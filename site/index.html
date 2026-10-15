@@ -421,7 +421,7 @@ footer a { color: inherit; }
 
   <footer id="footer">
     <p id="footer-source">Preços tirados das tabelas que as editoras publicaram no site da Festa do Livro da USP. O valor de feira é o "preço com desconto" de cada planilha. Confira no estande: algumas tabelas podem mudar até a Festa.</p>
-    <p>Sua lista não sai deste aparelho: não há conta nem servidor. Depois da primeira visita o site funciona sem internet. Projeto aberto em <a href="https://github.com/jvlcapi/guia-nao-oficial-festa-do-livro">github.com/jvlcapi/guia-nao-oficial-festa-do-livro</a>. Este guia é feito pela comunidade e não é um site oficial da Edusp nem da USP; o site oficial é <a href="https://festadolivro.edusp.com.br">festadolivro.edusp.com.br</a>.</p>
+    <p>Sua lista não sai deste aparelho: não há conta nem servidor. Depois da primeira visita o site funciona sem internet. Para medir o alcance do guia, cada navegador soma 1, uma única vez, a um contador público de visitantes (abacus.jasoncameron.dev), sem cookies e sem nada da sua lista. Projeto aberto em <a href="https://github.com/jvlcapi/guia-nao-oficial-festa-do-livro">github.com/jvlcapi/guia-nao-oficial-festa-do-livro</a>. Este guia é feito pela comunidade e não é um site oficial da Edusp nem da USP; o site oficial é <a href="https://festadolivro.edusp.com.br">festadolivro.edusp.com.br</a>.</p>
     <p>Criado por João Vitor Lopes Capi. Código sob a licença <a href="https://polyformproject.org/licenses/noncommercial/1.0.0">PolyForm Noncommercial 1.0.0</a>: pode usar, estudar e adaptar para fins não comerciais, mantendo o crédito.</p>
   </footer>
 </div>
@@ -434,10 +434,14 @@ footer a { color: inherit; }
  *   catalogo.json  books of every exhibitor for that edition
  * Lists live in localStorage under STORAGE_KEY: { edicoes: { <edition>: { livros: { <bookId>: book }, orcamento } } }.
  * A shared list travels in the URL fragment (#lista=...), which browsers never send to the server.
+ * Besides its own files and the fonts, the page makes one request elsewhere: a +1 to a public visitor counter, once per browser.
  */
 const STORAGE_KEY = "festa-do-livro:listas";
 const NAME_KEY = "festa-do-livro:nome";
 const SHARE_PREFIX = "lista=";
+const VISITOR_COUNTED_KEY = "festa-do-livro:visitante-contado";
+const VISITOR_COUNTER_HIT_URL = "https://abacus.jasoncameron.dev/hit/guia-nao-oficial-festa-do-livro/visitantes";
+const PUBLISHED_HOSTNAME = "jvlcapi.github.io";
 const brl = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
 const pct = new Intl.NumberFormat("pt-BR", { style: "percent", maximumFractionDigits: 0 });
 const intFormat = new Intl.NumberFormat("pt-BR");
@@ -1212,6 +1216,20 @@ document.getElementById("quick-searches").addEventListener("click", event => {
   runSearch();
 });
 
+/* ---------- Visitor counter ---------- */
+// The README badge shows this total. Local copies and forks never count, and nothing about the visitor or the list goes with the +1.
+function countThisBrowserOnce() {
+  if (location.hostname !== PUBLISHED_HOSTNAME) return;
+  try {
+    if (localStorage.getItem(VISITOR_COUNTED_KEY)) return;
+  } catch (error) {
+    return;
+  }
+  fetch(VISITOR_COUNTER_HIT_URL, { cache: "no-store" })
+    .then(response => { if (response.ok) localStorage.setItem(VISITOR_COUNTED_KEY, new Date().toISOString()); })
+    .catch(() => {});
+}
+
 /* ---------- Boot ---------- */
 loadSaved();
 renderAll();
@@ -1238,6 +1256,7 @@ fetch("edicao.json")
 if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) {
   navigator.serviceWorker.register("sw.js").catch(() => {});
 }
+countThisBrowserOnce();
 </script>
 </body>
 </html>

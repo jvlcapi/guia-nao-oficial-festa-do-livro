@@ -1,0 +1,53 @@
+name: Guardar contador de visitantes
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Toda segunda às 7h de Brasília. Ler o contador também evita que ele expire: o serviço apaga contadores sem acesso por 6 meses.
+    - cron: "0 10 * * 1"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: guardar-contador-de-visitantes
+  cancel-in-progress: false
+
+jobs:
+  guardar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Anotar o total de visitantes
+        env:
+          ENDERECO_DO_CONTADOR: https://abacus.jasoncameron.dev/get/guia-nao-oficial-festa-do-livro/visitantes
+          ARQUIVO_DO_HISTORICO: data/visitantes.csv
+        run: |
+          resposta="$RUNNER_TEMP/contador.json"
+          situacao=$(curl -sS --max-time 30 -o "$resposta" -w '%{http_code}' "$ENDERECO_DO_CONTADOR")
+          if [ "$situacao" = "404" ]; then
+            echo "O contador não existe: ou o site publicado ainda não teve visitas, ou o contador expirou. O histórico até aqui está em $ARQUIVO_DO_HISTORICO." | tee -a "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          if [ "$situacao" != "200" ]; then
+            echo "O contador respondeu HTTP $situacao: $(cat "$resposta")"
+            exit 1
+          fi
+          total=$(python3 -c 'import json, sys; print(int(json.load(open(sys.argv[1]))["value"]))' "$resposta")
+          echo "Visitantes únicos (um por navegador): $total" >> "$GITHUB_STEP_SUMMARY"
+
+          [ -f "$ARQUIVO_DO_HISTORICO" ] || echo "data,visitantes" > "$ARQUIVO_DO_HISTORICO"
+          if [ "$(tail -n 1 "$ARQUIVO_DO_HISTORICO" | cut -d, -f2)" = "$total" ]; then
+            echo "Nenhum visitante novo desde a última anotação."
+            exit 0
+          fi
+          echo "$(date -u +%F),$total" >> "$ARQUIVO_DO_HISTORICO"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "$ARQUIVO_DO_HISTORICO"
+          git commit -m "Anota total de visitantes únicos: $total"
+          git pull --rebase
+          git push

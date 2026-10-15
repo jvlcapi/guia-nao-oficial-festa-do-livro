@@ -13,6 +13,7 @@ A searchable price catalog and shopping-list planner for the [Festa do Livro da 
 | Prices checked against the source PDF | every book with an ISBN; 158 flagged for review |
 | Backend, accounts, API keys | **none** |
 | Hosting cost | **zero** (GitHub Pages + GitHub Actions) |
+| Unique visitors, one per browser | [![Unique visitors](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fabacus.jasoncameron.dev%2Fget%2Fguia-nao-oficial-festa-do-livro%2Fvisitantes&query=%24.value&label=unique%20visitors&color=2a4fd1&cacheSeconds=3600)](https://jvlcapi.github.io/guia-nao-oficial-festa-do-livro/) |
 
 Community project, not affiliated with Edusp or the University of São Paulo. Prices come from the lists publishers post on the official site and may change before the fair.
 
@@ -61,6 +62,8 @@ visitor's browser: search, totals and the list (stored on the device)
 
 **No backend on purpose.** The list is the only personal data, and a shopping list fits on the visitor's own device. It lives in `localStorage`, keyed by edition. Sharing encodes the book IDs and an optional name in the URL fragment (`#lista=...`), which browsers never send to the server. The result: no accounts, no database, no personal data collected, no running costs, and nothing for the maintainer to operate.
 
+**Reach without analytics.** To get a sense of how many people use the guide, the published page adds one to a public counter (abacus.jasoncameron.dev) the first time each browser opens it, and remembers in `localStorage` that it already counted. No cookies, no identifiers, nothing from the list; local copies and forks never count. The README badge reads the total without adding to it, and a weekly workflow writes it to `data/visitantes.csv`, so the history survives even if the counter service goes away (it also deletes counters untouched for six months).
+
 **Offline-first for the venue.** A small service worker uses a network-first strategy with the cache as fallback: visitors online always get the latest catalog, and the site keeps working without signal. The 6.5 MB catalog travels as about 1.5 MB gzipped, and revisits only revalidate it.
 
 **A public repository with nothing to leak.** The pipeline needs no keys: the source API is public, CI commits with the ephemeral `GITHUB_TOKEN`, and Pages deploys through OIDC. Some publisher PDFs embed links with third-party access tokens, so the catalog builder strips credential query parameters and drops cover-image URLs. A test fails the build if any tracked file matches a credential pattern, and GitHub secret scanning with push protection is enabled.
@@ -71,7 +74,7 @@ visitor's browser: search, totals and the list (stored on the device)
 
 - **Pipeline:** Python 3.12, PyMuPDF, pypdf, pytest
 - **Site:** plain HTML, CSS and JavaScript with no framework and no build step; Service Worker, Web Share API, Clipboard API
-- **Automation and hosting:** GitHub Actions (scheduled data refresh, tests, deploy) and GitHub Pages
+- **Automation and hosting:** GitHub Actions (scheduled data refresh, weekly visitor-count snapshot, tests, deploy) and GitHub Pages
 
 ## Tests and quality
 
@@ -109,7 +112,7 @@ src/festa_do_livro/
   price_verification.py       price checks and the report
   site_assembly.py            folder published to GitHub Pages
 site/                         the public site (page, offline worker, icon, manifest)
-data/                         generated catalogs, one folder per edition
+data/                         generated catalogs, one folder per edition; visitantes.csv with the weekly visitor count
 tests/                        unit and regression tests, with real PDF fixtures
 .github/workflows/            catalog refresh, site deploy, tests
 ```

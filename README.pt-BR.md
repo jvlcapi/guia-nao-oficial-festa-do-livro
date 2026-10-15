@@ -4,6 +4,8 @@
 
 **Abra: https://jvlcapi.github.io/guia-nao-oficial-festa-do-livro/**
 
+[![Visitantes únicos do guia](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fabacus.jasoncameron.dev%2Fget%2Fguia-nao-oficial-festa-do-livro%2Fvisitantes&query=%24.value&label=visitantes%20%C3%BAnicos&color=2a4fd1&cacheSeconds=3600)](https://jvlcapi.github.io/guia-nao-oficial-festa-do-livro/)
+
 Busque nos preços de feira de todas as editoras da [Festa do Livro da USP](https://festadolivro.edusp.com.br) e monte sua lista de compras antes de ir: total na feira, quanto você economiza sobre o preço de capa, gasto por editora e por gênero, orçamento e lista para compartilhar.
 
 Feito por leitores, de graça e de código aberto. **Não é um site oficial da Edusp nem da USP**; os preços vêm das tabelas que as editoras publicam no site oficial e podem mudar até a Festa. Confira no estande.
@@ -19,7 +21,7 @@ Não precisa de conta, cadastro nem instalar nada. É só abrir o link acima no 
 
 ### Onde fica a minha lista
 
-A lista fica salva **só no navegador do seu aparelho**. Nada é enviado para servidor nenhum e ninguém mais vê. Se você limpar os dados do navegador ou usar janela anônima, a lista se perde.
+A lista fica salva **só no navegador do seu aparelho**. Nada da lista é enviado para servidor nenhum e ninguém mais vê. A única coisa que o site manda para fora é um +1, uma vez por navegador, para o contador público de visitantes que aparece no topo desta página, sem cookies. Se você limpar os dados do navegador ou usar janela anônima, a lista se perde.
 
 ### Compartilhar a lista
 
@@ -60,12 +62,14 @@ navegador de cada pessoa: busca, lista e totais (lista salva no próprio aparelh
 - **Leitura dos PDFs**: cada lista é lida de dois jeitos (células da tabela e posição do texto) e fica o resultado mais completo. Nomes cortados pela célula são completados pelo texto do PDF.
 - **Conferência**: cada preço de capa e de feira precisa aparecer na linha do mesmo ISBN no PDF. O que não bate vai para o relatório.
 - **Site**: estático, sem servidor nem conta. A lista fica no `localStorage`, separada por edição, e os preços dela são atualizados quando o catálogo muda. O link de compartilhamento leva a edição, o nome e os identificadores dos livros no fragmento da URL (`#lista=...`), que o navegador não envia ao servidor. O `site/sw.js` guarda o site e o catálogo no aparelho (rede primeiro, cache como reserva) para funcionar sem internet.
+- **Contador de visitantes**: na primeira vez que um navegador abre o site publicado (`jvlcapi.github.io`), a página chama `abacus.jasoncameron.dev/hit/...` e anota no `localStorage` que já contou. Cópias locais e forks não contam. O selo do topo lê o total com `/get/...`, sem somar. Não é exato (quem limpa o navegador conta de novo, e quem só usa o site sem internet não conta), mas dá a dimensão do alcance.
 
 ### Atualização automática (GitHub Actions)
 
 - **Atualizar catálogo** (`atualizar-catalogo.yml`): roda pelo botão *Run workflow* (com a edição opcional) e todo dia às 6h de Brasília, de setembro a dezembro. Roda os testes, gera catálogo e relatório, mostra o relatório no resumo da execução e, se algo mudou, faz commit e publica o site.
 - **Publicar site** (`publicar-site.yml`): monta `_site/` com a edição atual (`data/edicao-atual.json`) e publica no GitHub Pages. Também roda quando `site/` ou os dados mudam por push.
 - **Testes** (`testes.yml`): em todo push e pull request.
+- **Guardar contador de visitantes** (`guardar-contador-de-visitantes.yml`): toda segunda às 7h de Brasília, anota o total em `data/visitantes.csv` quando ele mudou. Assim o histórico fica no repositório mesmo que o serviço do contador suma, e a leitura semanal impede que o contador expire (o serviço apaga contadores sem acesso por 6 meses).
 
 ### Roteiro do dia em que a lista sair
 
@@ -113,7 +117,7 @@ src/festa_do_livro/
   price_verification.py       conferência de preços e relatório
   site_assembly.py            monta a pasta publicada no GitHub Pages
 site/                         site público (página, cache offline, ícone, manifesto)
-data/                         catálogos gerados (um diretório por edição)
+data/                         catálogos gerados (um diretório por edição) e visitantes.csv com o total semanal de visitantes
 ```
 
 ## Licença
