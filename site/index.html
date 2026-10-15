@@ -11,14 +11,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Guia não oficial da Festa do Livro da USP</title>
 <meta name="description" content="Guia não oficial da Festa do Livro da USP, feito por leitores: busque nos preços de feira de todas as editoras e monte sua lista de compras. A lista fica salva só no seu aparelho.">
-<meta name="theme-color" content="#2a4fd1">
+<meta name="theme-color" content="#c0352b">
 <meta property="og:type" content="website">
 <meta property="og:locale" content="pt_BR">
 <meta property="og:site_name" content="Guia não oficial da Festa do Livro da USP">
 <meta property="og:title" content="Guia não oficial da Festa do Livro da USP">
 <meta property="og:description" content="Os preços de feira de todas as editoras num lugar só. Monte sua lista antes de ir: de graça, sem cadastro e funciona sem internet.">
 <meta property="og:url" content="https://jvlcapi.github.io/guia-nao-oficial-festa-do-livro/">
-<meta property="og:image" content="https://jvlcapi.github.io/guia-nao-oficial-festa-do-livro/link-preview.png">
+<meta property="og:image" content="https://jvlcapi.github.io/guia-nao-oficial-festa-do-livro/link-preview.png?versao=2">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="Guia não oficial da Festa do Livro da USP: os preços de feira de todas as editoras num lugar só.">
@@ -38,16 +38,16 @@ img { max-width: 100%; }
 
 /* Layout: price-list sheet — two tabs (my list / the fair's catalog); summary strip, bar panels and per-publisher tables */
 :root {
-  --bg: #f4f6fa;
+  --bg: #f8f5f3;
   --surface: #ffffff;
-  --fg: #141a2e;
-  --muted: #5a6178;
-  --line: #dde2ec;
-  --accent: #2a4fd1;
+  --fg: #1f1716;
+  --muted: #6e625e;
+  --line: #e9e0dd;
+  --accent: #c0352b;
   --accent-ink: #ffffff;
-  --accent-soft: #e4eafc;
-  --stamp: #ffd23f;
-  --stamp-ink: #2b2100;
+  --accent-soft: #fbe4e1;
+  --stamp: #f9d4ce;
+  --stamp-ink: #8f2620;
   --good: #11804f;
   --warn: #b25b00;
   --danger: #c0352b;
@@ -59,16 +59,16 @@ img { max-width: 100%; }
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #0e111b; --surface: #161a28; --fg: #e8ebf5; --muted: #9aa1b8; --line: #2a3045;
-    --accent: #7f97ff; --accent-ink: #0e111b; --accent-soft: #232c4d; --stamp: #e9c43c; --stamp-ink: #221a00;
+    --bg: #151011; --surface: #1f1819; --fg: #f2eae9; --muted: #b3a5a3; --line: #3b2e2e;
+    --accent: #ff8a7f; --accent-ink: #1a0f10; --accent-soft: #4a2422; --stamp: #f2b8b0; --stamp-ink: #3d100c;
     --good: #4cc98c; --warn: #f0a050; --danger: #ff7b70; color-scheme: dark;
     --source-1: #3987e5; --source-2: #d95926; --source-3: #199e70; --source-4: #c98500;
     --source-5: #d55181; --source-6: #008300; --source-7: #9085e9; --source-8: #e66767;
   }
 }
 :root[data-theme="dark"] {
-  --bg: #0e111b; --surface: #161a28; --fg: #e8ebf5; --muted: #9aa1b8; --line: #2a3045;
-  --accent: #7f97ff; --accent-ink: #0e111b; --accent-soft: #232c4d; --stamp: #e9c43c; --stamp-ink: #221a00;
+  --bg: #151011; --surface: #1f1819; --fg: #f2eae9; --muted: #b3a5a3; --line: #3b2e2e;
+  --accent: #ff8a7f; --accent-ink: #1a0f10; --accent-soft: #4a2422; --stamp: #f2b8b0; --stamp-ink: #3d100c;
   --good: #4cc98c; --warn: #f0a050; --danger: #ff7b70; color-scheme: dark;
   --source-1: #3987e5; --source-2: #d95926; --source-3: #199e70; --source-4: #c98500;
   --source-5: #d55181; --source-6: #008300; --source-7: #9085e9; --source-8: #e66767;

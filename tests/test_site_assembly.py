@@ -51,7 +51,8 @@ def meta_content(page: str, property_name: str) -> str:
 
 def link_preview_image_name() -> str:
     page = (ROOT / "site" / "index.html").read_text()
-    return meta_content(page, "og:image").removeprefix(SITE_ADDRESS)
+    image_address_without_cache_version = meta_content(page, "og:image").split("?")[0]
+    return image_address_without_cache_version.removeprefix(SITE_ADDRESS)
 
 
 def test_link_preview_image_uses_the_full_site_address():
@@ -75,3 +76,11 @@ def test_link_preview_declares_the_real_image_size():
 
 def test_link_preview_image_is_small_enough_for_whatsapp():
     assert (ROOT / "site" / link_preview_image_name()).stat().st_size < WHATSAPP_PREVIEW_LIMIT_BYTES
+
+
+def test_brand_color_is_the_same_in_page_icon_and_manifest():
+    page = (ROOT / "site" / "index.html").read_text()
+    accent = re.search(r"--accent: (#[0-9a-f]{6});", page).group(1)
+    manifest = json.loads((ROOT / "site" / "manifest.webmanifest").read_text())
+    icon_background = re.search(r'<rect [^>]*fill="(#[0-9a-f]{6})"', (ROOT / "site" / "icon.svg").read_text()).group(1)
+    assert {meta_content(page, "theme-color"), manifest["theme_color"], icon_background} == {accent}

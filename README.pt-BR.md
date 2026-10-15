@@ -4,7 +4,7 @@
 
 **Abra: https://jvlcapi.github.io/guia-nao-oficial-festa-do-livro/**
 
-[![Visitantes únicos do guia](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fabacus.jasoncameron.dev%2Fget%2Fguia-nao-oficial-festa-do-livro%2Fvisitantes&query=%24.value&label=visitantes%20%C3%BAnicos&color=2a4fd1&cacheSeconds=3600)](https://jvlcapi.github.io/guia-nao-oficial-festa-do-livro/)
+[![Visitantes únicos do guia](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fabacus.jasoncameron.dev%2Fget%2Fguia-nao-oficial-festa-do-livro%2Fvisitantes&query=%24.value&label=visitantes%20%C3%BAnicos&color=c0352b&cacheSeconds=3600)](https://jvlcapi.github.io/guia-nao-oficial-festa-do-livro/)
 
 Busque nos preços de feira de todas as editoras da [Festa do Livro da USP](https://festadolivro.edusp.com.br) e monte sua lista de compras antes de ir: total na feira, quanto você economiza sobre o preço de capa, gasto por editora e por gênero, orçamento e lista para compartilhar.
 

@@ -13,7 +13,7 @@ A searchable price catalog and shopping-list planner for the [Festa do Livro da 
 | Prices checked against the source PDF | every book with an ISBN; 158 flagged for review |
 | Backend, accounts, API keys | **none** |
 | Hosting cost | **zero** (GitHub Pages + GitHub Actions) |
-| Unique visitors, one per browser | [![Unique visitors](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fabacus.jasoncameron.dev%2Fget%2Fguia-nao-oficial-festa-do-livro%2Fvisitantes&query=%24.value&label=unique%20visitors&color=2a4fd1&cacheSeconds=3600)](https://jvlcapi.github.io/guia-nao-oficial-festa-do-livro/) |
+| Unique visitors, one per browser | [![Unique visitors](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fabacus.jasoncameron.dev%2Fget%2Fguia-nao-oficial-festa-do-livro%2Fvisitantes&query=%24.value&label=unique%20visitors&color=c0352b&cacheSeconds=3600)](https://jvlcapi.github.io/guia-nao-oficial-festa-do-livro/) |
 
 Community project, not affiliated with Edusp or the University of São Paulo. Prices come from the lists publishers post on the official site and may change before the fair.
 
