@@ -3,7 +3,7 @@ import json
 import shutil
 from pathlib import Path
 
-SITE_FILES = ("index.html", "sw.js", "manifest.webmanifest", "icon.svg")
+SITE_FILES = ("index.html", "sw.js", "manifest.webmanifest", "icon.svg", "apple-touch-icon.png", "link-preview.png")
 
 
 def assemble_site(site_source: Path, data_directory: Path, output: Path) -> dict:
