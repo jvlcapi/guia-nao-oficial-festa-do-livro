@@ -15,7 +15,7 @@ A searchable price catalog and shopping-list planner for the [Festa do Livro da 
 | Hosting cost | **zero** (GitHub Pages + GitHub Actions) |
 | Unique visitors, one per browser | [![Unique visitors](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fabacus.jasoncameron.dev%2Fget%2Fguia-nao-oficial-festa-do-livro%2Fvisitantes&query=%24.value&label=unique%20visitors&color=c0352b&cacheSeconds=3600)](https://jvlcapi.github.io/guia-nao-oficial-festa-do-livro/) |
 
-Community project, not affiliated with Edusp or the University of São Paulo. Prices come from the lists publishers post on the official site and may change before the fair.
+Community project, not affiliated with Edusp or the University of São Paulo. Prices come from the lists publishers post on the official site and may change before the fair. A [media kit](divulgacao/) (in Portuguese) has ready-to-post Instagram images, the logo and a suggested caption.
 
 ## The problem
 
@@ -112,6 +112,7 @@ src/festa_do_livro/
   price_verification.py       price checks and the report
   site_assembly.py            folder published to GitHub Pages
 site/                         the public site (page, offline worker, icon, manifest)
+divulgacao/                   media kit: Instagram images, logo and suggested caption
 data/                         generated catalogs, one folder per edition; visitantes.csv with the weekly visitor count
 tests/                        unit and regression tests, with real PDF fixtures
 .github/workflows/            catalog refresh, site deploy, tests

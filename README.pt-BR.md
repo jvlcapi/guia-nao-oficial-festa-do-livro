@@ -10,6 +10,8 @@ Busque nos preços de feira de todas as editoras da [Festa do Livro da USP](http
 
 Feito por leitores, de graça e de código aberto. **Não é um site oficial da Edusp nem da USP**; os preços vêm das tabelas que as editoras publicam no site oficial e podem mudar até a Festa. Confira no estande.
 
+Quer divulgar? O [kit de divulgação](divulgacao/) tem imagens prontas para o Instagram, a logo e uma sugestão de legenda.
+
 ## Para quem vai à Festa
 
 Não precisa de conta, cadastro nem instalar nada. É só abrir o link acima no celular ou no computador.
@@ -117,6 +119,7 @@ src/festa_do_livro/
   price_verification.py       conferência de preços e relatório
   site_assembly.py            monta a pasta publicada no GitHub Pages
 site/                         site público (página, cache offline, ícone, manifesto)
+divulgacao/                   kit de divulgação: imagens para Instagram, logo e legenda
 data/                         catálogos gerados (um diretório por edição) e visitantes.csv com o total semanal de visitantes
 ```
 
