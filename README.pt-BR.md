@@ -37,7 +37,7 @@ O link leva só os livros escolhidos e o nome que você digitou; ele não dá ac
 
 ### Quando sai a edição de um ano novo
 
-O site passa a mostrar o catálogo da nova edição e a sua lista recomeça vazia. As listas de anos anteriores continuam guardadas no aparelho e aparecem num seletor de edição, só para consulta.
+Enquanto as listas da nova Festa não saem, o topo do site avisa de qual edição são os preços mostrados. Quando saem, o site passa a mostrar o catálogo da nova edição e a sua lista recomeça vazia. As listas de anos anteriores continuam guardadas no aparelho e aparecem num seletor de edição, só para consulta.
 
 ---
 
@@ -60,10 +60,10 @@ GitHub Pages: site/index.html + catalogo.json + edicao.json
 navegador de cada pessoa: busca, lista e totais (lista salva no próprio aparelho)
 ```
 
-- **Edição**: `settings.json` tem `"edition": "auto"`, que usa a edição declarada na página inicial do site oficial. Para fixar uma edição, troque por exemplo para `"28-festa-do-livro-da-usp"` ou passe a variável `FESTA_EDITION`.
-- **Leitura dos PDFs**: cada lista é lida de dois jeitos (células da tabela e posição do texto) e fica o resultado mais completo. Nomes cortados pela célula são completados pelo texto do PDF.
-- **Conferência**: cada preço de capa e de feira precisa aparecer na linha do mesmo ISBN no PDF. O que não bate vai para o relatório.
-- **Site**: estático, sem servidor nem conta. A lista fica no `localStorage`, separada por edição, e os preços dela são atualizados quando o catálogo muda. O link de compartilhamento leva a edição, o nome e os identificadores dos livros no fragmento da URL (`#lista=...`), que o navegador não envia ao servidor. O `site/sw.js` guarda o site e o catálogo no aparelho (rede primeiro, cache como reserva) para funcionar sem internet.
+- **Edição**: `settings.json` tem `"edition": "auto"`, que usa a edição declarada na página inicial do site oficial. Para fixar uma edição, troque por exemplo para `"28-festa-do-livro-da-usp"` ou passe a variável `FESTA_EDITION`. Uma edição nova sem nenhuma lista lida não troca o site: o `build` nunca grava catálogo vazio. O ano vem do número da edição (a Festa é anual desde 1999) e as datas, do texto do site oficial.
+- **Leitura dos PDFs**: cada lista é lida de dois jeitos (células da tabela e posição do texto) e fica o resultado mais completo. Nomes cortados pela célula são completados pelo texto do PDF. Quando um leitor acha só um preço, a linha do mesmo ISBN no PDF decide qual é o de capa e qual é o de feira. O ISBN só vale com o dígito verificador certo, o que pega número de planilha em notação científica e ISBN quebrado em duas linhas; livros diferentes com o mesmo ISBN continuam separados.
+- **Conferência**: cada preço de capa e de feira precisa aparecer na linha do mesmo ISBN no PDF. O que não bate vai para o relatório, que também mostra, por editora, livros lidos e livros sem preço de capa.
+- **Site**: estático, sem servidor nem conta. A lista fica no `localStorage`, separada por edição, e os preços dela são atualizados quando o catálogo muda. O link de compartilhamento leva a edição, o nome e os identificadores dos livros no fragmento da URL (`#lista=...`), que o navegador não envia ao servidor. O `site/sw.js` guarda o site e o catálogo no aparelho para funcionar sem internet: vai primeiro na rede, mas depois de 3 segundos sem resposta usa a cópia guardada, porque na tenda o celular mostra sinal e não passa dados. O mesmo ISBN vendido em duas editoras tem um id para cada uma (o ISBN e um sufixo), e listas antigas são ajustadas sozinhas quando o catálogo muda.
 - **Contador de visitantes**: na primeira vez que um navegador abre o site publicado (`jvlcapi.github.io`), a página chama `abacus.jasoncameron.dev/hit/...` e anota no `localStorage` que já contou. Cópias locais e forks não contam. O selo do topo lê o total com `/get/...`, sem somar. Não é exato (quem limpa o navegador conta de novo, e quem só usa o site sem internet não conta), mas dá a dimensão do alcance.
 
 ### Atualização automática (GitHub Actions)
@@ -77,7 +77,7 @@ navegador de cada pessoa: busca, lista e totais (lista salva no próprio aparelh
 
 1. Confirme a edição: `python -m festa_do_livro detect-edition` (ou veja a página de editoras no site oficial).
 2. Rode o workflow **Atualizar catálogo** (vazio = `auto`, ou informe a edição).
-3. Abra o resumo da execução e leia o relatório: total de livros, listas não lidas e divergências por editora. Editora com formato novo aparece com 0 livros ou com muitas divergências.
+3. Abra o resumo da execução e leia o relatório: total de livros, listas não lidas e divergências por editora. Editora com formato novo aparece com 0 livros, com muitas divergências, com muitos livros sem preço de capa ou com "Lidos" bem acima de "Livros".
 4. Se precisar ajustar o leitor, corrija, adicione um teste com o PDF da editora em `tests/fixtures/price_lists/` e rode de novo.
 5. Abra o site e confira que o número e as datas da nova edição aparecem no topo.
 

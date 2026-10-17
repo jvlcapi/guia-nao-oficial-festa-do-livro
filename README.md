@@ -8,9 +8,9 @@ A searchable price catalog and shopping-list planner for the [Festa do Livro da 
 
 | | |
 |---|---|
-| Books in the catalog | **34,780** |
+| Books in the catalog | **34,937** |
 | Publisher price lists parsed | **191** (PDFs in dozens of different layouts) |
-| Prices checked against the source PDF | every book with an ISBN; 158 flagged for review |
+| Prices checked against the source PDF | every book with an ISBN; 156 flagged for review |
 | Backend, accounts, API keys | **none** |
 | Hosting cost | **zero** (GitHub Pages + GitHub Actions) |
 | Unique visitors, one per browser | [![Unique visitors](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fabacus.jasoncameron.dev%2Fget%2Fguia-nao-oficial-festa-do-livro%2Fvisitantes&query=%24.value&label=unique%20visitors&color=c0352b&cacheSeconds=3600)](https://jvlcapi.github.io/guia-nao-oficial-festa-do-livro/) |
@@ -54,17 +54,19 @@ visitor's browser: search, totals and the list (stored on the device)
 
 ## Engineering decisions
 
-**Edition-agnostic by design.** Nothing about a specific year lives in the code. The homepage declares the current edition, the pipeline reads it, and the site reads the edition name and dates from a small `edicao.json` published next to the catalog. A fixed edition can still be pinned in `settings.json` or through an environment variable.
+**Edition-agnostic by design.** Nothing about a specific year lives in the code. The homepage declares the current edition, the pipeline reads it, and the site reads the edition name and dates from a small `edicao.json` published next to the catalog. A fixed edition can still be pinned in `settings.json` or through an environment variable. Until the next edition's lists come out, the site says which fair its prices are from, and an edition with no list read yet never replaces the published catalog.
 
 **Two parsers instead of one clever one.** Each PDF goes through a table-cell reader (PyMuPDF table detection) and a positional reader that clusters text spans by their x-coordinates. The pipeline keeps whichever finds more complete books. Price columns are decided per table shape, so row numbers, stall numbers and internal codes are never mistaken for prices. Author and imprint names cut off by narrow cells are completed from the PDF's raw text.
 
 **Every price is verified against its source.** After parsing, each book's cover and fair prices must appear on the PDF line of the same ISBN; anything else lands in a per-publisher report shown in the CI run summary. This check is what surfaced the real bugs: a "Mesa" (stall number) column read as the price of 277 books, a letter spilling from the neighbouring cell ("S 44,90") that hid 764 cover prices, and numeric titles such as *1984* and *2666* being taken for internal codes. Each one became a regression test built on the publisher's real PDF.
 
+**Knowing the check's blind spot.** A cover price published as the fair price still appears on the ISBN's line, so the check above cannot catch it, and a book that silently disappears has no price to check at all. A review in October 2026 found both: 545 books where a reader had found only one of the two prices, and 157 books dropped because an ISBN repeated, broken across two lines or mangled by a spreadsheet into scientific notation (`9788580000000`) made different books look like the same one. When a reader finds a single price, the ISBN's line in the PDF now decides which one it is; an ISBN only counts when its check digit is right; and the report puts books read next to books published, per publisher, so a gap shows up.
+
 **No backend on purpose.** The list is the only personal data, and a shopping list fits on the visitor's own device. It lives in `localStorage`, keyed by edition. Sharing encodes the book IDs and an optional name in the URL fragment (`#lista=...`), which browsers never send to the server. The result: no accounts, no database, no personal data collected, no running costs, and nothing for the maintainer to operate.
 
 **Reach without analytics.** To get a sense of how many people use the guide, the published page adds one to a public counter (abacus.jasoncameron.dev) the first time each browser opens it, and remembers in `localStorage` that it already counted. No cookies, no identifiers, nothing from the list; local copies and forks never count. The README badge reads the total without adding to it, and a weekly workflow writes it to `data/visitantes.csv`, so the history survives even if the counter service goes away (it also deletes counters untouched for six months).
 
-**Offline-first for the venue.** A small service worker uses a network-first strategy with the cache as fallback: visitors online always get the latest catalog, and the site keeps working without signal. The 6.5 MB catalog travels as about 1.5 MB gzipped, and revisits only revalidate it.
+**Offline-first for the venue.** A small service worker goes to the network first, so visitors online get the latest catalog, but waits at most three seconds before answering from the saved copy: inside the tent a phone often shows signal and moves no data. The network keeps refreshing the copy in the background, and each file has exactly one saved copy, so a link carrying a social network's tracking parameter never brings back an old page. The page also remembers the last edition, so the list shows up before the network answers. The 6.5 MB catalog travels as about 1.5 MB gzipped.
 
 **A public repository with nothing to leak.** The pipeline needs no keys: the source API is public, CI commits with the ephemeral `GITHUB_TOKEN`, and Pages deploys through OIDC. Some publisher PDFs embed links with third-party access tokens, so the catalog builder strips credential query parameters and drops cover-image URLs. A test fails the build if any tracked file matches a credential pattern, and GitHub secret scanning with push protection is enabled.
 
@@ -78,8 +80,8 @@ visitor's browser: search, totals and the list (stored on the device)
 
 ## Tests and quality
 
-- 46 automated tests, run on every push.
-- Regression tests run on real price-list PDFs from six publishers, including the layouts that broke earlier versions of the parser.
+- 117 automated tests, run on every push.
+- Regression tests run on real price-list PDFs from ten publishers, including the layouts that broke earlier versions of the parser.
 - Unit tests cover edition detection, API pagination, download caching, table parsing edge cases, URL sanitizing, site assembly and repository hygiene.
 - The CI run publishes a verification report: total books, lists that could not be read, and price mismatches by publisher.
 - Work is planned in milestones and issues: [project milestones](https://github.com/jvlcapi/guia-nao-oficial-festa-do-livro/milestones?state=all).

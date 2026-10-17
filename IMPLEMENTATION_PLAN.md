@@ -42,10 +42,10 @@ Objetivo: gerar o catálogo da Festa do Livro da USP a partir de qualquer ediç�
 **Goal**: o site mostra o ano da edição e avisa quando os preços são de uma Festa que já passou; a atualização automática não troca o site para uma edição nova enquanto nenhuma lista dela foi lida.
 **Success Criteria**: `edicao.json` traz ano, início e fim; uma edição nova sem listas não escreve catálogo e o site continua na edição anterior.
 **Tests**: ano a partir do número da edição; datas a partir do período ("26 e 30 de novembro", "29 de novembro a 3 de dezembro"); build com editoras sem lista não grava nada.
-**Status**: In Progress (dados prontos; falta o aviso no site)
+**Status**: Complete
 
 ## Etapa 8: Site certo no celular e na tenda
 **Goal**: lista legível no celular (preço visível sem arrastar a tabela), preço certo para livros com o mesmo ISBN em duas editoras, link compartilhado malformado sem travar o site, foco do teclado preservado ao adicionar, resumo sem bloco vazio, aviso de quantas editoras já publicaram lista e cache com tempo limite para o sinal fraco da tenda.
 **Success Criteria**: em 375 px a lista não tem rolagem lateral; uma lista antiga com ISBN repetido passa para o livro da mesma editora; o site abre com o cache depois de alguns segundos sem resposta da rede.
 **Tests**: conferência no navegador (desktop e celular), checagem de sintaxe do script e testes de montagem do site.
-**Status**: Not Started
+**Status**: Complete (conferido no navegador em 375 px e em tela de computador, com rede lenta e sem rede)
