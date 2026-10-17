@@ -1,21 +1,33 @@
 """Turns the parsed price lists into the catalog file the web page reads."""
 import collections
 import hashlib
+import html
 import re
 from dataclasses import dataclass
 from pathlib import Path
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
+from .fair_dates import edition_year, period_dates
 from .fair_site import EventDetails, Publisher
+from .isbn import is_valid_isbn, isbn_of_book_id
 from .pdf_reading import extract_plain_text, extract_table_rows, extract_text_spans
 from .position_parser import parse_by_position
 from .table_parser import parse_table_rows
+from .text_helpers import without_accents_lowercase
 
 URL_IN_TEXT = re.compile(r"https?://\S+")
 CREDENTIAL_QUERY_KEYS = {"token", "access_token", "accesstoken", "key", "apikey", "api_key", "signature", "sig", "auth", "password", "secret"}
 IMAGE_HOSTS_AND_PATHS = ("bookinfometadados", "metabooks.com/api", "/cover/")
 COMPANY_SUFFIX_WORDS = {"e", "livraria", "ltda", "me", "eireli", "distribuidora"}
 MONEY_IN_TEXT = re.compile(r"(R\$\s*)?\d{1,3}(\.\d{3})*,\d{2}|\d+\.\d{2}\b")
+MONEY_IN_SUBJECT = re.compile(r"(?:R\$\s*)?\d{1,3}(?:\.\d{3})*,\d{2}")
+MONEY_ON_ISBN_LINE = re.compile(r"(?<![\d,.])(?:R\$\s*)?(\d{1,3}(?:\.\d{3})*,\d{1,2})(?![\d%])(?!\s*%)")
+HTML_TAG = re.compile(r"<[^>]+>")
+EDITION_BEFORE_TITLE = re.compile(r"^\d{1,2}\s*[aª]\.?\s*ed(?:ição|icao|\.)?\s+", re.I)
+SYNOPSIS_MINIMUM_LENGTH = 40
+SYNOPSIS_SHARE_OF_SUBJECTS = 0.8
+LOWEST_FAIR_SHARE_OF_COVER = 0.2
+LONGEST_TITLE = 250  # longer text is several rows glued together by the reader
 
 
 @dataclass(frozen=True)
@@ -30,10 +42,19 @@ def tidy(text: str) -> str:
 
 
 def tidy_subject(text: str) -> str:
-    text = tidy(text)
+    """The subject column sometimes carries HTML, a stray price or the end of a broken link instead of a genre."""
+    text = html.unescape(HTML_TAG.sub(" ", text or ""))
+    if text.lstrip().startswith("/") or URL_IN_TEXT.search(text) or "www." in text:
+        return ""
+    text = tidy(MONEY_IN_SUBJECT.sub(" ", text))
     if text.isupper():
         text = text.capitalize()
     return text[:60]
+
+
+def tidy_title(text: str) -> str:
+    """Some lists put the edition before the title: "1a ed. ACO EM FLOR"."""
+    return EDITION_BEFORE_TITLE.sub("", tidy(text))
 
 
 def clean_parsed_book(book: dict) -> dict:
@@ -64,7 +85,7 @@ def fill_missing_isbns_from_text(books: list[dict], plain_text: str) -> None:
         match = re.search(r"(97[89][\d\-]{10,14})\s?$", flat_text[max(0, position - 22):position])
         if match:
             digits = re.sub(r"\D", "", match.group(1))
-            if len(digits) == 13:
+            if len(digits) == 13 and is_valid_isbn(digits):
                 book["isbn"] = digits
 
 
@@ -91,13 +112,15 @@ def parse_price_list(pdf_path: Path) -> ParsedPriceList:
 
 
 def safe_public_url(url: str) -> str:
-    """Drops cover-image links and any query parameter that carries a credential."""
+    """Drops cover-image links, links to a site's front page (never the book's own page, and often cut by the cell) and query parameters that carry a credential."""
     if not url or len(url) < 12:
         return ""
     lowered = url.lower()
     if any(marker in lowered for marker in IMAGE_HOSTS_AND_PATHS) or lowered.split("?")[0].endswith((".jp", ".jpg", ".jpeg", ".png", ".webp")):
         return ""
     parts = urlsplit(url)
+    if parts.path in ("", "/") and not parts.query:
+        return ""
     kept_query = [(key, value) for key, value in parse_qsl(parts.query, keep_blank_values=True) if key.lower() not in CREDENTIAL_QUERY_KEYS]
     return urlunsplit((parts.scheme, parts.netloc, parts.path, urlencode(kept_query), parts.fragment))
 
@@ -129,17 +152,25 @@ def imprint_repeats_exhibitor(imprint: str, exhibitor_name: str) -> bool:
 
 def catalog_books(publishers: list[Publisher], parsed_by_index: dict[int, ParsedPriceList]) -> list[dict]:
     books = []
-    seen = set()
+    title_by_book_id = {}
     for publisher_index, parsed in sorted(parsed_by_index.items()):
         exhibitor_name = publishers[publisher_index].name
         for parsed_book in parsed.books:
-            title = tidy(parsed_book["title"])
-            if not title or re.fullmatch(r"[\d\s\-]{5,}", title):
+            title = tidy_title(parsed_book["title"])
+            if not title or re.fullmatch(r"[\d\s\-]{5,}", title) or len(title) > LONGEST_TITLE:
                 continue
-            book_id = stable_book_id(parsed_book["isbn"], exhibitor_name, title)
-            if (book_id, publisher_index) in seen:
-                continue
-            seen.add((book_id, publisher_index))
+            isbn = parsed_book["isbn"] if is_valid_isbn(parsed_book["isbn"]) else ""
+            if not isbn and without_accents_lowercase(title) == without_accents_lowercase(exhibitor_name):
+                continue  # a broken table row that only repeats the publisher's name
+            book_id = stable_book_id(isbn, exhibitor_name, title)
+            title_key = without_accents_lowercase(title)
+            if (book_id, publisher_index) in title_by_book_id:
+                if title_by_book_id[(book_id, publisher_index)] == title_key:
+                    continue  # the same row twice in the list
+                book_id = stable_book_id("", exhibitor_name, title)  # another book printed with the same ISBN
+                if (book_id, publisher_index) in title_by_book_id:
+                    continue
+            title_by_book_id[(book_id, publisher_index)] = title_key
             book = {
                 "i": book_id, "t": title, "a": tidy(parsed_book["author"]), "s": tidy(parsed_book["imprint"]),
                 "g": tidy_subject(parsed_book["subject"]), "c": parsed_book["cover_price"], "f": parsed_book["fair_price"], "x": publisher_index,
@@ -175,11 +206,12 @@ def repair_truncated_names(books: list[dict], publishers: list[Publisher], parse
     line_cache: dict[int, dict[str, str]] = {}
     repaired = 0
     for book in books:
-        if not book["i"].isdigit() or "a" not in book or book["x"] not in parsed_by_index:
+        isbn = isbn_of_book_id(book["i"])
+        if not isbn or "a" not in book or book["x"] not in parsed_by_index:
             continue
         if book["x"] not in line_cache:
             line_cache[book["x"]] = text_after_isbn_by_line(parsed_by_index[book["x"]].plain_text)
-        line = line_cache[book["x"]].get(book["i"])
+        line = EDITION_BEFORE_TITLE.sub("", line_cache[book["x"]].get(isbn, ""))
         if not line or not line.startswith(book["t"]):
             continue
         after_title = line[len(book["t"]):]
@@ -252,11 +284,74 @@ def normalize_imprints(books: list[dict], publishers: list[Publisher]) -> None:
             book["s"] = imprint
 
 
+def money_value(text: str) -> float:
+    return float(text.replace(".", "").replace(",", "."))
+
+
+def complete_prices_from_isbn_lines(books: list[dict], parsed_by_index: dict[int, ParsedPriceList]) -> None:
+    """A reader that finds one price cannot tell cover from fair price; the PDF line of the same ISBN shows both."""
+    line_cache: dict[int, dict[str, str]] = {}
+    for book in books:
+        isbn = isbn_of_book_id(book["i"])
+        if "c" in book or not isbn or book["x"] not in parsed_by_index:
+            continue
+        if book["x"] not in line_cache:
+            line_cache[book["x"]] = text_after_isbn_by_line(parsed_by_index[book["x"]].plain_text)
+        prices_on_line = [money_value(text) for text in MONEY_ON_ISBN_LINE.findall(line_cache[book["x"]].get(isbn, ""))]
+        if len(prices_on_line) != 2 or book["f"] not in prices_on_line:
+            continue
+        cover, fair = max(prices_on_line), min(prices_on_line)
+        if LOWEST_FAIR_SHARE_OF_COVER * cover <= fair < cover:
+            book["c"], book["f"] = cover, fair
+
+
+def give_each_exhibitor_its_own_id(books: list[dict], publishers: list[Publisher]) -> None:
+    """The same ISBN at two stands is two entries with different prices; the suffix comes from the exhibitor name, so it never depends on list order."""
+    exhibitors_by_book_id = collections.defaultdict(set)
+    for book in books:
+        exhibitors_by_book_id[book["i"]].add(book["x"])
+    for book in books:
+        if len(exhibitors_by_book_id[book["i"]]) > 1:
+            exhibitor_suffix = hashlib.md5(publishers[book["x"]].name.encode()).hexdigest()[:6]
+            book["i"] = f"{book['i']}-{exhibitor_suffix}"
+
+
+def drop_synopses_used_as_genre(books: list[dict]) -> None:
+    """Some publishers fill the subject column with a synopsis or a long list of tags: almost every value is long and different from the others."""
+    subjects_by_exhibitor = collections.defaultdict(list)
+    for book in books:
+        if book.get("g"):
+            subjects_by_exhibitor[book["x"]].append(book["g"])
+    exhibitors_with_synopses = {
+        exhibitor for exhibitor, subjects in subjects_by_exhibitor.items()
+        if len(subjects) >= 5
+        and len(set(subjects)) >= SYNOPSIS_SHARE_OF_SUBJECTS * len(subjects)
+        and sum(1 for subject in subjects if len(subject) >= SYNOPSIS_MINIMUM_LENGTH) >= SYNOPSIS_SHARE_OF_SUBJECTS * len(subjects)
+    }
+    for book in books:
+        if book["x"] in exhibitors_with_synopses:
+            book.pop("g", None)
+
+
+def event_summary(event: EventDetails) -> dict:
+    summary = {"edicao": event.edition, "nome": event.name, "periodo": event.period}
+    year = edition_year(event.edition)
+    if year:
+        summary["ano"] = year
+    dates = period_dates(event.period, year)
+    if dates:
+        summary["inicio"], summary["fim"] = dates[0].isoformat(), dates[1].isoformat()
+    return summary
+
+
 def build_catalog(event: EventDetails, publishers: list[Publisher], parsed_by_index: dict[int, ParsedPriceList], generated_at: str) -> dict:
     books = catalog_books(publishers, parsed_by_index)
     repair_truncated_names(books, publishers, parsed_by_index)
+    complete_prices_from_isbn_lines(books, parsed_by_index)
+    give_each_exhibitor_its_own_id(books, publishers)
+    drop_synopses_used_as_genre(books)
     return {
-        "evento": {"edicao": event.edition, "nome": event.name, "periodo": event.period},
+        "evento": event_summary(event),
         "geradoEm": generated_at,
         "expositores": [{"nome": publisher.name, "site": publisher.site} for publisher in publishers],
         "livros": books,

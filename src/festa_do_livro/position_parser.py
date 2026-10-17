@@ -47,16 +47,32 @@ def header_roles(pages: list[list[dict]]) -> list[str]:
     return []
 
 
+def isbn_continuation(spans: list[dict], anchor: dict, digits_so_far: str):
+    """The second line of an ISBN that a narrow cell broke in two ("978-65-87955-" above "23-0")."""
+    for span in spans:
+        below = span["middle"] - anchor["middle"]
+        if abs(span["left"] - anchor["left"]) < 4 and 3 < below < 15 and re.fullmatch(r"[\d\-]{1,8}", span["text"]):
+            if len(digits_so_far + re.sub(r"\D", "", span["text"])) == 13:
+                return span
+    return None
+
+
 def parse_by_position(pages: list[list[dict]]) -> list[dict]:
     roles = header_roles(pages)
 
     row_anchors = []
+    isbn_endings = set()
     for page_index, spans in enumerate(pages):
         for span in spans:
             match = ROW_START.match(span["text"])
             if not match:
                 continue
             digits = re.sub(r"\D", "", match.group(1))
+            if len(digits) < 13 and match.group(1).rstrip().endswith("-"):
+                ending = isbn_continuation(spans, span, digits)
+                if ending:
+                    digits += re.sub(r"\D", "", ending["text"])
+                    isbn_endings.add(id(ending))
             if len(digits) >= 13:
                 digits = digits[:13]
             if len(digits) in (10, 13):
@@ -73,7 +89,8 @@ def parse_by_position(pages: list[list[dict]]) -> list[dict]:
         bottom = (following[1] + middle) / 2 if following else middle + 12
         spans = [
             span for span in pages[page_index]
-            if top <= span["middle"] < bottom and span is not anchor and without_accents_lowercase(span["text"]).strip(" _:") not in HEADER_WORDS
+            if top <= span["middle"] < bottom and span is not anchor and id(span) not in isbn_endings
+            and without_accents_lowercase(span["text"]).strip(" _:") not in HEADER_WORDS
         ]
         text_after_isbn = ROW_START.sub("", anchor["text"], count=1).strip()
         if text_after_isbn:

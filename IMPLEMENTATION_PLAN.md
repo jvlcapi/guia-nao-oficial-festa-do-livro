@@ -31,3 +31,21 @@ Objetivo: gerar o catálogo da Festa do Livro da USP a partir de qualquer ediç�
 **Success Criteria**: dá para seguir o roteiro sem consultar o histórico da conversa.
 **Tests**: ensaio do roteiro com a 27ª edição fixada em `settings.json`.
 **Status**: In Progress (README pronto; falta o dia do lançamento)
+
+## Etapa 6: Catálogo sem livros perdidos nem preços trocados
+**Goal**: corrigir o que a revisão de outubro de 2026 achou nos dados: ISBN com dígito verificador inválido ou quebrado em duas linhas, livros descartados por repetir ISBN, o mesmo ISBN em duas editoras, preço de capa publicado como preço de feira, links que não levam ao livro, sinopse no lugar do gênero e prefixo de edição no título.
+**Success Criteria**: ao regenerar a 27ª edição, Mundaréu / Manjuba tem 40 livros e BEĨ 56; nenhum livro sem preço de capa tem, na linha do ISBN no PDF, os dois preços; cada id aparece uma vez no catálogo; o relatório mostra, por editora, livros lidos e livros sem preço de capa.
+**Tests**: dígito verificador do ISBN; regressões com os PDFs reais de Mundaréu / Manjuba, BEĨ, Olhares e Duna Dueto; ids únicos por editora; links repetidos descartados; gênero sem HTML, preço ou sinopse; título sem "1a ed.".
+**Status**: Complete (catálogo da 27ª regenerado: 34.937 livros, 545 preços de feira corrigidos)
+
+## Etapa 7: Ano da edição e catálogo vazio
+**Goal**: o site mostra o ano da edição e avisa quando os preços são de uma Festa que já passou; a atualização automática não troca o site para uma edição nova enquanto nenhuma lista dela foi lida.
+**Success Criteria**: `edicao.json` traz ano, início e fim; uma edição nova sem listas não escreve catálogo e o site continua na edição anterior.
+**Tests**: ano a partir do número da edição; datas a partir do período ("26 e 30 de novembro", "29 de novembro a 3 de dezembro"); build com editoras sem lista não grava nada.
+**Status**: In Progress (dados prontos; falta o aviso no site)
+
+## Etapa 8: Site certo no celular e na tenda
+**Goal**: lista legível no celular (preço visível sem arrastar a tabela), preço certo para livros com o mesmo ISBN em duas editoras, link compartilhado malformado sem travar o site, foco do teclado preservado ao adicionar, resumo sem bloco vazio, aviso de quantas editoras já publicaram lista e cache com tempo limite para o sinal fraco da tenda.
+**Success Criteria**: em 375 px a lista não tem rolagem lateral; uma lista antiga com ISBN repetido passa para o livro da mesma editora; o site abre com o cache depois de alguns segundos sem resposta da rede.
+**Tests**: conferência no navegador (desktop e celular), checagem de sintaxe do script e testes de montagem do site.
+**Status**: Not Started
