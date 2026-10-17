@@ -200,12 +200,24 @@ footer { font-size: 13px; color: var(--muted); }
 
 @media (max-width: 760px) {
   .summary { grid-template-columns: 1fr 1fr; }
-  .kpi.hero { grid-column: 1 / -1; }
+  .kpi.hero, .kpi:last-child { grid-column: 1 / -1; }
   .panels { grid-template-columns: 1fr; }
   .filters { grid-template-columns: 1fr 1fr; }
   .filters .field:first-child { grid-column: 1 / -1; }
   .result { grid-template-columns: minmax(0, 1fr) auto; }
   .result .action { grid-column: 1 / -1; justify-self: start; }
+  /* On a phone each book is a card: title on the left, fair price on the right, nothing hidden behind a sideways scroll. */
+  .publisher table, .publisher tbody { display: block; }
+  .publisher thead { display: none; }
+  .publisher tr { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 14px; row-gap: 6px; padding: 12px 16px; border-top: 1px solid var(--line); }
+  .publisher tbody tr:first-child { border-top: 0; }
+  .publisher td { display: block; padding: 0; border-top: 0; }
+  .publisher .book-cell { grid-column: 1; grid-row: 1 / span 2; }
+  .publisher .fair-cell { grid-column: 2; grid-row: 1; }
+  .publisher .cover-cell { grid-column: 2; grid-row: 2; }
+  .publisher .genre-cell { grid-column: 1; grid-row: 3; }
+  .publisher .remove-cell { grid-column: 2; grid-row: 3; align-self: end; }
+  .title-cell { min-width: 0; }
 }
 @media (prefers-reduced-motion: reduce) { .fill, .tip { transition: none; } }
 
@@ -259,6 +271,7 @@ footer a { color: inherit; }
     <div class="eyebrow" id="event-eyebrow">Feito por leitores · sem vínculo com a Edusp</div>
     <h1>Guia não oficial da Festa do Livro da USP</h1>
     <p class="lede">Busque nos preços de feira de todas as editoras e monte sua lista de compras. Feito por leitores, sem vínculo com a Edusp ou a USP. Sua lista fica salva só neste aparelho; para mandar para alguém, use Compartilhar.</p>
+    <p class="notice" id="past-edition-notice" hidden></p>
   </header>
 
   <nav class="tabs" role="tablist" aria-label="Seções">
@@ -429,15 +442,22 @@ footer a { color: inherit; }
 <script>
 /*
  * Everything runs in the visitor's browser. Files served next to this page:
- *   edicao.json    current edition { edicao, nome, periodo }
+ *   edicao.json    current edition { edicao, nome, periodo, ano, inicio, fim }
  *   catalogo.json  books of every exhibitor for that edition
+ * Book ids are the ISBN, the ISBN plus "-" and an exhibitor suffix when two stands sell the same ISBN, or "x" plus a hash when there is no ISBN.
  * Lists live in localStorage under STORAGE_KEY: { edicoes: { <edition>: { livros: { <bookId>: book }, orcamento } } }.
  * A shared list travels in the URL fragment (#lista=...), which browsers never send to the server.
  * Besides its own files and the fonts, the page makes one request elsewhere: a +1 to a public visitor counter, once per browser.
  */
 const STORAGE_KEY = "festa-do-livro:listas";
 const NAME_KEY = "festa-do-livro:nome";
+const EDITION_KEY = "festa-do-livro:edicao";
 const SHARE_PREFIX = "lista=";
+const SHARED_BOOK_ID = /^[0-9x][0-9a-fA-FxX-]{5,30}$/;
+const ISBN_AT_START_OF_BOOK_ID = /^(\d{13}|\d{9}[\dXx])(?:-|$)/;
+const GENRE_BARS_SHOWN = 8;
+const PUBLISHER_NAMES_SHOWN = 3;
+const SHARE_OF_PUBLISHERS_FOR_COMPLETE_CATALOG = 0.9;
 const VISITOR_COUNTED_KEY = "festa-do-livro:visitante-contado";
 const VISITOR_COUNTER_HIT_URL = "https://abacus.jasoncameron.dev/hit/guia-nao-oficial-festa-do-livro/visitantes";
 const PUBLISHED_HOSTNAME = "jvlcapi.github.io";
@@ -460,6 +480,7 @@ const SOURCE_COLOR_COUNT = 8;
 
 let catalog = null;
 let catalogById = null;
+let catalogByIsbn = null;
 let catalogLoading = null;
 let catalogMatches = [];
 let catalogShown = 0;
@@ -541,10 +562,39 @@ function readablePeriod(period) {
   return (period || "").replace(/^(\d+)\s+e\s+(\d+\s+de\s+)/, "de $1 a $2");
 }
 
+function eventDates() {
+  const period = readablePeriod(state.event?.periodo);
+  return period && state.event?.ano ? `${period} de ${state.event.ano}` : period;
+}
+
+function fairIsOver() {
+  const lastDay = state.event?.fim;
+  return Boolean(lastDay) && new Date() > new Date(`${lastDay}T23:59:59-03:00`);
+}
+
+function rememberEvent(event) {
+  try { localStorage.setItem(EDITION_KEY, JSON.stringify(event)); } catch (error) {}
+}
+
+// The last known edition lets the list show up at once, even while the weak signal inside the tent keeps edicao.json waiting.
+function rememberedEvent() {
+  try {
+    const event = JSON.parse(localStorage.getItem(EDITION_KEY) || "null");
+    return typeof event?.edicao === "string" ? event : null;
+  } catch (error) {
+    return null;
+  }
+}
+
 function renderEventTexts() {
   if (!state.event) return;
   const editionNumber = String(currentEdition() || "").match(/^(\d+)/);
-  document.getElementById("event-eyebrow").textContent = [editionNumber ? `${editionNumber[1]}ª edição` : "", readablePeriod(state.event.periodo), "feito por leitores"].filter(Boolean).join(" · ");
+  document.getElementById("event-eyebrow").textContent = [editionNumber ? `${editionNumber[1]}ª edição` : "", eventDates(), "feito por leitores"].filter(Boolean).join(" · ");
+  const pastNotice = document.getElementById("past-edition-notice");
+  pastNotice.hidden = !fairIsOver();
+  if (fairIsOver()) {
+    pastNotice.textContent = `Estes preços são da ${editionLabel(currentEdition())}, que foi ${eventDates()}. A próxima Festa ainda não tem listas; quando tiver, o guia muda sozinho.`;
+  }
   document.getElementById("footer-source").textContent = `Preços tirados das tabelas que as editoras publicaram para a ${editionLabel(currentEdition())}. O valor de feira é o "preço com desconto" de cada planilha. Confira no estande: algumas tabelas podem mudar até a Festa.`;
   document.title = `Guia não oficial da ${editionLabel(currentEdition())}`;
 }
@@ -598,24 +648,49 @@ function entryFromCatalog(book) {
   return entry;
 }
 
+function isbnOf(bookId) {
+  const match = ISBN_AT_START_OF_BOOK_ID.exec(bookId || "");
+  return match ? match[1] : "";
+}
+
+// A book keeps its ISBN but its id can change between catalog updates: a second stand selling the same ISBN adds a
+// suffix per exhibitor, and the suffix goes away when one stand is left. The exhibitor tells the two stands apart.
+function catalogBookFor(entryId, exhibitorName) {
+  const sameId = catalogById?.get(entryId);
+  if (sameId && sameId.exhibitor === exhibitorName) return sameId;
+  const sameIsbn = catalogByIsbn?.get(isbnOf(entryId)) || [];
+  if (!sameIsbn.length) return sameId || null;
+  if (sameIsbn.length === 1) return sameIsbn[0];
+  return sameIsbn.find(book => book.exhibitor === exhibitorName) || null;
+}
+
 function refreshPricesFromCatalog() {
   const record = listRecord(currentEdition());
   if (!record || !catalogById) return;
-  let changed = 0;
-  const livros = { ...record.livros };
-  for (const [bookId, entry] of Object.entries(livros)) {
-    const book = catalogById.get(bookId);
-    if (!book) continue;
-    const cover = book.c || book.f;
-    if (toNumber(entry.precoFeira) !== book.f || toNumber(entry.precoCapa) !== cover) {
-      livros[bookId] = { ...entry, precoFeira: book.f, precoCapa: cover };
-      changed += 1;
+  let pricesChanged = 0;
+  let entriesMoved = 0;
+  const livros = {};
+  for (const [entryId, entry] of Object.entries(record.livros)) {
+    const book = catalogBookFor(entryId, entry.editora);
+    if (!book) {
+      livros[entryId] = livros[entryId] || entry;
+      continue;
     }
+    const cover = book.c || book.f;
+    let updated = { ...entry, editora: book.exhibitor || entry.editora };
+    if (toNumber(entry.precoFeira) !== book.f || toNumber(entry.precoCapa) !== cover) {
+      updated = { ...updated, precoFeira: book.f, precoCapa: cover };
+      pricesChanged += 1;
+    }
+    if (book.i !== entryId) entriesMoved += 1;
+    livros[book.i] = livros[book.i] || updated;
   }
-  if (changed) {
+  if (pricesChanged || entriesMoved) {
     state.saved.edicoes[currentEdition()] = { ...record, livros };
     persist();
-    showToast(`${changed} ${changed === 1 ? "preço da sua lista mudou" : "preços da sua lista mudaram"} na tabela da editora e ${changed === 1 ? "foi atualizado" : "foram atualizados"}.`);
+  }
+  if (pricesChanged) {
+    showToast(`${pricesChanged} ${pricesChanged === 1 ? "preço da sua lista mudou" : "preços da sua lista mudaram"} na tabela da editora e ${pricesChanged === 1 ? "foi atualizado" : "foram atualizados"}.`);
   }
 }
 
@@ -628,18 +703,25 @@ function shareLinkFor(edition, name) {
 }
 
 function parseSharedFragment() {
-  const fragment = decodeURIComponent(location.hash.slice(1));
+  const rawFragment = location.hash.slice(1);
+  let fragment = "";
+  try {
+    fragment = decodeURIComponent(rawFragment);
+  } catch (error) {
+    if (rawFragment.startsWith("lista")) showToast("O link desta lista chegou cortado. Peça para a pessoa mandar de novo.");
+    return null;
+  }
   if (!fragment.startsWith(SHARE_PREFIX)) return null;
   const [version, edition, name, idsText] = fragment.slice(SHARE_PREFIX.length).split("~");
   if (version !== "v1" || !edition) return null;
-  const ids = (idsText || "").split(".").filter(id => /^[0-9x][0-9a-fA-FxX]{5,20}$/.test(id));
+  const ids = (idsText || "").split(".").filter(id => SHARED_BOOK_ID.test(id));
   return { edition, name: (name || "").slice(0, 40), ids };
 }
 
 function sharedBooks() {
   if (!state.sharedList || !catalogById) return [];
   return state.sharedList.ids
-    .map(id => catalogById.get(id))
+    .map(id => catalogById.get(id) || catalogBookFor(id, null))
     .filter(Boolean)
     .map(book => ({ ...entryFromCatalog(book), id: book.i, precoCapa: book.c || book.f, precoFeira: book.f }));
 }
@@ -837,7 +919,7 @@ function renderSummary(books, budgetValue) {
   document.getElementById("kpi-count").textContent = books.length;
   document.getElementById("kpi-count-sub").textContent = books.length ? `Média de ${brl.format(totalFair / books.length)} cada` : "Nenhum livro ainda";
   document.getElementById("kpi-publishers").textContent = publishers.length;
-  document.getElementById("kpi-publishers-sub").textContent = publishers.length ? publishers.map(p => p.name).join(", ") : "nenhuma ainda";
+  document.getElementById("kpi-publishers-sub").textContent = publishers.length ? publisherNamesSummary(publishers) : "nenhuma ainda";
 
   const budget = document.getElementById("budget");
   const meter = document.getElementById("budget-meter");
@@ -863,13 +945,29 @@ function renderSummary(books, budgetValue) {
   if (editable && document.activeElement !== input) input.value = hasBudget ? String(budgetValue).replace(".", ",") : "";
 }
 
+function publisherNamesSummary(publishers) {
+  const names = publishers.slice(0, PUBLISHER_NAMES_SHOWN).map(publisher => publisher.name).join(", ");
+  const others = publishers.length - PUBLISHER_NAMES_SHOWN;
+  return others > 0 ? `${names} e mais ${others}` : names;
+}
+
+// Publishers describe genres in their own words, so a long list would draw almost one bar per book.
+function largestGroupsAndTheRest(groups, restName) {
+  if (groups.length <= GENRE_BARS_SHOWN) return groups;
+  const rest = groups.slice(GENRE_BARS_SHOWN - 1).reduce(
+    (total, group) => ({ ...total, fair: total.fair + group.fair, cover: total.cover + group.cover, count: total.count + group.count }),
+    { name: restName, fair: 0, cover: 0, count: 0 },
+  );
+  return [...groups.slice(0, GENRE_BARS_SHOWN - 1), rest];
+}
+
 function renderBars(containerId, groups) {
   const container = document.getElementById(containerId);
   if (!groups.length) {
     container.replaceChildren(el("p", { class: "status", text: "Aparece quando houver livros na lista." }));
     return;
   }
-  const max = groups[0].fair;
+  const max = Math.max(...groups.map(group => group.fair));
   container.replaceChildren(...groups.map(group => {
     const bookWord = group.count === 1 ? "livro" : "livros";
     return el("div", { class: "bar", tabindex: "0", "aria-label": `${group.name}: ${brl.format(group.fair)}, ${group.count} ${bookWord}` }, [
@@ -885,7 +983,7 @@ function renderBars(containerId, groups) {
 
 function removeButton(book) {
   if (!isEditable()) return null;
-  const button = el("button", { type: "button", class: "btn small", text: "Remover", "aria-label": `Remover ${book.titulo} da lista` });
+  const button = el("button", { type: "button", class: "btn small", text: "Remover", "aria-label": `Remover ${book.titulo} (${book.editora}) da lista` });
   let confirming = false;
   button.addEventListener("click", () => {
     if (!confirming) {
@@ -904,9 +1002,11 @@ function removeButton(book) {
 function renderList(books) {
   const container = document.getElementById("publishers");
   if (!books.length) {
-    const text = isViewingShared()
-      ? (catalogById ? "Nenhum livro desta lista está no catálogo atual." : "Carregando os livros…")
-      : isEditable() ? "Sua lista está vazia. Vá na aba Catálogo da feira, busque um livro e toque em Adicionar." : "Nenhum livro nesta lista.";
+    const text = !state.event
+      ? "Carregando sua lista…"
+      : isViewingShared()
+        ? (catalogById ? "Nenhum livro desta lista está no catálogo atual." : "Carregando os livros…")
+        : isEditable() ? "Sua lista está vazia. Vá na aba Catálogo da feira, busque um livro e toque em Adicionar." : "Nenhum livro nesta lista.";
     container.replaceChildren(el("div", { class: "empty", text }));
     return;
   }
@@ -919,15 +1019,15 @@ function renderList(books) {
       const discount = book.precoCapa ? 1 - book.precoFeira / book.precoCapa : 0;
       const titleNode = book.url ? el("a", { href: book.url, target: "_blank", rel: "noopener", text: book.titulo }) : el("span", { class: "title-text", text: book.titulo });
       return el("tr", {}, [
-        el("td", {}, el("div", { class: "title-cell" }, [
+        el("td", { class: "book-cell" }, el("div", { class: "title-cell" }, [
           titleNode,
           el("span", { class: "author", text: [book.autor, book.selo].filter(Boolean).join(" · ") }),
-          el("span", { class: "isbn", text: /^\d{10,13}$/.test(book.id) ? `ISBN ${book.id}` : "" }),
+          el("span", { class: "isbn", text: isbnOf(book.id) ? `ISBN ${isbnOf(book.id)}` : "" }),
           !isViewingShared() && book.origens?.length ? el("div", { class: "chips source-chips" }, book.origens.map(key => sourceChip(key))) : null,
         ])),
-        el("td", {}, el("div", { class: "chips" }, [book.genero].filter(Boolean).map(tag => el("span", { class: "chip", text: tag, title: tag })))),
-        el("td", { class: "num" }, book.precoCapa > book.precoFeira ? el("span", { class: "price-cap", text: brl.format(book.precoCapa) }) : null),
-        el("td", { class: "num" }, [el("span", { class: "price-fair", text: brl.format(book.precoFeira) }), discount > 0.005 ? el("span", { class: "stamp", text: `−${pct.format(discount)}` }) : null]),
+        el("td", { class: "genre-cell" }, el("div", { class: "chips" }, [book.genero].filter(Boolean).map(tag => el("span", { class: "chip", text: tag, title: tag })))),
+        el("td", { class: "num cover-cell" }, book.precoCapa > book.precoFeira ? el("span", { class: "price-cap", text: brl.format(book.precoCapa) }) : null),
+        el("td", { class: "num fair-cell" }, [el("span", { class: "price-fair", text: brl.format(book.precoFeira) }), discount > 0.005 ? el("span", { class: "stamp", text: `−${pct.format(discount)}` }) : null]),
         el("td", { class: "remove-cell" }, removeButton(book)),
       ]);
     });
@@ -993,7 +1093,7 @@ function renderAll() {
   renderHeader(books);
   renderSummary(books, budgetValue);
   renderBars("bars-publisher", sumBy(books, "editora"));
-  renderBars("bars-genre", sumBy(books, "genero"));
+  renderBars("bars-genre", largestGroupsAndTheRest(sumBy(books, "genero"), "Outros gêneros"));
   renderSourceFilter(books);
   const shownBooks = books.filter(matchesSourceFilter);
   renderList(shownBooks);
@@ -1052,6 +1152,11 @@ function loadCatalog() {
         }),
       };
       catalogById = new Map(catalog.books.map(book => [book.i, book]));
+      catalogByIsbn = new Map();
+      for (const book of catalog.books) {
+        const isbn = isbnOf(book.i);
+        if (isbn) catalogByIsbn.set(isbn, [...(catalogByIsbn.get(isbn) || []), book]);
+      }
       const select = document.getElementById("catalog-exhibitor");
       const counts = new Map();
       for (const book of catalog.books) counts.set(book.x, (counts.get(book.x) || 0) + 1);
@@ -1059,6 +1164,7 @@ function loadCatalog() {
         .map((exhibitor, index) => ({ index, name: exhibitor.nome, count: counts.get(index) || 0 }))
         .filter(option => option.count > 0)
         .sort((a, b) => collator.compare(a.name, b.name));
+      catalog.exhibitorsWithLists = options.length;
       select.append(...options.map(option => el("option", { value: String(option.index), text: `${option.name} (${intFormat.format(option.count)})` })));
       restoreCatalogFilters();
       refreshPricesFromCatalog();
@@ -1096,6 +1202,14 @@ function discountOf(book) {
   return book.c ? 1 - book.f / book.c : 0;
 }
 
+// While a new edition's lists are still coming in, say how many publishers are missing so a short catalog is not a surprise.
+function catalogSizeText() {
+  const size = `${intFormat.format(catalog.books.length)} livros de ${catalog.exhibitorsWithLists} editoras`;
+  const registered = catalog.exhibitors.length;
+  if (catalog.exhibitorsWithLists >= SHARE_OF_PUBLISHERS_FOR_COMPLETE_CATALOG * registered) return size;
+  return `${size}. As outras ${registered - catalog.exhibitorsWithLists} das ${registered} inscritas ainda não publicaram a lista; o guia confere todo dia.`;
+}
+
 function runSearch() {
   if (!catalog) return;
   const filters = currentFilters();
@@ -1109,7 +1223,7 @@ function runSearch() {
     catalogMatches = [];
     catalogShown = 0;
     document.getElementById("results-title").textContent = "Catálogo da feira";
-    document.getElementById("catalog-status").textContent = `${intFormat.format(catalog.books.length)} livros de ${catalog.exhibitors.length} editoras`;
+    document.getElementById("catalog-status").textContent = catalogSizeText();
     document.getElementById("catalog-results").replaceChildren(el("div", { class: "empty", text: "Digite um título, autor, editora ou assunto para buscar. Você também pode escolher só uma editora ou uma faixa de preço." }));
     document.getElementById("catalog-more").hidden = true;
     return;
@@ -1146,14 +1260,24 @@ function runSearch() {
   renderCatalogPage(true);
 }
 
+// Adding redraws the results, so focus goes back to the same book and keyboard or screen reader users keep their place.
+function focusCatalogBook(bookId) {
+  const row = [...document.querySelectorAll("#catalog-results .result")].find(result => result.dataset.bookId === bookId);
+  row?.querySelector(".action button")?.focus();
+}
+
 function addButton(book, myIds) {
-  if (myIds.has(book.i)) return el("button", { type: "button", class: "btn done", disabled: "", text: "Na sua lista ✓" });
+  const whereAndPrice = `${book.exhibitor}, ${brl.format(book.f)}`;
+  if (myIds.has(book.i)) {
+    return el("button", { type: "button", class: "btn done", "aria-disabled": "true", text: "Na sua lista ✓", "aria-label": `${book.t} (${whereAndPrice}) já está na sua lista` });
+  }
   if (!currentEdition()) return null;
   return el("button", {
-    type: "button", class: "btn primary", text: "Adicionar", "aria-label": `Adicionar ${book.t} à sua lista`,
+    type: "button", class: "btn primary", text: "Adicionar", "aria-label": `Adicionar ${book.t} (${whereAndPrice}) à sua lista`,
     onclick: () => {
       updateMyList(record => { record.livros[book.i] = entryFromCatalog(book); return record; });
       showToast(`Adicionado: ${book.t} · ${brl.format(book.f)}`);
+      focusCatalogBook(book.i);
     },
   });
 }
@@ -1164,7 +1288,7 @@ function catalogRow(book, myIds) {
   const titleNode = book.u
     ? el("a", { class: "title-text", href: book.u, target: "_blank", rel: "noopener", text: book.t })
     : el("span", { class: "title-text", text: book.t });
-  return el("div", { class: "result" }, [
+  return el("div", { class: "result", "data-book-id": book.i }, [
     el("div", { class: "info" }, [
       titleNode,
       el("span", { class: "meta", text: metaParts.join(" · ") }),
@@ -1231,6 +1355,7 @@ function countThisBrowserOnce() {
 
 /* ---------- Boot ---------- */
 loadSaved();
+state.event = rememberedEvent();
 renderAll();
 const sharedOnArrival = parseSharedFragment();
 let initialTab = null;
@@ -1243,6 +1368,12 @@ fetch("edicao.json")
   .then(event => {
     state.event = event;
     state.viewedEdition = event.edicao;
+    rememberEvent(event);
+  })
+  .catch(error => {
+    if (!state.event) throw error;
+  })
+  .then(() => {
     renderAll();
     if (sharedOnArrival) openShared(sharedOnArrival);
     // Loads the catalog in the background so prices stay fresh and the site keeps working offline at the fair.
