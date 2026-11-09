@@ -351,3 +351,14 @@ def test_catalog_tells_why_a_publisher_has_no_books():
     parsed = {0: ParsedPriceList(books=[], method="não usada", plain_text="", problem="só tem preço de capa; sem o preço de feira, os livros ficam de fora")}
     catalog = build_catalog(EVENT, publishers, parsed, "2026-11-09T00:00:00+00:00")
     assert catalog["expositores"] == [{"nome": "Pontes Editores", "site": "", "aviso": "só tem preço de capa; sem o preço de feira, os livros ficam de fora"}]
+
+
+def test_list_printed_in_strips_keeps_title_author_and_prices_together():
+    catalog, _ = catalog_for("phorte.pdf", "Phorte Editora")
+    book = book_titled(catalog, "A estética no pensamento e na obra")
+    assert (book["i"], book["a"], book["c"], book["f"]) == ("9786599017476", "Alfredo Hoyuelos", 69.0, 34.5)
+
+
+def test_report_names_the_reading_of_a_list_printed_in_strips():
+    _, parsed = catalog_for("phorte.pdf", "Phorte Editora")
+    assert parsed.method == "tabela em faixas"

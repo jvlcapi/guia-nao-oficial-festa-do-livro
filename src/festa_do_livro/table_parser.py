@@ -1,5 +1,6 @@
 """Reads price lists whose PDF has real table cells (most publishers)."""
 import collections
+import itertools
 import re
 
 from .text_helpers import without_accents_lowercase
@@ -136,7 +137,36 @@ def numeric_columns_by_row_length(rows: list[list[str]]) -> dict[int, set[int]]:
     }
 
 
+def has_isbn(row: list[str]) -> bool:
+    return any(isbn_in_cell(cell) for cell in row)
+
+
+def has_price(row: list[str]) -> bool:
+    return any(STRICT_MONEY.match(join_split_digits(cell)) for cell in row)
+
+
+def join_sheet_printed_in_strips(rows: list[list[str]]) -> list[list[str]]:
+    """Some spreadsheets are printed in vertical strips: first every ISBN and title, then every author and price, in the same order.
+    A strip with ISBNs and no prices followed by a strip of the same length with prices and no ISBNs is glued back line by line."""
+    strips = [list(strip) for _, strip in itertools.groupby(rows, key=len)]
+    joined: list[list[str]] = []
+    position = 0
+    while position < len(strips):
+        left = strips[position]
+        right = strips[position + 1] if position + 1 < len(strips) else []
+        isbns_without_prices = sum(map(has_isbn, left)) >= 0.8 * (len(left) - 1) and not any(map(has_price, left))
+        prices_without_isbns = sum(map(has_price, right)) >= 0.8 * (len(right) - 1) and not any(map(has_isbn, right))
+        if len(left) >= 3 and len(left) == len(right) and isbns_without_prices and prices_without_isbns:
+            joined += [left_row + right_row for left_row, right_row in zip(left, right)]
+            position += 2
+        else:
+            joined += left
+            position += 1
+    return joined
+
+
 def parse_table_rows(rows: list[list[str]]) -> list[dict]:
+    rows = join_sheet_printed_in_strips(rows)
     price_columns = price_columns_by_row_length(rows)
     numeric_columns = numeric_columns_by_row_length(rows)
     books = []

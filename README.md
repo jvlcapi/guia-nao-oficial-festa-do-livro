@@ -56,7 +56,7 @@ visitor's browser: search, totals and the list (stored on the device)
 
 **Edition-agnostic by design.** Nothing about a specific year lives in the code. The homepage declares the current edition, the pipeline reads it, and the site reads the edition name and dates from a small `edicao.json` published next to the catalog. A fixed edition can still be pinned in `settings.json` or through an environment variable. Until the next edition's lists come out, the site says which fair its prices are from, and an edition with no list read yet never replaces the published catalog.
 
-**Two parsers instead of one clever one.** Each PDF goes through a table-cell reader (PyMuPDF table detection) and a positional reader that clusters text spans by their x-coordinates. The pipeline keeps whichever finds more complete books. Price columns are decided per table shape, so row numbers, stall numbers and internal codes are never mistaken for prices. Author and imprint names cut off by narrow cells are completed from the PDF's raw text.
+**Two parsers instead of one clever one.** Each PDF goes through a table-cell reader (PyMuPDF table detection) and a positional reader that clusters text spans by their x-coordinates. The pipeline keeps whichever finds more complete books. Price columns are decided per table shape, so row numbers, stall numbers and internal codes are never mistaken for prices. Author and imprint names cut off by narrow cells are completed from the PDF's raw text. A spreadsheet printed in vertical strips (every ISBN and title first, then every author and price) is glued back line by line, and a list that only gives cover prices is left out rather than guessed, with the reason shown on the site.
 
 **Every price is verified against its source.** After parsing, each book's cover and fair prices must appear on the PDF line of the same ISBN; anything else lands in a per-publisher report shown in the CI run summary. This check is what surfaced the real bugs: a "Mesa" (stall number) column read as the price of 277 books, a letter spilling from the neighbouring cell ("S 44,90") that hid 764 cover prices, and numeric titles such as *1984* and *2666* being taken for internal codes. Each one became a regression test built on the publisher's real PDF.
 
@@ -80,8 +80,8 @@ visitor's browser: search, totals and the list (stored on the device)
 
 ## Tests and quality
 
-- 117 automated tests, run on every push.
-- Regression tests run on real price-list PDFs from ten publishers, including the layouts that broke earlier versions of the parser.
+- 131 automated tests, run on every push.
+- Regression tests run on real price-list PDFs from twelve publishers, including the layouts that broke earlier versions of the parser.
 - Unit tests cover edition detection, API pagination, download caching, table parsing edge cases, URL sanitizing, site assembly and repository hygiene.
 - The CI run publishes a verification report: total books, lists that could not be read, and price mismatches by publisher.
 - Work is planned in milestones and issues: [project milestones](https://github.com/jvlcapi/guia-nao-oficial-festa-do-livro/milestones?state=all).

@@ -12,7 +12,7 @@ from .fair_site import EventDetails, Publisher
 from .isbn import is_valid_isbn, isbn_of_book_id
 from .pdf_reading import extract_plain_text, extract_table_rows, extract_text_spans
 from .position_parser import parse_by_position
-from .table_parser import parse_table_rows
+from .table_parser import join_sheet_printed_in_strips, parse_table_rows
 from .text_helpers import without_accents_lowercase
 
 URL_IN_TEXT = re.compile(r"https?://\S+")
@@ -107,16 +107,19 @@ def parse_price_list(pdf_path: Path) -> ParsedPriceList:
     if has_only_cover_prices(plain_text):
         return ParsedPriceList(books=[], method="não usada", plain_text=plain_text, problem=ONLY_COVER_PRICE_PROBLEM)
     try:
-        from_tables = parse_table_rows(extract_table_rows(pdf_path))
+        table_rows = extract_table_rows(pdf_path)
+        from_tables = parse_table_rows(table_rows)
+        printed_in_strips = len(join_sheet_printed_in_strips(table_rows)) < len(table_rows)
     except Exception:
-        from_tables = []
+        from_tables, printed_in_strips = [], False
     try:
         from_positions = parse_by_position(extract_text_spans(pdf_path))
     except Exception:
         from_positions = []
     complete = lambda books: sum(1 for book in books if book["title"] and book["fair_price"])
     if complete(from_tables) >= 0.95 * complete(from_positions) and complete(from_tables) > 0:
-        chosen, method = from_tables, "tabela"
+        # In strips, the ISBN and its prices sit on different pages, so the price check reports them as divergences.
+        chosen, method = from_tables, "tabela em faixas" if printed_in_strips else "tabela"
     else:
         chosen, method = from_positions, "posição do texto"
     books = [clean_parsed_book(book) for book in chosen if book["title"] and book["fair_price"]]

@@ -52,3 +52,19 @@ def test_price_written_between_dashes():
     ]
     books = {book["title"]: book for book in parse_table_rows(rows)}
     assert (books["Ai Weiwei Raiz"]["cover_price"], books["Ai Weiwei Raiz"]["fair_price"]) == (169.0, 50.0)
+
+
+def test_sheet_printed_in_strips_is_glued_back_line_by_line():
+    rows = [
+        ["ISBN", "TITULO"],
+        ["9786588868539", "A Aventura dialógica na infância"],
+        ["9786588868478", "A dança na arte, no esporte e na educação"],
+        ["9786588868768", "A escola do ser e do querer (ser)"],
+        ["AUTOR", "EDITORA", "PREÇO de CAPA", "PREÇO com DESCONTO"],
+        ["Myrtha Chockler", "Phorte Editora", "R$ 95,00", "R$ 47,50"],
+        ["Carla Salvagni e Antonio Carlos de Quadros", "Phorte Editora", "R$ 63,00", "R$ 31,50"],
+        ["Angeles Abelleira e Isabel Abelleira", "Phorte Editora", "R$ 120,00", "R$ 60,00"],
+    ]
+    books = {book["isbn"]: book for book in parse_table_rows(rows)}
+    book = books["9786588868768"]
+    assert (book["title"], book["author"], book["cover_price"], book["fair_price"]) == ("A escola do ser e do querer (ser)", "Angeles Abelleira e Isabel Abelleira", 120.0, 60.0)
