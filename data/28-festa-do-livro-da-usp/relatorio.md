@@ -2,9 +2,9 @@
 
 - Edição: `28-festa-do-livro-da-usp` · 25 e 29 de novembro
 - Editoras no site: 23
-- Livros no catálogo: 3838
-- Livros sem ISBN (preço não conferível automaticamente): 106
-- Preços que não bateram com o PDF: 0
+- Livros no catálogo: 3851
+- Livros sem ISBN (preço não conferível automaticamente): 59
+- Preços que não bateram com o PDF: 59
 - Livros sem preço de capa: 0
 
 ## Listas que ficaram de fora
@@ -31,10 +31,14 @@
 | Letra Selvagem | 49 | 50 | 0 | tabela | 0 |
 | Livros da Matriz | 33 | 33 | 0 | tabela | 0 |
 | Movimento Neomarginal | 22 | 22 | 0 | posição do texto | 0 |
-| Phorte Editora | 47 | 60 | 0 | tabela | 0 |
+| Phorte Editora | 60 | 60 | 0 | tabela em faixas | 59 |
 | Pontes Editores | 0 | 0 | 0 | não usada | 0 |
 | Pulo do Gato | 86 | 86 | 0 | tabela | 0 |
 | Sisko Editora | 19 | 19 | 0 | tabela | 0 |
 | Telos Editora | 166 | 166 | 0 | tabela | 0 |
 | Ubu Editora | 166 | 166 | 0 | tabela | 0 |
 | Unifesp | 197 | 200 | 0 | tabela | 0 |
+
+## Divergências (amostra de até 5 por editora)
+
+- **Phorte Editora** (59): A Aventura dialógica na infância (capa 95.0 · feira 47.5); A dança na arte, no esporte e na educação (capa 63.0 · feira 31.5); A escola do ser e do querer (ser) (capa 120.0 · feira 60.0); A estética no pensamento e na obra (capa 69.0 · feira 34.5); A ética no pensamento e na obra (capa 75.0 · feira 37.5)
