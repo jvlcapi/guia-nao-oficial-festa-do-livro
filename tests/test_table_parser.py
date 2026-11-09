@@ -68,3 +68,15 @@ def test_sheet_printed_in_strips_is_glued_back_line_by_line():
     books = {book["isbn"]: book for book in parse_table_rows(rows)}
     book = books["9786588868768"]
     assert (book["title"], book["author"], book["cover_price"], book["fair_price"]) == ("A escola do ser e do querer (ser)", "Angeles Abelleira e Isabel Abelleira", 120.0, 60.0)
+
+
+def test_later_section_without_a_price_column_is_not_read_as_books():
+    rows = [
+        ["ISBN", "DESCRIÇÃO", "AUTOR", "$ CAPA"],
+        ["9788521702108", "#FICA ESPANHOL NO RS", "FAGUNDES/LACERDA/SANTOS", "48,00"],
+        ["9786556372495", "(ARTE)FATOS LITERARIOS - VOLUME I", "QUERIDO/MANTOVANI E BARBOSA", "59,00"],
+        ["ASSUNTO", "COLEÇÃO", "COD. BARRA", "PAGINAS"],
+        ["ENSINO DE ESPANHOL", "", "9788521702108", "298"],
+        ["TECNOLOGIA", "", "9786556372495", "262"],
+    ]
+    assert [book["title"] for book in parse_table_rows(rows)] == ["#FICA ESPANHOL NO RS", "(ARTE)FATOS LITERARIOS - VOLUME I"]

@@ -336,23 +336,35 @@ def test_list_with_only_cover_prices_is_recognized(header, only_cover):
     assert has_only_cover_prices(header) is only_cover
 
 
-def test_list_with_only_cover_prices_publishes_no_book(monkeypatch):
+def test_list_with_only_cover_prices_keeps_the_cover_price_and_a_notice(monkeypatch):
     import festa_do_livro.catalog_builder as catalog_builder
     pontes_text = "PONTES EDITORES LTDA. RANKING ISBN DESCRIÇÃO AUTOR $ CAPA\n9788521702108#FICA ESPANHOL NO RS FAGUNDES 48,00\n"
     monkeypatch.setattr(catalog_builder, "extract_plain_text", lambda path: pontes_text)
     monkeypatch.setattr(catalog_builder, "extract_table_rows", lambda path: [["ISBN", "DESCRIÇÃO", "AUTOR", "$ CAPA"], ["9788521702108", "#FICA ESPANHOL NO RS", "FAGUNDES", "48,00"]])
     monkeypatch.setattr(catalog_builder, "extract_text_spans", lambda path: [])
     parsed = catalog_builder.parse_price_list(Path("pontes.pdf"))
-    assert (parsed.books, parsed.problem) == ([], "só tem preço de capa; sem o preço de feira, os livros ficam de fora")
+    book = parsed.books[0]
+    assert (book["cover_price"], book["fair_price"], parsed.notice) == (48.0, None, "só tem preço de capa; o preço de feira não foi informado")
 
 
-def test_catalog_tells_why_a_publisher_has_no_books():
-    publishers = [Publisher(name="Pontes Editores", slug="", price_list_url="x", site="")]
-    parsed = {0: ParsedPriceList(books=[], method="não usada", plain_text="", problem="só tem preço de capa; sem o preço de feira, os livros ficam de fora")}
+def test_book_from_a_list_with_only_cover_prices_has_no_fair_price():
+    publishers = [Publisher(name="Pontes Editores", slug="", price_list_url="https://festadolivro.edusp.com.br/storage/pontes.pdf", site="")]
+    parsed = {0: ParsedPriceList(
+        books=[parsed_book("9788521702108", "#FICA ESPANHOL NO RS", cover=48.0, fair=None), parsed_book("9786556372495", "Esgotado", cover=0.0, fair=None)],
+        method="tabela", plain_text="", notice="só tem preço de capa; o preço de feira não foi informado",
+    )}
     catalog = build_catalog(EVENT, publishers, parsed, "2026-11-09T00:00:00+00:00")
-    assert catalog["expositores"] == [{"nome": "Pontes Editores", "site": "", "aviso": "só tem preço de capa; sem o preço de feira, os livros ficam de fora"}]
+    assert [(book["t"], book.get("c"), book.get("f")) for book in catalog["livros"]] == [("#FICA ESPANHOL NO RS", 48.0, None)]
 
 
+def test_catalog_carries_each_publisher_price_list_and_notice():
+    publishers = [Publisher(name="Pontes Editores", slug="", price_list_url="https://festadolivro.edusp.com.br/storage/pontes.pdf", site="")]
+    parsed = {0: ParsedPriceList(books=[], method="tabela", plain_text="", notice="só tem preço de capa; o preço de feira não foi informado")}
+    catalog = build_catalog(EVENT, publishers, parsed, "2026-11-09T00:00:00+00:00")
+    assert catalog["expositores"] == [{
+        "nome": "Pontes Editores", "site": "", "lista": "https://festadolivro.edusp.com.br/storage/pontes.pdf",
+        "aviso": "só tem preço de capa; o preço de feira não foi informado",
+    }]
 def test_list_printed_in_strips_keeps_title_author_and_prices_together():
     catalog, _ = catalog_for("phorte.pdf", "Phorte Editora")
     book = book_titled(catalog, "A estética no pensamento e na obra")

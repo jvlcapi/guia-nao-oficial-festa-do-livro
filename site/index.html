@@ -155,6 +155,9 @@ tr.series-row td { background: var(--bg); font-size: 12px; font-family: var(--fo
 .chip { font-size: 12px; padding: 1px 8px; border-radius: 999px; background: var(--accent-soft); color: var(--fg); white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
 .price-cap { color: var(--muted); text-decoration: line-through; font-family: var(--font-mono); font-size: 13px; }
 .price-fair { font-family: var(--font-mono); font-weight: 500; }
+.price-note { display: block; font-size: 11px; line-height: 1.3; color: var(--muted); white-space: normal; max-width: 13em; margin-left: auto; text-align: right; }
+.price-list-link { font-size: 13px; color: var(--accent); }
+.publisher-head .price-list-link { flex-basis: 100%; }
 .stamp { display: inline-block; background: var(--stamp); color: var(--stamp-ink); font-family: var(--font-mono); font-size: 11px; font-weight: 500; padding: 1px 6px; border-radius: 4px; transform: rotate(-3deg); margin-left: 6px; }
 .prio { font-size: 12px; font-weight: 600; color: var(--good); }
 
@@ -427,6 +430,7 @@ footer a { color: inherit; }
         <h2 id="results-title">Catálogo da feira</h2>
         <span class="status" id="catalog-status">Abrindo o catálogo…</span>
       </div>
+      <a class="price-list-link" id="exhibitor-price-list" target="_blank" rel="noopener" hidden></a>
       <div id="catalog-results"></div>
       <button type="button" class="btn more" id="catalog-more" hidden>Mostrar mais</button>
     </section>
@@ -481,6 +485,7 @@ const SOURCE_COLOR_COUNT = 8;
 let catalog = null;
 let catalogById = null;
 let catalogByIsbn = null;
+let catalogExhibitorByName = new Map();
 let catalogLoading = null;
 let catalogMatches = [];
 let catalogShown = 0;
@@ -645,7 +650,22 @@ function entryFromCatalog(book) {
     adicionadoEm: new Date().toISOString(),
   };
   if (book.s) entry.selo = book.s;
+  if (book.fairPriceUnknown) entry.semPrecoDeFeira = true;
   return entry;
+}
+
+// A list with only cover prices (Pontes in 2026): the book shows its cover price, says the fair price is unknown,
+// and counts in the totals by the cover price, so a budget never comes out lower than the real one.
+function priceWithUnknownFairPrice(price) {
+  return el("span", {}, [
+    el("span", { class: "price-fair", text: brl.format(price) }),
+    el("span", { class: "price-note", text: "preço de capa; a editora não informou o preço de feira" }),
+  ]);
+}
+
+function priceListLink(exhibitorName) {
+  const address = catalogExhibitorByName.get(exhibitorName)?.lista;
+  return address ? el("a", { class: "price-list-link", href: address, target: "_blank", rel: "noopener", text: "Lista de preços da editora (PDF no site da Festa)" }) : null;
 }
 
 function isbnOf(bookId) {
@@ -678,8 +698,10 @@ function refreshPricesFromCatalog() {
     }
     const cover = book.c || book.f;
     let updated = { ...entry, editora: book.exhibitor || entry.editora };
-    if (toNumber(entry.precoFeira) !== book.f || toNumber(entry.precoCapa) !== cover) {
+    if (toNumber(entry.precoFeira) !== book.f || toNumber(entry.precoCapa) !== cover || Boolean(entry.semPrecoDeFeira) !== book.fairPriceUnknown) {
       updated = { ...updated, precoFeira: book.f, precoCapa: cover };
+      if (book.fairPriceUnknown) updated.semPrecoDeFeira = true;
+      else delete updated.semPrecoDeFeira;
       pricesChanged += 1;
     }
     if (book.i !== entryId) entriesMoved += 1;
@@ -913,7 +935,11 @@ function renderSummary(books, budgetValue) {
   const savings = totalCover - totalFair;
   const publishers = sumBy(books, "editora");
   document.getElementById("kpi-total").textContent = brl.format(totalFair);
-  document.getElementById("kpi-total-sub").replaceChildren("Preço de capa: ", el("s", { text: brl.format(totalCover) }));
+  const byCoverPrice = books.filter(book => book.semPrecoDeFeira).length;
+  document.getElementById("kpi-total-sub").replaceChildren(
+    "Preço de capa: ", el("s", { text: brl.format(totalCover) }),
+    byCoverPrice ? ` · ${byCoverPrice} ${byCoverPrice === 1 ? "livro entra" : "livros entram"} pelo preço de capa` : "",
+  );
   document.getElementById("kpi-savings").textContent = brl.format(savings);
   document.getElementById("kpi-savings-sub").textContent = totalCover ? `${pct.format(savings / totalCover)} abaixo da capa` : "0% abaixo da capa";
   document.getElementById("kpi-count").textContent = books.length;
@@ -1026,15 +1052,18 @@ function renderList(books) {
           !isViewingShared() && book.origens?.length ? el("div", { class: "chips source-chips" }, book.origens.map(key => sourceChip(key))) : null,
         ])),
         el("td", { class: "genre-cell" }, el("div", { class: "chips" }, [book.genero].filter(Boolean).map(tag => el("span", { class: "chip", text: tag, title: tag })))),
-        el("td", { class: "num cover-cell" }, book.precoCapa > book.precoFeira ? el("span", { class: "price-cap", text: brl.format(book.precoCapa) }) : null),
-        el("td", { class: "num fair-cell" }, [el("span", { class: "price-fair", text: brl.format(book.precoFeira) }), discount > 0.005 ? el("span", { class: "stamp", text: `−${pct.format(discount)}` }) : null]),
+        el("td", { class: "num cover-cell" }, !book.semPrecoDeFeira && book.precoCapa > book.precoFeira ? el("span", { class: "price-cap", text: brl.format(book.precoCapa) }) : null),
+        el("td", { class: "num fair-cell" }, book.semPrecoDeFeira
+          ? priceWithUnknownFairPrice(book.precoFeira)
+          : [el("span", { class: "price-fair", text: brl.format(book.precoFeira) }), discount > 0.005 ? el("span", { class: "stamp", text: `−${pct.format(discount)}` }) : null]),
         el("td", { class: "remove-cell" }, removeButton(book)),
       ]);
     });
     return el("article", { class: "publisher" }, [
       el("div", { class: "publisher-head" }, [
         el("h3", { text: publisher.name }),
-        el("span", { class: "meta", text: `${publisher.count} ${publisher.count === 1 ? "livro" : "livros"} · ${brl.format(publisher.fair)} na feira` }),
+        el("span", { class: "meta", text: `${publisher.count} ${publisher.count === 1 ? "livro" : "livros"} · ${brl.format(publisher.fair)} ${publisherBooks.every(book => book.semPrecoDeFeira) ? "pelo preço de capa" : "na feira"}` }),
+        priceListLink(publisher.name),
       ]),
       el("div", { class: "table-scroll" }, el("table", {}, [
         el("thead", {}, el("tr", {}, [
@@ -1148,7 +1177,11 @@ function loadCatalog() {
         exhibitors,
         books: data.livros.map(book => {
           const exhibitor = exhibitors[book.x]?.nome || "";
-          return { ...book, exhibitor, haystack: normalizeText(`${book.t} ${book.a || ""} ${book.s || ""} ${exhibitor} ${book.g || ""} ${book.i}`), titleKey: normalizeText(book.t) };
+          const fairPriceUnknown = book.f === undefined;
+          return {
+            ...book, f: fairPriceUnknown ? book.c : book.f, fairPriceUnknown, exhibitor,
+            haystack: normalizeText(`${book.t} ${book.a || ""} ${book.s || ""} ${exhibitor} ${book.g || ""} ${book.i}`), titleKey: normalizeText(book.t),
+          };
         }),
       };
       catalogById = new Map(catalog.books.map(book => [book.i, book]));
@@ -1165,6 +1198,8 @@ function loadCatalog() {
         .filter(option => option.count > 0)
         .sort((a, b) => collator.compare(a.name, b.name));
       catalog.exhibitorsWithLists = options.length;
+      catalogExhibitorByName = new Map(exhibitors.map(exhibitor => [exhibitor.nome, exhibitor]));
+      catalog.exhibitorsThatPosted = exhibitors.filter((exhibitor, index) => counts.get(index) || exhibitor.aviso).length;
       select.append(...options.map(option => el("option", { value: String(option.index), text: `${option.name} (${intFormat.format(option.count)})` })));
       restoreCatalogFilters();
       refreshPricesFromCatalog();
@@ -1208,7 +1243,7 @@ function catalogSizeText() {
 
 // While a new edition's lists are still coming in, a short catalog looks broken: say how many publishers have posted so far.
 function coverageNote() {
-  const posted = catalog.exhibitorsWithLists + catalog.exhibitors.filter(exhibitor => exhibitor.aviso).length;
+  const posted = catalog.exhibitorsThatPosted;
   const previous = state.event?.editorasNaEdicaoAnterior;
   if (previous && posted < SHARE_OF_PUBLISHERS_FOR_COMPLETE_CATALOG * previous) {
     return `Por enquanto, ${posted} editoras publicaram a lista no site da Festa (na edição anterior foram ${previous}). O guia confere o site todo dia e acrescenta as que chegarem.`;
@@ -1220,7 +1255,7 @@ function coverageNote() {
   return "";
 }
 
-function listsSetAsideNote() {
+function listNotices() {
   return catalog.exhibitors.filter(exhibitor => exhibitor.aviso).map(exhibitor => `A lista da ${exhibitor.nome} ${exhibitor.aviso}.`).join(" ");
 }
 
@@ -1232,6 +1267,13 @@ function runSearch() {
   const maxPrice = filters.maxPrice ? Number(filters.maxPrice) : Infinity;
   const exhibitorIndex = filters.exhibitor === "" ? null : Number(filters.exhibitor);
   const hasFilter = terms.length || exhibitorIndex !== null || filters.maxPrice;
+  const selectedExhibitor = exhibitorIndex === null ? null : catalog.exhibitors[exhibitorIndex];
+  const priceList = document.getElementById("exhibitor-price-list");
+  priceList.hidden = !selectedExhibitor?.lista;
+  if (selectedExhibitor?.lista) {
+    priceList.href = selectedExhibitor.lista;
+    priceList.textContent = `Lista de preços da ${selectedExhibitor.nome} (PDF no site da Festa)`;
+  }
 
   if (!hasFilter) {
     catalogMatches = [];
@@ -1239,7 +1281,7 @@ function runSearch() {
     document.getElementById("results-title").textContent = "Catálogo da feira";
     document.getElementById("catalog-status").textContent = catalogSizeText();
     const howToSearch = "Digite um título, autor, editora ou assunto para buscar. Você também pode escolher só uma editora ou uma faixa de preço.";
-    document.getElementById("catalog-results").replaceChildren(el("div", { class: "empty", text: [howToSearch, coverageNote(), listsSetAsideNote()].filter(Boolean).join(" ") }));
+    document.getElementById("catalog-results").replaceChildren(el("div", { class: "empty", text: [howToSearch, coverageNote(), listNotices()].filter(Boolean).join(" ") }));
     document.getElementById("catalog-more").hidden = true;
     return;
   }
@@ -1310,8 +1352,10 @@ function catalogRow(book, myIds) {
       book.g ? el("div", { class: "chips" }, el("span", { class: "chip", text: book.g, title: book.g })) : null,
     ]),
     el("div", { class: "prices" }, [
-      book.c ? el("span", { class: "price-cap", text: brl.format(book.c) }) : null,
-      el("span", {}, [el("span", { class: "price-fair", text: brl.format(book.f) }), discount > 0.005 ? el("span", { class: "stamp", text: `−${pct.format(discount)}` }) : null]),
+      book.c && !book.fairPriceUnknown ? el("span", { class: "price-cap", text: brl.format(book.c) }) : null,
+      book.fairPriceUnknown
+        ? priceWithUnknownFairPrice(book.f)
+        : el("span", {}, [el("span", { class: "price-fair", text: brl.format(book.f) }), discount > 0.005 ? el("span", { class: "stamp", text: `−${pct.format(discount)}` }) : null]),
     ]),
     el("div", { class: "action" }, addButton(book, myIds)),
   ]);
@@ -1321,7 +1365,7 @@ function renderCatalogPage(reset) {
   if (!catalogMatches.length) {
     if (reset) {
       const nothingFound = "Nenhum livro com esses filtros. Tente outra palavra ou aumente o preço máximo.";
-      document.getElementById("catalog-results").replaceChildren(el("div", { class: "empty", text: [nothingFound, coverageNote(), listsSetAsideNote()].filter(Boolean).join(" ") }));
+      document.getElementById("catalog-results").replaceChildren(el("div", { class: "empty", text: [nothingFound, coverageNote(), listNotices()].filter(Boolean).join(" ") }));
       document.getElementById("catalog-more").hidden = true;
     }
     return;

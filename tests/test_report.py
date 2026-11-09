@@ -31,3 +31,15 @@ def test_isbn_10_ending_in_x_is_found():
     catalog = {**CATALOG, "livros": [{"i": "857480195X", "t": "Ancora Medicinal", "c": 68.0, "f": 34.0, "x": 0}]}
     report = verify_prices(catalog, {0: "85-7480-195-X Ancora Medicinal para Conservar a Vida 68,00 34,00"})
     assert report.mismatch_count == 0
+
+
+def test_book_with_only_a_cover_price_is_checked_by_that_price():
+    catalog = {**CATALOG, "livros": [{"i": "9788521702108", "t": "#FICA ESPANHOL NO RS", "c": 48.0, "x": 0}]}
+    report = verify_prices(catalog, {0: "9788521702108#FICA ESPANHOL NO RS FAGUNDES/LACERDA/SANTOS 48,00"})
+    assert report.mismatch_count == 0
+
+
+def test_report_counts_books_with_only_a_cover_price():
+    catalog = {**CATALOG, "livros": [{"i": "9788521702108", "t": "#FICA ESPANHOL NO RS", "c": 48.0, "x": 0}]}
+    text = report_markdown(catalog, VerificationReport(total_books=1), [], {0: "tabela"}, {0: 1}, [("Pontes Editores", "só tem preço de capa; o preço de feira não foi informado")])
+    assert "- Livros só com preço de capa (feira não informado): 1" in text and "- Pontes Editores: só tem preço de capa; o preço de feira não foi informado" in text

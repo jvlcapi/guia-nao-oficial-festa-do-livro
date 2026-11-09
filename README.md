@@ -23,7 +23,7 @@ Every year each publisher uploads its own price list to the fair's website, as a
 
 ## What it does
 
-- **One catalog for the whole fair.** Search every publisher at once by title, author, publisher or subject; filter by stall and price range; sort by price or discount.
+- **One catalog for the whole fair.** Search every publisher at once by title, author, publisher or subject; filter by stall and price range; sort by price or discount. Each publisher links to its official price list (the PDF on the fair's site).
 - **A shopping list with the math done.** Total at the fair, savings over cover price, spending by publisher and by genre, and an optional budget meter.
 - **Share by link.** A list becomes a URL that anyone can open, see with current prices, and copy into their own list. The same link moves a list from phone to laptop. Imported books carry a colored tag with the name of the list they came from, one stable color per source, and the list can be filtered by source.
 - **Works offline.** After the first visit the site and the catalog stay on the device, because the signal inside the fair tent is unreliable.
@@ -56,7 +56,7 @@ visitor's browser: search, totals and the list (stored on the device)
 
 **Edition-agnostic by design.** Nothing about a specific year lives in the code. The homepage declares the current edition, the pipeline reads it, and the site reads the edition name and dates from a small `edicao.json` published next to the catalog. A fixed edition can still be pinned in `settings.json` or through an environment variable. Until the next edition's lists come out, the site says which fair its prices are from, and an edition with no list read yet never replaces the published catalog.
 
-**Two parsers instead of one clever one.** Each PDF goes through a table-cell reader (PyMuPDF table detection) and a positional reader that clusters text spans by their x-coordinates. The pipeline keeps whichever finds more complete books. Price columns are decided per table shape, so row numbers, stall numbers and internal codes are never mistaken for prices. Author and imprint names cut off by narrow cells are completed from the PDF's raw text. A spreadsheet printed in vertical strips (every ISBN and title first, then every author and price) is glued back line by line, and a list that only gives cover prices is left out rather than guessed, with the reason shown on the site.
+**Two parsers instead of one clever one.** Each PDF goes through a table-cell reader (PyMuPDF table detection) and a positional reader that clusters text spans by their x-coordinates. The pipeline keeps whichever finds more complete books. Price columns are decided per table shape, so row numbers, stall numbers and internal codes are never mistaken for prices. Author and imprint names cut off by narrow cells are completed from the PDF's raw text. A spreadsheet printed in vertical strips (every ISBN and title first, then every author and price) is glued back line by line, and a book from a list that only gives cover prices shows that price with a note that the fair price was not given, instead of a guessed discount; list totals count it at the cover price, so a budget never comes out short.
 
 **Every price is verified against its source.** After parsing, each book's cover and fair prices must appear on the PDF line of the same ISBN; anything else lands in a per-publisher report shown in the CI run summary. This check is what surfaced the real bugs: a "Mesa" (stall number) column read as the price of 277 books, a letter spilling from the neighbouring cell ("S 44,90") that hid 764 cover prices, and numeric titles such as *1984* and *2666* being taken for internal codes. Each one became a regression test built on the publisher's real PDF.
 
@@ -80,7 +80,7 @@ visitor's browser: search, totals and the list (stored on the device)
 
 ## Tests and quality
 
-- 131 automated tests, run on every push.
+- 135 automated tests, run on every push.
 - Regression tests run on real price-list PDFs from twelve publishers, including the layouts that broke earlier versions of the parser.
 - Unit tests cover edition detection, API pagination, download caching, table parsing edge cases, URL sanitizing, site assembly and repository hygiene.
 - The CI run publishes a verification report: total books, lists that could not be read, and price mismatches by publisher.

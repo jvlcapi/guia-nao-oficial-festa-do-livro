@@ -29,7 +29,7 @@ SYNOPSIS_SHARE_OF_SUBJECTS = 0.8
 LOWEST_FAIR_SHARE_OF_COVER = 0.2
 LONGEST_TITLE = 250  # longer text is several rows glued together by the reader
 FAIR_PRICE_HINTS = ("desc", "feira", "festa", "%", "promo", "final", "venda", "liquido")
-ONLY_COVER_PRICE_PROBLEM = "só tem preço de capa; sem o preço de feira, os livros ficam de fora"
+ONLY_COVER_PRICE_NOTICE = "só tem preço de capa; o preço de feira não foi informado"
 
 
 @dataclass(frozen=True)
@@ -37,7 +37,7 @@ class ParsedPriceList:
     books: list[dict]
     method: str
     plain_text: str
-    problem: str = ""
+    notice: str = ""
 
 
 def tidy(text: str) -> str:
@@ -101,11 +101,9 @@ def has_only_cover_prices(plain_text: str) -> bool:
 
 
 def parse_price_list(pdf_path: Path) -> ParsedPriceList:
-    """Runs both readers and keeps the one that found more complete books. A list with only cover prices publishes nothing:
-    its single price would show up as the fair price, twice what the book costs at the fair."""
+    """Runs both readers and keeps the one that found more complete books. In a list with only cover prices the single price
+    is the cover: the book keeps it and has no fair price, instead of showing the cover as the fair price, twice the real one."""
     plain_text = extract_plain_text(pdf_path)
-    if has_only_cover_prices(plain_text):
-        return ParsedPriceList(books=[], method="não usada", plain_text=plain_text, problem=ONLY_COVER_PRICE_PROBLEM)
     try:
         table_rows = extract_table_rows(pdf_path)
         from_tables = parse_table_rows(table_rows)
@@ -124,8 +122,14 @@ def parse_price_list(pdf_path: Path) -> ParsedPriceList:
         chosen, method = from_positions, "posição do texto"
     books = [clean_parsed_book(book) for book in chosen if book["title"] and book["fair_price"]]
     books = [book for book in books if book["title"]]
+    notice = ""
+    if has_only_cover_prices(plain_text):
+        for book in books:
+            if book["cover_price"] is None:
+                book["cover_price"], book["fair_price"] = book["fair_price"], None
+        notice = ONLY_COVER_PRICE_NOTICE
     fill_missing_isbns_from_text(books, plain_text)
-    return ParsedPriceList(books=books, method=method, plain_text=plain_text)
+    return ParsedPriceList(books=books, method=method, plain_text=plain_text, notice=notice)
 
 
 def safe_public_url(url: str) -> str:
@@ -201,9 +205,11 @@ def catalog_books(publishers: list[Publisher], parsed_by_index: dict[int, Parsed
                 book.pop("s", None)
             if not book["g"]:
                 del book["g"]
-            if book["c"] is None or book["c"] < book["f"]:
+            if book["c"] is None or (book["f"] is not None and book["c"] < book["f"]):
                 book.pop("c")
-            if book["f"] < 1:
+            if book["f"] is None:
+                book.pop("f")  # a list with only cover prices: the fair price is unknown
+            if book.get("f", book.get("c", 0)) < 1:
                 continue
             books.append(book)
     return books
@@ -362,10 +368,12 @@ def event_summary(event: EventDetails) -> dict:
 
 
 def exhibitor_entry(publisher: Publisher, parsed: ParsedPriceList | None) -> dict:
-    """The site tells visitors why a publisher that posted a list has no books in the guide."""
+    """The site links each publisher to its price list on the official site and repeats any notice about that list."""
     entry = {"nome": publisher.name, "site": publisher.site}
-    if parsed is not None and parsed.problem:
-        entry["aviso"] = parsed.problem
+    if publisher.price_list_url.startswith("https://"):
+        entry["lista"] = publisher.price_list_url
+    if parsed is not None and parsed.notice:
+        entry["aviso"] = parsed.notice
     return entry
 
 

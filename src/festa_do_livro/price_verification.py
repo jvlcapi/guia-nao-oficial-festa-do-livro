@@ -57,13 +57,14 @@ def verify_prices(catalog: dict, plain_text_by_exhibitor: dict[int, str]) -> Ver
         window = text[max(0, position - 200):position + 13 + (next_isbn.start() if next_isbn else 900)]
         window_without_spaces = window.replace(" ", "")
         found = lambda value: any(form in window or form in window_without_spaces for form in written_forms(value, True))
-        if not found(book["f"]) or ("c" in book and not found(book["c"])):
-            report.mismatches_by_exhibitor[exhibitor_index].append((book["t"], f"capa {book.get('c')} · feira {book['f']}"))
+        if not all(found(book[price]) for price in ("c", "f") if price in book):
+            report.mismatches_by_exhibitor[exhibitor_index].append((book["t"], f"capa {book.get('c')} · feira {book.get('f')}"))
     return report
 
 
 def report_markdown(
     catalog: dict, report: VerificationReport, download_problems: list[tuple[str, str]], methods: dict[int, str], rows_read: dict[int, int],
+    notices: list[tuple[str, str]] = (),
 ) -> str:
     """Per exhibitor, "Lidos" far above "Livros" means rows were lost, and many books "Sem capa" usually mean a price column was misread."""
     exhibitors = catalog["expositores"]
@@ -77,10 +78,13 @@ def report_markdown(
         f"- Livros sem ISBN (preço não conferível automaticamente): {report.books_without_isbn}",
         f"- Preços que não bateram com o PDF: {report.mismatch_count}",
         f"- Livros sem preço de capa: {sum(1 for book in catalog['livros'] if 'c' not in book)}",
+        f"- Livros só com preço de capa (feira não informado): {sum(1 for book in catalog['livros'] if 'f' not in book)}",
         "",
     ]
     if download_problems:
         lines += ["## Listas que ficaram de fora", ""] + [f"- {name}: {problem}" for name, problem in download_problems] + [""]
+    if notices:
+        lines += ["## Avisos sobre listas", ""] + [f"- {name}: {notice}" for name, notice in notices] + [""]
     counts = collections.Counter(book["x"] for book in catalog["livros"])
     without_cover = collections.Counter(book["x"] for book in catalog["livros"] if "c" not in book)
     lines += ["## Livros por editora", "", "| Editora | Livros | Lidos | Sem capa | Leitura | Divergências |", "|---|---:|---:|---:|---|---:|"]

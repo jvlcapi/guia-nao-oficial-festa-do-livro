@@ -13,6 +13,8 @@ STRICT_MONEY = re.compile(
 )
 INTERNAL_CODE = re.compile(r"^\s*\d{1,9}\s*$")
 PERCENT_CELL = re.compile(r"\s*-?(\d{1,2}(?:[.,]\d+)?)\s*%\s*")
+SECTION_HEADER_WORDS = ("isbn", "ean", "cod", "titulo", "descricao", "livro", "autor", "editora", "selo", "assunto", "colecao", "pagina", "url", "link", "preco", "capa", "valor", "desconto")
+PRICE_HEADER_WORDS = ("preco", "capa", "valor", "desconto", "feira", "$", "%")
 HEADER_KEYWORDS = [
     ("url", ["url", "link", "endereco", "capa/url"]),
     ("isbn", ["isbn", "ean", "codigo"]),
@@ -165,14 +167,32 @@ def join_sheet_printed_in_strips(rows: list[list[str]]) -> list[list[str]]:
     return joined
 
 
+def section_header_has_prices(row: list[str]):
+    """None when the row is not a header of short labels; otherwise whether the part of the list it opens has a price column."""
+    if has_isbn(row) or has_price(row):
+        return None
+    labels = [without_accents_lowercase(cell) for cell in row if cell and len(cell.strip()) <= 30]
+    header_labels = [label for label in labels if any(word in label for word in SECTION_HEADER_WORDS)]
+    if len(header_labels) < 3:
+        return None
+    return any(word in label for label in header_labels for word in PRICE_HEADER_WORDS)
+
+
 def parse_table_rows(rows: list[list[str]]) -> list[dict]:
     rows = join_sheet_printed_in_strips(rows)
     price_columns = price_columns_by_row_length(rows)
     numeric_columns = numeric_columns_by_row_length(rows)
     books = []
     header = None
+    in_priced_section = True
     for row in rows:
         if not any(row):
+            continue
+        # A later part of the list without a price column (Pontes ends with subject and page count per ISBN) is not a list of books.
+        opens_priced_section = section_header_has_prices(row)
+        if opens_priced_section is not None and (opens_priced_section or books):
+            in_priced_section = opens_priced_section
+        if not in_priced_section:
             continue
         joined = without_accents_lowercase(" ".join(row))
         if ("isbn" in joined or "titulo" in joined or "ean" in joined.split()) and not any(isbn_in_cell(cell) for cell in row):
