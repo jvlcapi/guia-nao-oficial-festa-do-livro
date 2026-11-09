@@ -28,6 +28,8 @@ SYNOPSIS_MINIMUM_LENGTH = 40
 SYNOPSIS_SHARE_OF_SUBJECTS = 0.8
 LOWEST_FAIR_SHARE_OF_COVER = 0.2
 LONGEST_TITLE = 250  # longer text is several rows glued together by the reader
+FAIR_PRICE_HINTS = ("desc", "feira", "festa", "%", "promo", "final", "venda", "liquido")
+ONLY_COVER_PRICE_PROBLEM = "só tem preço de capa; sem o preço de feira, os livros ficam de fora"
 
 
 @dataclass(frozen=True)
@@ -35,6 +37,7 @@ class ParsedPriceList:
     books: list[dict]
     method: str
     plain_text: str
+    problem: str = ""
 
 
 def tidy(text: str) -> str:
@@ -89,8 +92,20 @@ def fill_missing_isbns_from_text(books: list[dict], plain_text: str) -> None:
                 book["isbn"] = digits
 
 
+def has_only_cover_prices(plain_text: str) -> bool:
+    """The header has one price label, it says "capa" and nothing mentions a discount: the list has no fair price at all."""
+    first_isbn = re.search(r"97[89][\d\-\s]{10,17}", plain_text)
+    header = without_accents_lowercase(plain_text[:first_isbn.start()] if first_isbn else plain_text[:1500]).replace("descricao", "")
+    price_labels = len(re.findall(r"preco|\$|valor", header))
+    return "capa" in header and price_labels <= 1 and not any(hint in header for hint in FAIR_PRICE_HINTS)
+
+
 def parse_price_list(pdf_path: Path) -> ParsedPriceList:
-    """Runs both readers and keeps the one that found more complete books."""
+    """Runs both readers and keeps the one that found more complete books. A list with only cover prices publishes nothing:
+    its single price would show up as the fair price, twice what the book costs at the fair."""
+    plain_text = extract_plain_text(pdf_path)
+    if has_only_cover_prices(plain_text):
+        return ParsedPriceList(books=[], method="não usada", plain_text=plain_text, problem=ONLY_COVER_PRICE_PROBLEM)
     try:
         from_tables = parse_table_rows(extract_table_rows(pdf_path))
     except Exception:
@@ -106,7 +121,6 @@ def parse_price_list(pdf_path: Path) -> ParsedPriceList:
         chosen, method = from_positions, "posição do texto"
     books = [clean_parsed_book(book) for book in chosen if book["title"] and book["fair_price"]]
     books = [book for book in books if book["title"]]
-    plain_text = extract_plain_text(pdf_path)
     fill_missing_isbns_from_text(books, plain_text)
     return ParsedPriceList(books=books, method=method, plain_text=plain_text)
 
@@ -344,6 +358,14 @@ def event_summary(event: EventDetails) -> dict:
     return summary
 
 
+def exhibitor_entry(publisher: Publisher, parsed: ParsedPriceList | None) -> dict:
+    """The site tells visitors why a publisher that posted a list has no books in the guide."""
+    entry = {"nome": publisher.name, "site": publisher.site}
+    if parsed is not None and parsed.problem:
+        entry["aviso"] = parsed.problem
+    return entry
+
+
 def build_catalog(event: EventDetails, publishers: list[Publisher], parsed_by_index: dict[int, ParsedPriceList], generated_at: str) -> dict:
     books = catalog_books(publishers, parsed_by_index)
     repair_truncated_names(books, publishers, parsed_by_index)
@@ -353,7 +375,7 @@ def build_catalog(event: EventDetails, publishers: list[Publisher], parsed_by_in
     return {
         "evento": event_summary(event),
         "geradoEm": generated_at,
-        "expositores": [{"nome": publisher.name, "site": publisher.site} for publisher in publishers],
+        "expositores": [exhibitor_entry(publisher, parsed_by_index.get(index)) for index, publisher in enumerate(publishers)],
         "livros": books,
     }
 

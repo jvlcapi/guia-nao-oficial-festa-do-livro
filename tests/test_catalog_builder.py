@@ -6,6 +6,7 @@ import pytest
 from festa_do_livro.catalog_builder import (
     ParsedPriceList,
     build_catalog,
+    has_only_cover_prices,
     imprint_repeats_exhibitor,
     parse_price_list,
     safe_public_url,
@@ -316,3 +317,37 @@ def test_several_titles_glued_into_one_row_are_not_a_book():
     glued = "PAIXÃO DA JUVENTUDE: UMA BIOGRAFIA PRÁTICAS SEXUAIS, HOLLYWOOD E IMAGENS DA AMÉRICA NO EDUCAÇÃO IMIGRANTE EM SANTOS " * 3
     catalog = catalog_from({"Annablume": [parsed_book("9788526810563", glued), parsed_book("9788526807969", "A invenção do impossível")]})
     assert [book["t"] for book in catalog["livros"]] == ["A invenção do impossível"]
+
+
+def test_cover_price_between_dashes_is_read():
+    catalog, _ = catalog_for("ubu.pdf", "Ubu Editora")
+    book = book_titled(catalog, "A planta do mundo")
+    assert (book["c"], book["f"]) == (79.9, 39.95)
+
+
+@pytest.mark.parametrize("header, only_cover", [
+    ("PONTES EDITORES LTDA. - FONE: (019) 3252-6011 RANKING ISBN DESCRIÇÃO AUTOR $ CAPA\n9788521702108", True),
+    ("ISBN TITULO AUTOR EDITORA PREÇO de CAPA PREÇO com DESCONTO ASSUNTO URL_LIVRO\n9788535914849", False),
+    ("ISBN TITULO AUTOR EDITORA PREÇO de CAPA PREÇO com DESCONT O ASSUNTO URL_LIVRO\n9788535914849", False),
+    ("ISBN TITULO AUTOR(ES) EDITORA PREÇO CAPA PREÇO PRES. ASSUNTO LINKS\n9788535914849", False),
+    ("ISBN TITULO AUTOR EDITORA PREÇO FEIRA\n9788535914849", False),
+])
+def test_list_with_only_cover_prices_is_recognized(header, only_cover):
+    assert has_only_cover_prices(header) is only_cover
+
+
+def test_list_with_only_cover_prices_publishes_no_book(monkeypatch):
+    import festa_do_livro.catalog_builder as catalog_builder
+    pontes_text = "PONTES EDITORES LTDA. RANKING ISBN DESCRIÇÃO AUTOR $ CAPA\n9788521702108#FICA ESPANHOL NO RS FAGUNDES 48,00\n"
+    monkeypatch.setattr(catalog_builder, "extract_plain_text", lambda path: pontes_text)
+    monkeypatch.setattr(catalog_builder, "extract_table_rows", lambda path: [["ISBN", "DESCRIÇÃO", "AUTOR", "$ CAPA"], ["9788521702108", "#FICA ESPANHOL NO RS", "FAGUNDES", "48,00"]])
+    monkeypatch.setattr(catalog_builder, "extract_text_spans", lambda path: [])
+    parsed = catalog_builder.parse_price_list(Path("pontes.pdf"))
+    assert (parsed.books, parsed.problem) == ([], "só tem preço de capa; sem o preço de feira, os livros ficam de fora")
+
+
+def test_catalog_tells_why_a_publisher_has_no_books():
+    publishers = [Publisher(name="Pontes Editores", slug="", price_list_url="x", site="")]
+    parsed = {0: ParsedPriceList(books=[], method="não usada", plain_text="", problem="só tem preço de capa; sem o preço de feira, os livros ficam de fora")}
+    catalog = build_catalog(EVENT, publishers, parsed, "2026-11-09T00:00:00+00:00")
+    assert catalog["expositores"] == [{"nome": "Pontes Editores", "site": "", "aviso": "só tem preço de capa; sem o preço de feira, os livros ficam de fora"}]

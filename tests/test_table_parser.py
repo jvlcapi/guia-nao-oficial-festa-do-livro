@@ -41,3 +41,14 @@ def test_numeric_code_column_is_not_read_as_title():
     ]
     titles = [book["title"] for book in parse_table_rows(rows)]
     assert titles == ["#RIOUTÓPICO [EM CONSTRUÇÃO]", "6 PERGUNTAS SOBRE VOLPI", "A CRÍTICA CÚMPLICE", "A FORMA DA LUZ"]
+
+
+def test_price_written_between_dashes():
+    rows = [
+        HEADER,
+        ["9788592886059", "24/07 – Capitalismo tardio", "Jonathan Crary", "UBU", "-R$ 79,90-", "R$ 39,95", "filosofia", "https://www.ubueditora.com.br/"],
+        ["9786586497298", "A planta do mundo", "Stefano Mancuso", "UBU", "-R$ 79,90-", "R$ 39,95", "ecologia", "https://www.ubueditora.com.br/"],
+        ["9788571260092", "Ai Weiwei Raiz", "Marcello Dantas", "UBU", "-R$ 169,00", "- R$ 50,00", "arte", "https://www.ubueditora.com.br/"],
+    ]
+    books = {book["title"]: book for book in parse_table_rows(rows)}
+    assert (books["Ai Weiwei Raiz"]["cover_price"], books["Ai Weiwei Raiz"]["fair_price"]) == (169.0, 50.0)

@@ -442,7 +442,7 @@ footer a { color: inherit; }
 <script>
 /*
  * Everything runs in the visitor's browser. Files served next to this page:
- *   edicao.json    current edition { edicao, nome, periodo, ano, inicio, fim }
+ *   edicao.json    current edition { edicao, nome, periodo, ano, inicio, fim, editorasNaEdicaoAnterior }
  *   catalogo.json  books of every exhibitor for that edition
  * Book ids are the ISBN, the ISBN plus "-" and an exhibitor suffix when two stands sell the same ISBN, or "x" plus a hash when there is no ISBN.
  * Lists live in localStorage under STORAGE_KEY: { edicoes: { <edition>: { livros: { <bookId>: book }, orcamento } } }.
@@ -1202,12 +1202,26 @@ function discountOf(book) {
   return book.c ? 1 - book.f / book.c : 0;
 }
 
-// While a new edition's lists are still coming in, say how many publishers are missing so a short catalog is not a surprise.
 function catalogSizeText() {
-  const size = `${intFormat.format(catalog.books.length)} livros de ${catalog.exhibitorsWithLists} editoras`;
+  return `${intFormat.format(catalog.books.length)} livros de ${catalog.exhibitorsWithLists} editoras`;
+}
+
+// While a new edition's lists are still coming in, a short catalog looks broken: say how many publishers have posted so far.
+function coverageNote() {
+  const posted = catalog.exhibitorsWithLists;
+  const previous = state.event?.editorasNaEdicaoAnterior;
+  if (previous && posted < SHARE_OF_PUBLISHERS_FOR_COMPLETE_CATALOG * previous) {
+    return `Por enquanto, ${posted} editoras publicaram a lista no site da Festa (na edição anterior foram ${previous}). O guia confere o site todo dia e acrescenta as que chegarem.`;
+  }
   const registered = catalog.exhibitors.length;
-  if (catalog.exhibitorsWithLists >= SHARE_OF_PUBLISHERS_FOR_COMPLETE_CATALOG * registered) return size;
-  return `${size}. As outras ${registered - catalog.exhibitorsWithLists} das ${registered} inscritas ainda não publicaram a lista; o guia confere todo dia.`;
+  if (posted < SHARE_OF_PUBLISHERS_FOR_COMPLETE_CATALOG * registered) {
+    return `As outras ${registered - posted} das ${registered} inscritas ainda não publicaram a lista; o guia confere todo dia.`;
+  }
+  return "";
+}
+
+function listsSetAsideNote() {
+  return catalog.exhibitors.filter(exhibitor => exhibitor.aviso).map(exhibitor => `A lista da ${exhibitor.nome} ${exhibitor.aviso}.`).join(" ");
 }
 
 function runSearch() {
@@ -1224,7 +1238,8 @@ function runSearch() {
     catalogShown = 0;
     document.getElementById("results-title").textContent = "Catálogo da feira";
     document.getElementById("catalog-status").textContent = catalogSizeText();
-    document.getElementById("catalog-results").replaceChildren(el("div", { class: "empty", text: "Digite um título, autor, editora ou assunto para buscar. Você também pode escolher só uma editora ou uma faixa de preço." }));
+    const howToSearch = "Digite um título, autor, editora ou assunto para buscar. Você também pode escolher só uma editora ou uma faixa de preço.";
+    document.getElementById("catalog-results").replaceChildren(el("div", { class: "empty", text: [howToSearch, coverageNote(), listsSetAsideNote()].filter(Boolean).join(" ") }));
     document.getElementById("catalog-more").hidden = true;
     return;
   }
@@ -1305,7 +1320,8 @@ function catalogRow(book, myIds) {
 function renderCatalogPage(reset) {
   if (!catalogMatches.length) {
     if (reset) {
-      document.getElementById("catalog-results").replaceChildren(el("div", { class: "empty", text: "Nenhum livro com esses filtros. Tente outra palavra ou aumente o preço máximo." }));
+      const nothingFound = "Nenhum livro com esses filtros. Tente outra palavra ou aumente o preço máximo.";
+      document.getElementById("catalog-results").replaceChildren(el("div", { class: "empty", text: [nothingFound, coverageNote(), listsSetAsideNote()].filter(Boolean).join(" ") }));
       document.getElementById("catalog-more").hidden = true;
     }
     return;

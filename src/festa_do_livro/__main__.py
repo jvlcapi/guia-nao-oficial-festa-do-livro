@@ -8,6 +8,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from .catalog_builder import build_catalog, event_summary, parse_price_list, same_content
+from .fair_dates import edition_number
 from .fair_site import FairSite
 from .price_list_download import download_price_lists
 from .price_verification import report_markdown, verify_prices
@@ -20,6 +21,19 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 def resolve_edition(settings, site: FairSite, edition_argument: str) -> str:
     edition = edition_argument or settings.edition
     return site.detect_current_edition() if edition == "auto" else edition
+
+
+def publishers_in_previous_edition(data_directory: Path, edition: str):
+    """How many publishers had books in the edition before this one, so the site can say how much of the new one has arrived."""
+    current_number = edition_number(edition)
+    earlier = sorted(
+        (edition_number(folder.name), folder) for folder in Path(data_directory).iterdir()
+        if (folder / "catalogo.json").exists() and edition_number(folder.name) and current_number and edition_number(folder.name) < current_number
+    )
+    if not earlier:
+        return None
+    catalog = json.loads((earlier[-1][1] / "catalogo.json").read_text())
+    return len({book["x"] for book in catalog["livros"]})
 
 
 def published_edition(output_directory: Path) -> str:
@@ -72,6 +86,9 @@ def command_build(arguments) -> int:
     catalog = build_catalog(event, publishers, parsed_by_index, generated_at)
     if not catalog["livros"]:
         return refuse_empty_catalog(edition, Path(arguments.output))
+    previous_count = publishers_in_previous_edition(Path(arguments.output), edition)
+    if previous_count:
+        catalog["evento"]["editorasNaEdicaoAnterior"] = previous_count
 
     output_directory = Path(arguments.output) / edition
     output_directory.mkdir(parents=True, exist_ok=True)
@@ -85,7 +102,8 @@ def command_build(arguments) -> int:
     methods = {index: parsed.method for index, parsed in parsed_by_index.items()}
     catalog_path.write_text(json.dumps(catalog, ensure_ascii=False, separators=(",", ":")))
     rows_read = {index: len(parsed.books) for index, parsed in parsed_by_index.items()}
-    (output_directory / "relatorio.md").write_text(report_markdown(catalog, report, download_problems, methods, rows_read))
+    lists_set_aside = download_problems + [(publishers[index].name, parsed.problem) for index, parsed in parsed_by_index.items() if parsed.problem]
+    (output_directory / "relatorio.md").write_text(report_markdown(catalog, report, lists_set_aside, methods, rows_read))
     (output_directory / "edicao.json").write_text(json.dumps(catalog["evento"], ensure_ascii=False, indent=2) + "\n")
     (Path(arguments.output) / "edicao-atual.json").write_text(
         json.dumps({"edicao": edition, "catalogo": f"{edition}/catalogo.json", "edicaoInfo": f"{edition}/edicao.json", "relatorio": f"{edition}/relatorio.md"}, ensure_ascii=False, indent=2) + "\n"

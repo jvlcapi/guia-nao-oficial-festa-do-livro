@@ -80,7 +80,7 @@ def report_markdown(
         "",
     ]
     if download_problems:
-        lines += ["## Listas que não foram lidas", ""] + [f"- {name}: {problem}" for name, problem in download_problems] + [""]
+        lines += ["## Listas que ficaram de fora", ""] + [f"- {name}: {problem}" for name, problem in download_problems] + [""]
     counts = collections.Counter(book["x"] for book in catalog["livros"])
     without_cover = collections.Counter(book["x"] for book in catalog["livros"] if "c" not in book)
     lines += ["## Livros por editora", "", "| Editora | Livros | Lidos | Sem capa | Leitura | Divergências |", "|---|---:|---:|---:|---|---:|"]

@@ -13,10 +13,15 @@ MONTH_NUMBERS = {
 DAY_OR_MONTH = re.compile(r"\b(\d{1,2})\b|\b(" + "|".join(MONTH_NUMBERS) + r")\b")
 
 
+def edition_number(edition: str) -> Optional[int]:
+    number = re.match(r"(\d+)-", edition or "")
+    return int(number.group(1)) if number else None
+
+
 def edition_year(edition: str) -> Optional[int]:
     """The official site says the Festa is held every year since 1999, the year of the 1st edition."""
-    number = re.match(r"(\d+)-", edition or "")
-    return FIRST_EDITION_YEAR + int(number.group(1)) - 1 if number else None
+    number = edition_number(edition)
+    return FIRST_EDITION_YEAR + number - 1 if number else None
 
 
 def period_dates(period: str, year: Optional[int]) -> Optional[tuple[date, date]]:

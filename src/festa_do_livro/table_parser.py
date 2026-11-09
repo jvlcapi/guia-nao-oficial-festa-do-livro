@@ -23,8 +23,10 @@ HEADER_KEYWORDS = [
 
 
 def join_split_digits(cell: str) -> str:
-    """Normalizes a price cell: "R$ 1 09,00" -> "R$ 109,00" and "S 44,90" (letter spilled from the next cell) -> "44,90"."""
-    cell = re.sub(r"^\s*[A-Za-z]\s+(?=(?:R\$\s*)?\d)", "", cell or "")
+    """Normalizes a price cell: "R$ 1 09,00" -> "R$ 109,00", "S 44,90" (letter spilled from the next cell) -> "44,90"
+    and "-R$ 79,90-" (dashes drawn around the cover price) -> "R$ 79,90"."""
+    cell = re.sub(r"^[\s\-–]+|[\s\-–]+$", "", cell or "")
+    cell = re.sub(r"^\s*[A-Za-z]\s+(?=(?:R\$\s*)?\d)", "", cell)
     return re.sub(r"(?<=\d)\s+(?=[\d,])", "", cell)
 
 
