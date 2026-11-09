@@ -1208,7 +1208,7 @@ function catalogSizeText() {
 
 // While a new edition's lists are still coming in, a short catalog looks broken: say how many publishers have posted so far.
 function coverageNote() {
-  const posted = catalog.exhibitorsWithLists;
+  const posted = catalog.exhibitorsWithLists + catalog.exhibitors.filter(exhibitor => exhibitor.aviso).length;
   const previous = state.event?.editorasNaEdicaoAnterior;
   if (previous && posted < SHARE_OF_PUBLISHERS_FOR_COMPLETE_CATALOG * previous) {
     return `Por enquanto, ${posted} editoras publicaram a lista no site da Festa (na edição anterior foram ${previous}). O guia confere o site todo dia e acrescenta as que chegarem.`;
