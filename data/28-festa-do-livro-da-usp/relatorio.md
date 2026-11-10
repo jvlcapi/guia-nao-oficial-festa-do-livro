@@ -1,8 +1,8 @@
 # Relatório do catálogo: 28 Festa do Livro da USP
 
 - Edição: `28-festa-do-livro-da-usp` · 25 e 29 de novembro
-- Editoras no site: 31
-- Livros no catálogo: 7206
+- Editoras no site: 32
+- Livros no catálogo: 7306
 - Livros sem ISBN (preço não conferível automaticamente): 90
 - Preços que não bateram com o PDF: 73
 - Livros sem preço de capa: 0
@@ -28,6 +28,7 @@
 | Editora Mostarda | 102 | 102 | 0 | tabela | 0 |
 | Editora Olhares | 79 | 79 | 0 | posição do texto | 0 |
 | Editora UFPR | 133 | 133 | 0 | tabela | 0 |
+| EdUFSCar | 100 | 100 | 0 | tabela | 0 |
 | Edusp | 1007 | 1021 | 0 | tabela | 0 |
 | Grua | 102 | 102 | 0 | tabela | 0 |
 | Grupo Editorial Pensamento | 290 | 290 | 0 | tabela | 0 |
