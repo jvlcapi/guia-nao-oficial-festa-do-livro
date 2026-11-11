@@ -6,6 +6,8 @@ from typing import Callable, Optional
 
 from .fair_site import HttpResponse, Publisher, http_get
 
+NO_PRICE_LIST_YET = "sem lista de preços"
+
 
 @dataclass(frozen=True)
 class DownloadResult:
@@ -32,7 +34,7 @@ def download_price_lists(
     def download_one(indexed_publisher):
         publisher_index, publisher = indexed_publisher
         if not publisher.price_list_url:
-            return DownloadResult(publisher_index, publisher, None, "sem lista de preços")
+            return DownloadResult(publisher_index, publisher, None, NO_PRICE_LIST_YET)
         target = cache_directory / cached_file_name(publisher_index, publisher.price_list_url)
         if target.exists() and target.stat().st_size > 0:
             return DownloadResult(publisher_index, publisher, target)

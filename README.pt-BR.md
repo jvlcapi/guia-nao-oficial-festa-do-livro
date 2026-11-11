@@ -68,7 +68,7 @@ navegador de cada pessoa: busca, lista e totais (lista salva no próprio aparelh
 
 ### Atualização automática (GitHub Actions)
 
-- **Atualizar catálogo** (`atualizar-catalogo.yml`): roda pelo botão *Run workflow* (com a edição opcional) e todo dia às 6h de Brasília, de setembro a dezembro. Roda os testes, gera catálogo e relatório, mostra o relatório no resumo da execução e, se algo mudou, faz commit e publica o site.
+- **Atualizar catálogo** (`atualizar-catalogo.yml`): roda pelo botão *Run workflow* (com a edição opcional) e todo dia de setembro a dezembro. Está marcado para 6h de Brasília, mas o GitHub dispara agendamentos com atraso; em 2026 ele rodou entre 9h30 e 16h15. Roda os testes, gera catálogo e relatório, mostra o relatório no resumo da execução e, se algo mudou, faz commit e publica o site. Quando uma lista parece mal lida (nenhum livro, a maioria sem preço de capa, linhas perdidas ou muitos preços que não aparecem no PDF), o job `avisar` abre a issue "Listas de preço para conferir", que chega por e-mail. Um problema já avisado não é avisado de novo, e a issue fecha sozinha quando todas as listas voltam a ser lidas sem problema.
 - **Publicar site** (`publicar-site.yml`): monta `_site/` com a edição atual (`data/edicao-atual.json`) e publica no GitHub Pages. Também roda quando `site/` ou os dados mudam por push.
 - **Testes** (`testes.yml`): em todo push e pull request.
 - **Guardar contador de visitantes** (`guardar-contador-de-visitantes.yml`): toda segunda às 7h de Brasília, anota o total em `data/visitantes.csv` quando ele mudou. Assim o histórico fica no repositório mesmo que o serviço do contador suma, e a leitura semanal impede que o contador expire (o serviço apaga contadores sem acesso por 6 meses).

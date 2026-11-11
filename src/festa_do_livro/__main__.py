@@ -7,9 +7,11 @@ from concurrent.futures import ProcessPoolExecutor
 from datetime import datetime, timezone
 from pathlib import Path
 
+from .alert_issue import ISSUE_TITLE, GitHubIssues, sync_issue
 from .catalog_builder import build_catalog, event_summary, parse_price_list, same_content
 from .fair_dates import edition_number
 from .fair_site import FairSite
+from .lists_to_check import LISTS_TO_CHECK_FILE, lists_to_check, load_lists_to_check, save_lists_to_check
 from .price_list_download import download_price_lists
 from .price_verification import report_markdown, verify_prices
 from .settings import load_settings
@@ -103,12 +105,37 @@ def command_build(arguments) -> int:
     catalog_path.write_text(json.dumps(catalog, ensure_ascii=False, separators=(",", ":")))
     rows_read = {index: len(parsed.books) for index, parsed in parsed_by_index.items()}
     notices = [(publishers[index].name, parsed.notice) for index, parsed in sorted(parsed_by_index.items()) if parsed.notice]
-    (output_directory / "relatorio.md").write_text(report_markdown(catalog, report, download_problems, methods, rows_read, notices))
+    to_check = lists_to_check(catalog, report, download_problems, methods, rows_read)
+    save_lists_to_check(output_directory / LISTS_TO_CHECK_FILE, to_check)
+    (output_directory / "relatorio.md").write_text(report_markdown(catalog, report, download_problems, methods, rows_read, notices, to_check))
     (output_directory / "edicao.json").write_text(json.dumps(catalog["evento"], ensure_ascii=False, indent=2) + "\n")
     (Path(arguments.output) / "edicao-atual.json").write_text(
         json.dumps({"edicao": edition, "catalogo": f"{edition}/catalogo.json", "edicaoInfo": f"{edition}/edicao.json", "relatorio": f"{edition}/relatorio.md"}, ensure_ascii=False, indent=2) + "\n"
     )
-    print(f"{report.total_books} livros · {report.mismatch_count} preços a conferir · {catalog_path}", file=sys.stderr)
+    print(f"{report.total_books} livros · {report.mismatch_count} preços a conferir · {len(to_check)} listas para conferir · {catalog_path}", file=sys.stderr)
+    return 0
+
+
+def required_environment(name: str) -> str:
+    value = os.environ.get(name, "")
+    if not value:
+        raise SystemExit(f"Falta a variável de ambiente {name}; no GitHub Actions o workflow a define.")
+    return value
+
+
+def command_notify_lists_to_check(arguments) -> int:
+    """Run by the daily refresh after the catalog is saved: one GitHub issue keeps the lists that look misread."""
+    data_directory = Path(arguments.data)
+    edition = published_edition(data_directory)
+    if not edition or not (data_directory / edition / LISTS_TO_CHECK_FILE).exists():
+        print(f"A edição publicada não tem {LISTS_TO_CHECK_FILE}; a issue fica como está.", file=sys.stderr)
+        return 0
+    repository = required_environment("GITHUB_REPOSITORY")
+    issues = GitHubIssues(repository, required_environment("GITHUB_TOKEN"))
+    report_url = f"{os.environ.get('GITHUB_SERVER_URL', 'https://github.com')}/{repository}/blob/main/data/{edition}/relatorio.md"
+    items = load_lists_to_check(data_directory / edition / LISTS_TO_CHECK_FILE)
+    outcome = sync_issue(items, issues, required_environment("GITHUB_REPOSITORY_OWNER"), report_url)
+    print(f'Issue "{ISSUE_TITLE}": {outcome} ({len(items)} listas para conferir)', file=sys.stderr)
     return 0
 
 
@@ -131,8 +158,13 @@ def main(argv=None) -> int:
     assemble = subcommands.add_parser("assemble-site", help="monta a pasta publicada no GitHub Pages")
     assemble.add_argument("--data", default=str(PROJECT_ROOT / "data"), help="pasta com os catálogos gerados")
     assemble.add_argument("--output", default=str(PROJECT_ROOT / "_site"), help="pasta de saída do site")
+    notify = subcommands.add_parser("notify-lists-to-check", help="abre, atualiza ou fecha a issue das listas para conferir")
+    notify.add_argument("--data", default=str(PROJECT_ROOT / "data"), help="pasta com os catálogos gerados")
     arguments = parser.parse_args(argv)
-    commands = {"detect-edition": command_detect_edition, "build": command_build, "assemble-site": command_assemble_site}
+    commands = {
+        "detect-edition": command_detect_edition, "build": command_build, "assemble-site": command_assemble_site,
+        "notify-lists-to-check": command_notify_lists_to_check,
+    }
     return commands[arguments.command](arguments)
 
 

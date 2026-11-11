@@ -55,3 +55,9 @@ Objetivo: gerar o catálogo da Festa do Livro da USP a partir de qualquer ediç�
 **Success Criteria**: Arquipélago com preço de capa nos 63 livros; Nós com os 143 livros, sem preço no lugar do autor; Universo dos Livros com 358 livros em vez de nenhum; Tomie Ohtake sem divergências; nas outras listas (191 da 27ª e 44 da 28ª) nenhum livro some e nenhum preço que já era lido muda.
 **Tests**: regressões com os PDFs reais da Nós e da Universo dos Livros; preço com parêntese; faixas da mesma largura; linha com ISBN e preço juntos nunca colada como faixa; preço de feira que segue ou não a porcentagem.
 **Status**: Complete (comparação com os 238 PDFs: só essas listas e quatro da 27ª mudaram, todas ganhando o preço de capa que o PDF traz)
+
+## Etapa 10: Aviso de lista com erro
+**Goal**: a atualização diária avisa quando uma lista parece mal lida, em vez de publicar em silêncio. O build grava `listas-para-conferir.json` e põe as listas no topo do relatório; o job `avisar` abre, comenta ou fecha a issue "Listas de preço para conferir", que chega por e-mail.
+**Success Criteria**: aplicadas às listas da 28ª lidas pelo leitor antigo, as regras apontam exatamente as quatro que estavam erradas (Universo dos Livros, Nós, Arquipélago e Tomie Ohtake) e, com o leitor novo, nenhuma; o mesmo problema nunca é avisado duas vezes; a issue fecha sozinha quando tudo volta a ser lido; a falha do aviso não segura a publicação.
+**Tests**: cada regra (nenhum livro, linhas perdidas, sem preço de capa, preços fora do PDF, lista não baixada) e o que não deve avisar (lista boa, lista em faixas, editora sem lista ainda); abrir, comentar só o novo, fechar, respeitar a issue fechada e reabrir para problema novo; busca da issue pelo título exato; comando que entrega as listas à issue.
+**Status**: Complete

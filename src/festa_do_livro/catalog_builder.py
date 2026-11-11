@@ -30,6 +30,7 @@ LOWEST_FAIR_SHARE_OF_COVER = 0.2
 LONGEST_TITLE = 250  # longer text is several rows glued together by the reader
 FAIR_PRICE_HINTS = ("desc", "feira", "festa", "%", "promo", "final", "venda", "liquido")
 ONLY_COVER_PRICE_NOTICE = "só tem preço de capa; o preço de feira não foi informado"
+READ_IN_STRIPS = "tabela em faixas"
 
 
 @dataclass(frozen=True)
@@ -117,7 +118,7 @@ def parse_price_list(pdf_path: Path) -> ParsedPriceList:
     complete = lambda books: sum(1 for book in books if book["title"] and book["fair_price"])
     if complete(from_tables) >= 0.95 * complete(from_positions) and complete(from_tables) > 0:
         # In strips, the ISBN and its prices sit on different pages, so the price check reports them as divergences.
-        chosen, method = from_tables, "tabela em faixas" if printed_in_strips else "tabela"
+        chosen, method = from_tables, READ_IN_STRIPS if printed_in_strips else "tabela"
     else:
         chosen, method = from_positions, "posição do texto"
     books = [clean_parsed_book(book) for book in chosen if book["title"] and book["fair_price"]]

@@ -72,3 +72,30 @@ jobs:
       pages: write
       id-token: write
     uses: ./.github/workflows/publicar-site.yml
+
+  avisar:
+    # Lista que o leitor parece ter lido errado vira uma issue, e o GitHub manda e-mail. Fica num job à parte para nunca segurar a publicação.
+    needs: atualizar
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Pega o catálogo que o job "atualizar" acabou de salvar.
+          ref: main
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Instalar
+        run: pip install -e .
+
+      - name: Abrir, atualizar ou fechar a issue das listas para conferir
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python -m festa_do_livro notify-lists-to-check

@@ -43,3 +43,11 @@ def test_report_counts_books_with_only_a_cover_price():
     catalog = {**CATALOG, "livros": [{"i": "9788521702108", "t": "#FICA ESPANHOL NO RS", "c": 48.0, "x": 0}]}
     text = report_markdown(catalog, VerificationReport(total_books=1), [], {0: "tabela"}, {0: 1}, [("Pontes Editores", "só tem preço de capa; o preço de feira não foi informado")])
     assert "- Livros só com preço de capa (feira não informado): 1" in text and "- Pontes Editores: só tem preço de capa; o preço de feira não foi informado" in text
+
+
+def test_report_starts_with_the_lists_to_check():
+    from festa_do_livro.lists_to_check import ListToCheck
+
+    items = [ListToCheck("Olhares", "nenhum livro lido", "a lista foi baixada, mas o leitor não achou nenhum livro")]
+    text = report_markdown(CATALOG, VerificationReport(total_books=3), [], {0: "tabela", 1: "tabela"}, {0: 70, 1: 1}, lists_to_check=items)
+    assert "## Listas para conferir\n\n- **Olhares**: nenhum livro lido (a lista foi baixada, mas o leitor não achou nenhum livro)" in text

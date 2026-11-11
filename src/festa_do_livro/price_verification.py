@@ -75,9 +75,10 @@ def verify_prices(catalog: dict, plain_text_by_exhibitor: dict[int, str]) -> Ver
 
 def report_markdown(
     catalog: dict, report: VerificationReport, download_problems: list[tuple[str, str]], methods: dict[int, str], rows_read: dict[int, int],
-    notices: list[tuple[str, str]] = (),
+    notices: list[tuple[str, str]] = (), lists_to_check: list = (),
 ) -> str:
-    """Per exhibitor, "Lidos" far above "Livros" means rows were lost, and many books "Sem capa" usually mean a price column was misread."""
+    """Per exhibitor, "Lidos" far above "Livros" means rows were lost, and many books "Sem capa" usually mean a price column was misread.
+    The lists that look misread come first, as the daily refresh also announces them in a GitHub issue."""
     exhibitors = catalog["expositores"]
     event = catalog["evento"]
     lines = [
@@ -92,6 +93,8 @@ def report_markdown(
         f"- Livros só com preço de capa (feira não informado): {sum(1 for book in catalog['livros'] if 'f' not in book)}",
         "",
     ]
+    if lists_to_check:
+        lines += ["## Listas para conferir", ""] + [item.markdown_line() for item in lists_to_check] + [""]
     if download_problems:
         lines += ["## Listas que ficaram de fora", ""] + [f"- {name}: {problem}" for name, problem in download_problems] + [""]
     if notices:
