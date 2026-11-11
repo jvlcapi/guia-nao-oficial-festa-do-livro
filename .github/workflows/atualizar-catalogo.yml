@@ -8,7 +8,8 @@ on:
         required: false
         default: ""
   schedule:
-    # Todo dia às 6h de Brasília, de setembro a dezembro (as editoras atualizam as listas perto da Festa).
+    # Todo dia de setembro a dezembro (as editoras atualizam as listas perto da Festa). Marcado para 6h de Brasília,
+    # mas o GitHub atrasa horas; a hora certa vem de uma tarefa agendada no Claude Code que dispara esta rotina às 9h55.
     - cron: "0 9 * 9-12 *"
 
 permissions:
