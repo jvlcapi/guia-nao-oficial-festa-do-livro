@@ -374,3 +374,44 @@ def test_list_printed_in_strips_keeps_title_author_and_prices_together():
 def test_report_names_the_reading_of_a_list_printed_in_strips():
     _, parsed = catalog_for("phorte.pdf", "Phorte Editora")
     assert parsed.method == "tabela em faixas"
+
+
+@pytest.fixture(scope="module")
+def nos():
+    return catalog_for("nos.pdf", "Nós")
+
+
+def test_prices_written_without_cents_are_read(nos):
+    book = book_titled(nos[0], "Dezembros")
+    assert (book["c"], book["f"]) == (78.0, 39.0)
+
+
+def test_reads_every_book_of_a_list_with_prices_without_cents(nos):
+    assert len(nos[0]["livros"]) == 143
+
+
+def test_three_digit_cover_price_stays_out_of_the_title(nos):
+    book = book_titled(nos[0], "A trilogia do genocídio de Ruanda")
+    assert (book["t"], book["c"], book["f"]) == ("A trilogia do genocídio de Ruanda", 257.0, 128.5)
+
+
+def test_price_column_is_not_read_as_author(nos):
+    assert [book["a"] for book in nos[0]["livros"] if re.search(r"\d", book.get("a", ""))] == []
+
+
+def test_list_printed_in_two_strips_of_the_same_width_is_read():
+    catalog, _ = catalog_for("universo_dos_livros.pdf", "Universo dos livros")
+    book = book_titled(catalog, "ACEITA-ME - EDIÇÃO DE LUXO LIMITADA")
+    assert (book["i"], book["c"], book["f"]) == ("9788550306643", 89.9, 44.95)
+
+
+def test_fair_price_computed_from_a_discount_percentage_is_not_a_divergence():
+    catalog = catalog_from({"Instituto Tomie Ohtake": [parsed_book("9788553190133", "AI-5 - AINDA NÃO TERMINOU DE ACABAR", cover=120.0, fair=60.0)]})
+    plain_text = "978-8553190133 AI-5 - AINDA NÃO TERMINOU DE ACABAR Paulo Miyada Instituto Tomie Ohtake R$ 120,00 50,00% POLÍTICA"
+    assert verify_prices(catalog, {0: plain_text}).mismatch_count == 0
+
+
+def test_fair_price_that_does_not_follow_the_discount_percentage_is_a_divergence():
+    catalog = catalog_from({"Instituto Tomie Ohtake": [parsed_book("9788553190133", "AI-5 - AINDA NÃO TERMINOU DE ACABAR", cover=120.0, fair=70.0)]})
+    plain_text = "978-8553190133 AI-5 - AINDA NÃO TERMINOU DE ACABAR Paulo Miyada Instituto Tomie Ohtake R$ 120,00 50,00% POLÍTICA"
+    assert verify_prices(catalog, {0: plain_text}).mismatch_count == 1

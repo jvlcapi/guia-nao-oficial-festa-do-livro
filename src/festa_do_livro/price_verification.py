@@ -5,6 +5,8 @@ from dataclasses import dataclass, field
 
 from .isbn import isbn_of_book_id
 
+DISCOUNT_PERCENTAGE = re.compile(r"(\d{1,2}(?:[.,]\d+)?)\s*%")
+
 
 @dataclass
 class VerificationReport:
@@ -27,6 +29,12 @@ def written_forms(value: float, allow_whole_number: bool) -> set[str]:
     if value >= 1000:
         forms.add(f"{int(value) // 1000}.{two_decimals.replace('.', ',')[-6:]}")
     return forms
+
+
+def follows_discount_percentage(window: str, cover_price: float, fair_price: float) -> bool:
+    """Lists that give the cover price and a discount ("R$ 120,00 50,00%") never write the fair price, which the reader computed."""
+    percentages = [float(percent.replace(",", ".")) for percent in DISCOUNT_PERCENTAGE.findall(window)]
+    return any(abs(round(cover_price * (1 - percent / 100), 2) - fair_price) < 0.011 for percent in percentages if 0 < percent < 95)
 
 
 def compact_text(plain_text: str) -> str:
@@ -57,7 +65,10 @@ def verify_prices(catalog: dict, plain_text_by_exhibitor: dict[int, str]) -> Ver
         window = text[max(0, position - 200):position + 13 + (next_isbn.start() if next_isbn else 900)]
         window_without_spaces = window.replace(" ", "")
         found = lambda value: any(form in window or form in window_without_spaces for form in written_forms(value, True))
-        if not all(found(book[price]) for price in ("c", "f") if price in book):
+        missing_prices = [price for price in ("c", "f") if price in book and not found(book[price])]
+        if missing_prices == ["f"] and "c" in book and follows_discount_percentage(window, book["c"], book["f"]):
+            missing_prices = []
+        if missing_prices:
             report.mismatches_by_exhibitor[exhibitor_index].append((book["t"], f"capa {book.get('c')} · feira {book.get('f')}"))
     return report
 

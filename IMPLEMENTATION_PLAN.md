@@ -49,3 +49,9 @@ Objetivo: gerar o catálogo da Festa do Livro da USP a partir de qualquer ediç�
 **Success Criteria**: em 375 px a lista não tem rolagem lateral; uma lista antiga com ISBN repetido passa para o livro da mesma editora; o site abre com o cache depois de alguns segundos sem resposta da rede.
 **Tests**: conferência no navegador (desktop e celular), checagem de sintaxe do script e testes de montagem do site.
 **Status**: Complete (conferido no navegador em 375 px e em tela de computador, com rede lenta e sem rede)
+
+## Etapa 9: Formatos novos das listas da 28ª edição
+**Goal**: ler direito as listas que chegaram em novembro de 2026 em formatos que o leitor ainda não conhecia: preço de capa seguido de parêntese ("69,90)", Arquipélago), preços sem centavos ("75" e "37,5", Nós), preço de três dígitos alinhado à direita que escapava para o título e planilha impressa em duas faixas da mesma largura (ISBN e título, depois capa e preço USP, Universo dos Livros). A conferência de preços passa a aceitar o preço de feira calculado a partir da porcentagem de desconto (Instituto Tomie Ohtake).
+**Success Criteria**: Arquipélago com preço de capa nos 63 livros; Nós com os 143 livros, sem preço no lugar do autor; Universo dos Livros com 358 livros em vez de nenhum; Tomie Ohtake sem divergências; nas outras listas (191 da 27ª e 44 da 28ª) nenhum livro some e nenhum preço que já era lido muda.
+**Tests**: regressões com os PDFs reais da Nós e da Universo dos Livros; preço com parêntese; faixas da mesma largura; linha com ISBN e preço juntos nunca colada como faixa; preço de feira que segue ou não a porcentagem.
+**Status**: Complete (comparação com os 238 PDFs: só essas listas e quatro da 27ª mudaram, todas ganhando o preço de capa que o PDF traz)

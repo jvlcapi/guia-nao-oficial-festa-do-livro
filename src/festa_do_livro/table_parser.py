@@ -26,9 +26,11 @@ HEADER_KEYWORDS = [
 
 
 def join_split_digits(cell: str) -> str:
-    """Normalizes a price cell: "R$ 1 09,00" -> "R$ 109,00", "S 44,90" (letter spilled from the next cell) -> "44,90"
-    and "-R$ 79,90-" (dashes drawn around the cover price) -> "R$ 79,90"."""
+    """Normalizes a price cell: "R$ 1 09,00" -> "R$ 109,00", "S 44,90" (letter spilled from the next cell) -> "44,90",
+    "-R$ 79,90-" (dashes drawn around the cover price) -> "R$ 79,90" and "69,90)" (the parenthesis a spreadsheet number
+    format keeps for negative values, printed by the PDF converter) -> "69,90"."""
     cell = re.sub(r"^[\s\-–]+|[\s\-–]+$", "", cell or "")
+    cell = re.sub(r"(?<=\d)\)$", "", cell)
     cell = re.sub(r"^\s*[A-Za-z]\s+(?=(?:R\$\s*)?\d)", "", cell)
     return re.sub(r"(?<=\d)\s+(?=[\d,])", "", cell)
 
@@ -164,7 +166,17 @@ def join_sheet_printed_in_strips(rows: list[list[str]]) -> list[list[str]]:
         else:
             joined += left
             position += 1
-    return joined
+    return joined if len(joined) < len(rows) else join_two_strips_of_the_same_width(rows)
+
+
+def join_two_strips_of_the_same_width(rows: list[list[str]]) -> list[list[str]]:
+    """When both strips have the same number of columns they come out as one table: every row with an ISBN comes before every
+    row with prices, no row has both, and there are as many prices as ISBNs (Universo dos Livros: ISBN and title, then capa and USP)."""
+    isbn_positions = [position for position, row in enumerate(rows) if has_isbn(row)]
+    price_positions = [position for position, row in enumerate(rows) if has_price(row)]
+    if len(isbn_positions) < 3 or len(isbn_positions) != len(price_positions) or isbn_positions[-1] >= price_positions[0]:
+        return rows
+    return [rows[isbn_position] + rows[price_position] for isbn_position, price_position in zip(isbn_positions, price_positions)]
 
 
 def section_header_has_prices(row: list[str]):

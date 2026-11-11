@@ -1,11 +1,14 @@
 """Reads price lists whose PDF has no table cells, using where each piece of text sits on the page."""
 import collections
 import re
+import statistics
 
 from .text_helpers import without_accents_lowercase
 
 ROW_START = re.compile(r"^(?:ean:?|isbn13:?)?\s*(97[89][\d\-\s]{10,17}|\d{10}\b)", re.I)
 MONEY = re.compile(r"(\d{1,3}(?:\.\d{3})*,\d{2}|\d{1,3} \d{2},\d{2}|\d+,\d)")
+PRICE_WITH_OR_WITHOUT_CENTS = re.compile(r"(?:R\$\s*)?\d{1,4}(?:,\d{1,2})?")
+PRICE_LABEL = re.compile(r"preco|valor")
 HEADER_WORDS = {
     "isbn", "titulo", "autor", "editora", "assunto", "url_livro", "url livro", "url", "preco de", "capa",
     "preco com", "desconto", "preco de capa", "preco com desconto", "autor(es)", "selo", "paginas", "prc.venda", "por", "%",
@@ -16,35 +19,49 @@ def money_values(text: str) -> list[float]:
     return [float(value.replace(" ", "").replace(".", "").replace(",", ".")) for value in MONEY.findall(text)]
 
 
-def header_roles(pages: list[list[dict]]) -> list[str]:
+def price_values(text: str) -> list[float]:
+    """Values in a column already known to hold prices, where some lists drop the cents ("75" next to "37,5")."""
+    whole_number = re.fullmatch(r"(?:R\$\s*)?(\d{1,4})", text.strip())
+    return money_values(text) or ([float(whole_number.group(1))] if whole_number else [])
+
+
+def header_spans(pages: list[list[dict]]) -> list[dict]:
+    """The header row, from left to right: the spans level with the first one that starts with ISBN, EAN or código."""
     for spans in pages[:2]:
         for span in spans:
-            normalized = without_accents_lowercase(span["text"])
-            if not normalized.startswith(("isbn", "ean", "codigo")):
-                continue
-            header_spans = sorted((other for other in spans if abs(other["middle"] - span["middle"]) < 14), key=lambda other: other["left"])
-            roles = []
-            for header_span in header_spans:
-                for word in re.split(r"\s+", without_accents_lowercase(header_span["text"])):
-                    role = None
-                    if word.startswith(("isbn", "ean")):
-                        role = "isbn"
-                    elif word.startswith(("titul", "nome", "livro")):
-                        role = "title"
-                    elif word.startswith("autor"):
-                        role = "author"
-                    elif word.startswith(("editora", "selo")):
-                        role = "imprint"
-                    elif word.startswith(("assunt", "area", "genero")):
-                        role = "subject"
-                    elif word.startswith("pagina"):
-                        role = "pages"
-                    elif word.startswith(("url", "endereco", "link")):
-                        role = "url"
-                    if role and role not in roles:
-                        roles.append(role)
-            return roles
+            if without_accents_lowercase(span["text"]).startswith(("isbn", "ean", "codigo")):
+                return sorted((other for other in spans if abs(other["middle"] - span["middle"]) < 14), key=lambda other: other["left"])
     return []
+
+
+def header_roles(pages: list[list[dict]]) -> list[str]:
+    roles = []
+    for header_span in header_spans(pages):
+        for word in re.split(r"\s+", without_accents_lowercase(header_span["text"])):
+            role = None
+            if word.startswith(("isbn", "ean")):
+                role = "isbn"
+            elif word.startswith(("titul", "nome", "livro")):
+                role = "title"
+            elif word.startswith("autor"):
+                role = "author"
+            elif word.startswith(("editora", "selo")):
+                role = "imprint"
+            elif word.startswith(("assunt", "area", "genero")):
+                role = "subject"
+            elif word.startswith("pagina"):
+                role = "pages"
+            elif word.startswith(("url", "endereco", "link")):
+                role = "url"
+            if role and role not in roles:
+                roles.append(role)
+    return roles
+
+
+def price_labels_in_header(pages: list[list[dict]]) -> int:
+    """How many prices the header announces: "Preço R$" and "Preço com desconto" are two."""
+    header_text = " ".join(span["text"] for span in header_spans(pages))
+    return len(PRICE_LABEL.findall(without_accents_lowercase(header_text)))
 
 
 def isbn_continuation(spans: list[dict], anchor: dict, digits_so_far: str):
@@ -116,11 +133,13 @@ def parse_by_position(pages: list[list[dict]]) -> list[dict]:
         return found
 
     texts_by_column = collections.defaultdict(list)
+    right_edges_by_column = collections.defaultdict(list)
     for spans in row_spans:
         for span in spans:
             column = column_of(span["left"])
             if column is not None:
                 texts_by_column[column].append(span["text"])
+                right_edges_by_column[column].append(span["right"])
 
     kinds = {}
     for column in range(len(column_starts)):
@@ -131,6 +150,8 @@ def parse_by_position(pages: list[list[dict]]) -> list[dict]:
         share = lambda predicate: sum(1 for text in texts if predicate(text)) / len(texts)
         if share(lambda text: re.fullmatch(r"(R\$\s*)?[\d\.\s]+,\d{1,2}(\s*R\$)?|R\$", text.strip())) > 0.5:
             kinds[column] = "money"
+        elif share(lambda text: PRICE_WITH_OR_WITHOUT_CENTS.fullmatch(text.strip())) > 0.9 and share(lambda text: "," in text) > 0.2:
+            kinds[column] = "money"
         elif share(lambda text: "http" in text or "www" in text) > 0.5:
             kinds[column] = "url"
         elif share(lambda text: "%" in text) > 0.5:
@@ -140,8 +161,21 @@ def parse_by_position(pages: list[list[dict]]) -> list[dict]:
         else:
             kinds[column] = "text"
 
+    money_columns = [column for column in range(len(column_starts)) if kinds[column] == "money"]
+    # The header announces two prices but only one column has cents: the whole numbers right before it are the cover price (Nós).
+    if len(money_columns) == 1 and kinds.get(money_columns[0] - 1) == "number" and price_labels_in_header(pages) >= 2:
+        kinds[money_columns[0] - 1] = "money"
+
     text_columns = [column for column in range(len(column_starts)) if kinds[column] == "text"]
     money_columns = [column for column in range(len(column_starts)) if kinds[column] == "money"]
+    money_right_edges = {column: statistics.median(right_edges_by_column[column]) for column in money_columns}
+
+    def money_column_ending_at(span):
+        """Prices are aligned to the right, so a longer one ("257" above "75") starts before its column does."""
+        if not PRICE_WITH_OR_WITHOUT_CENTS.fullmatch(span["text"].strip()):
+            return None
+        return next((column for column, right in money_right_edges.items() if abs(span["right"] - right) < 3), None)
+
     first_money_column = min(money_columns) if money_columns else 99
     header_text_roles = [role for role in roles if role in ("title", "author", "imprint", "subject")]
     role_of_column = {}
@@ -166,10 +200,13 @@ def parse_by_position(pages: list[list[dict]]) -> list[dict]:
                 prices += money_values(span["text"])
                 continue
             column = column_of(span["left"])
+            right_aligned_money_column = money_column_ending_at(span) if kinds.get(column) != "money" else None
+            if right_aligned_money_column is not None:
+                column = right_aligned_money_column
             if column is None:
                 continue
             if kinds[column] == "money":
-                prices += money_values(span["text"])
+                prices += price_values(span["text"])
             elif column in role_of_column:
                 texts_by_role[role_of_column[column]].append(span["text"])
         if not prices:

@@ -80,3 +80,46 @@ def test_later_section_without_a_price_column_is_not_read_as_books():
         ["TECNOLOGIA", "", "9786556372495", "262"],
     ]
     assert [book["title"] for book in parse_table_rows(rows)] == ["#FICA ESPANHOL NO RS", "(ARTE)FATOS LITERARIOS - VOLUME I"]
+
+
+def test_cover_price_followed_by_a_stray_parenthesis():
+    rows = [
+        HEADER,
+        ["9786589741350", "A BIBLIOTECA NO FIM DO TÚNEL", "RODRIGO CASARIN", "ARQUIPÉLAGO", "69,90)", "34,95", "CRÔNICAS", "https://www.arquipelago.com.br/a-biblioteca-no-fim-do-tunel-rodrigo-casarin"],
+        ["9786589741534", "A CRÔNICA NÃO MATA", "LUIS HENRIQUE PELLANDA", "ARQUIPÉLAGO", "59,90)", "29,95", "CRÔNICAS", "https://www.arquipelago.com.br/a-cronica-nao-mata-luis-henrique-pellanda"],
+        ["9788560171392", "DIAS DE LUTA", "RICARDO ALEXANDRE", "ARQUIPÉLAGO", "129,90)", "64,95", "MÚSICA", "https://www.arquipelago.com.br/dias-de-luta-ricardo-alexandre"],
+    ]
+    books = {book["title"]: book for book in parse_table_rows(rows)}
+    assert (books["DIAS DE LUTA"]["cover_price"], books["DIAS DE LUTA"]["fair_price"]) == (129.9, 64.95)
+
+
+def test_sheet_printed_in_two_strips_of_the_same_width_is_glued_back_line_by_line():
+    rows = [
+        ["UNIVERSO DOS LIVROS - 28° FESTA DO LIVRO DA USP", ""],
+        ["ISBN Title", ""],
+        ["9786597941247", "A Casa Coruja: Bruxas contra Feiticeiros"],
+        ["9786556091921", "Aceita-me"],
+        ["9788550306643", "ACEITA-ME - EDIÇÃO DE LUXO LIMITADA"],
+        ["", ""],
+        ["Preço Capa preço USP", ""],
+        ["-R$ 39,90-", "-R$ 19,95-"],
+        ["-R$ 59,90-", "-R$ 29,95-"],
+        ["-R$ 89,90-", "-R$ 44,95-"],
+    ]
+    books = {book["isbn"]: book for book in parse_table_rows(rows)}
+    book = books["9788550306643"]
+    assert (book["title"], book["cover_price"], book["fair_price"]) == ("ACEITA-ME - EDIÇÃO DE LUXO LIMITADA", 89.9, 44.95)
+
+
+def test_rows_with_isbn_and_price_together_are_never_glued_as_strips():
+    rows = [
+        HEADER,
+        row("9788535914849", "1984", "ORWELL, GEORGE", "R$ 44,90", "R$ 22,00"),
+        ["9788571646858", "A METAMORFOSE", "", "", "", "", "", ""],
+        ["9788535911626", "PERSÉPOLIS (COMPLETO)", "", "", "", "", "", ""],
+        ["9788535906288", "MAUS", "", "", "", "", "", ""],
+        ["", "", "", "", "R$ 49,90", "R$ 24,50", "", ""],
+        ["", "", "", "", "R$ 104,90", "R$ 52,00", "", ""],
+        ["", "", "", "", "R$ 94,90", "R$ 47,00", "", ""],
+    ]
+    assert [book["title"] for book in parse_table_rows(rows)] == ["1984"]

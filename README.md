@@ -80,8 +80,8 @@ visitor's browser: search, totals and the list (stored on the device)
 
 ## Tests and quality
 
-- 135 automated tests, run on every push.
-- Regression tests run on real price-list PDFs from twelve publishers, including the layouts that broke earlier versions of the parser.
+- 145 automated tests, run on every push.
+- Regression tests run on real price-list PDFs from fourteen publishers, including the layouts that broke earlier versions of the parser.
 - Unit tests cover edition detection, API pagination, download caching, table parsing edge cases, URL sanitizing, site assembly and repository hygiene.
 - The CI run publishes a verification report: total books, lists that could not be read, and price mismatches by publisher.
 - Work is planned in milestones and issues: [project milestones](https://github.com/jvlcapi/guia-nao-oficial-festa-do-livro/milestones?state=all).
