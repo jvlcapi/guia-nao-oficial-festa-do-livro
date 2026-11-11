@@ -1,9 +1,9 @@
 # Relatório do catálogo: 28 Festa do Livro da USP
 
 - Edição: `28-festa-do-livro-da-usp` · 25 e 29 de novembro
-- Editoras no site: 48
-- Livros no catálogo: 9586
-- Livros sem ISBN (preço não conferível automaticamente): 84
+- Editoras no site: 50
+- Livros no catálogo: 9805
+- Livros sem ISBN (preço não conferível automaticamente): 86
 - Preços que não bateram com o PDF: 416
 - Livros sem preço de capa: 0
 - Livros só com preço de capa (feira não informado): 2479
@@ -40,6 +40,7 @@
 | EdUFSCar | 100 | 100 | 0 | tabela | 0 |
 | Edusp | 1007 | 1021 | 0 | tabela | 0 |
 | Grua | 102 | 102 | 0 | tabela | 0 |
+| Grupo Editorial Bookone | 183 | 183 | 0 | tabela | 0 |
 | Grupo Editorial Pensamento | 290 | 290 | 0 | tabela | 0 |
 | Grupo Summus | 402 | 402 | 0 | tabela | 0 |
 | HarperCollins Brasil | 415 | 415 | 0 | tabela | 0 |
@@ -60,6 +61,7 @@
 | Seiva | 8 | 8 | 0 | tabela | 0 |
 | Sisko Editora | 19 | 19 | 0 | tabela | 0 |
 | Telos Editora | 166 | 166 | 0 | tabela | 0 |
+| Terra Virgem Edições | 36 | 36 | 0 | tabela | 0 |
 | Ubu Editora | 166 | 166 | 0 | tabela | 0 |
 | Unifesp | 197 | 200 | 0 | tabela | 0 |
 | Universo dos livros | 358 | 358 | 0 | tabela em faixas | 356 |
