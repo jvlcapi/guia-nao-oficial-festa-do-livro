@@ -1,8 +1,8 @@
 # Relatório do catálogo: 28 Festa do Livro da USP
 
 - Edição: `28-festa-do-livro-da-usp` · 25 e 29 de novembro
-- Editoras no site: 50
-- Livros no catálogo: 9805
+- Editoras no site: 51
+- Livros no catálogo: 10505
 - Livros sem ISBN (preço não conferível automaticamente): 86
 - Preços que não bateram com o PDF: 416
 - Livros sem preço de capa: 0
@@ -16,6 +16,7 @@
 
 | Editora | Livros | Lidos | Sem capa | Leitura | Divergências |
 |---|---:|---:|---:|---|---:|
+| 34 Editora | 700 | 700 | 0 | tabela | 0 |
 | Aller Editora | 60 | 60 | 0 | tabela | 0 |
 | Arquipélago | 63 | 63 | 0 | tabela | 0 |
 | Ars et Vita | 21 | 21 | 0 | tabela | 1 |
