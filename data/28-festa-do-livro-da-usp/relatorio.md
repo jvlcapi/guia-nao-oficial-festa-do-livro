@@ -1,8 +1,8 @@
 # Relatório do catálogo: 28 Festa do Livro da USP
 
 - Edição: `28-festa-do-livro-da-usp` · 25 e 29 de novembro
-- Editoras no site: 51
-- Livros no catálogo: 10505
+- Editoras no site: 55
+- Livros no catálogo: 11324
 - Livros sem ISBN (preço não conferível automaticamente): 86
 - Preços que não bateram com o PDF: 416
 - Livros sem preço de capa: 0
@@ -21,6 +21,8 @@
 | Arquipélago | 63 | 63 | 0 | tabela | 0 |
 | Ars et Vita | 21 | 21 | 0 | tabela | 1 |
 | Autonomia Literária | 155 | 155 | 0 | tabela | 0 |
+| AUTORES ASSOCIADOS | 285 | 285 | 0 | tabela | 0 |
+| Baião | 48 | 48 | 0 | tabela | 0 |
 | Barbatana | 51 | 51 | 0 | tabela | 0 |
 | CORTEZ EDITORA | 150 | 150 | 0 | tabela | 0 |
 | DBA Literatura | 52 | 52 | 0 | tabela | 0 |
@@ -30,6 +32,7 @@
 | Editora Bazar do Tempo | 95 | 95 | 0 | posição do texto | 0 |
 | Editora Biruta | 290 | 290 | 0 | tabela | 0 |
 | Editora Cosac | 30 | 30 | 0 | tabela | 0 |
+| Editora da Unicamp | 453 | 453 | 0 | tabela | 0 |
 | Editora escala | 111 | 111 | 0 | tabela | 0 |
 | EDITORA INSTANTE | 60 | 60 | 0 | tabela | 0 |
 | Editora Joaquina | 12 | 12 | 0 | tabela | 0 |
@@ -56,6 +59,7 @@
 | Odysseus Editora | 81 | 82 | 0 | tabela | 0 |
 | Paco Editorial | 91 | 91 | 0 | tabela | 0 |
 | Phorte Editora | 60 | 60 | 0 | tabela em faixas | 59 |
+| Pinard | 33 | 33 | 0 | tabela | 0 |
 | Pontes Editores | 2479 | 2479 | 0 | tabela | 0 |
 | Pulo do Gato | 86 | 86 | 0 | tabela | 0 |
 | Quina Editora | 21 | 21 | 0 | tabela | 0 |
