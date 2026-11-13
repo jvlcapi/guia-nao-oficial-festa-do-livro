@@ -2,8 +2,8 @@
 
 - Edição: `28-festa-do-livro-da-usp` · 25 e 29 de novembro
 - Editoras no site: 60
-- Livros no catálogo: 11680
-- Livros sem ISBN (preço não conferível automaticamente): 90
+- Livros no catálogo: 11679
+- Livros sem ISBN (preço não conferível automaticamente): 89
 - Preços que não bateram com o PDF: 416
 - Livros sem preço de capa: 0
 - Livros só com preço de capa (feira não informado): 2479
@@ -43,7 +43,7 @@
 | Editora Panda Books | 139 | 139 | 0 | tabela | 0 |
 | Editora UFPR | 133 | 133 | 0 | tabela | 0 |
 | Editora UFSC | 297 | 297 | 0 | tabela | 0 |
-| Eduem | 150 | 151 | 0 | tabela | 0 |
+| Eduem | 150 | 150 | 0 | tabela | 0 |
 | EdUFSCar | 100 | 100 | 0 | tabela | 0 |
 | Edusp | 1007 | 1021 | 0 | tabela | 0 |
 | Grua | 102 | 102 | 0 | tabela | 0 |
@@ -73,7 +73,7 @@
 | Telos Editora | 166 | 166 | 0 | tabela | 0 |
 | Terra Virgem Edições | 36 | 36 | 0 | tabela | 0 |
 | Ubu Editora | 166 | 166 | 0 | tabela | 0 |
-| Unifesp | 198 | 201 | 0 | tabela | 0 |
+| Unifesp | 197 | 200 | 0 | tabela | 0 |
 | Universo dos livros | 358 | 358 | 0 | tabela em faixas | 356 |
 | Via Lettera | 119 | 119 | 0 | tabela | 0 |
 
