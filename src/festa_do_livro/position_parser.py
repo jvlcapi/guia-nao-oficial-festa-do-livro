@@ -9,6 +9,8 @@ ROW_START = re.compile(r"^(?:ean:?|isbn13:?)?\s*(97[89][\d\-\s]{10,17}|\d{10}\b)
 MONEY = re.compile(r"(\d{1,3}(?:\.\d{3})*,\d{2}|\d{1,3} \d{2},\d{2}|\d+,\d)")
 PRICE_WITH_OR_WITHOUT_CENTS = re.compile(r"(?:R\$\s*)?\d{1,4}(?:,\d{1,2})?")
 PRICE_LABEL = re.compile(r"preco|valor")
+# Pages, years and stall numbers never have cents, so a few prices like "44,9" among "80" and "40" are enough (Letra Selvagem).
+SHARE_WITH_CENTS_IN_A_PRICE_COLUMN = 0.05
 HEADER_WORDS = {
     "isbn", "titulo", "autor", "editora", "assunto", "url_livro", "url livro", "url", "preco de", "capa",
     "preco com", "desconto", "preco de capa", "preco com desconto", "autor(es)", "selo", "paginas", "prc.venda", "por", "%",
@@ -64,6 +66,11 @@ def price_labels_in_header(pages: list[list[dict]]) -> int:
     return len(PRICE_LABEL.findall(without_accents_lowercase(header_text)))
 
 
+def is_isbn_missing_a_digit(digits: str) -> bool:
+    """A row whose ISBN was typed with a digit missing ("978-658984119") is still a row; the catalog shows it without ISBN."""
+    return len(digits) == 12 and digits.startswith(("978", "979"))
+
+
 def isbn_continuation(spans: list[dict], anchor: dict, digits_so_far: str):
     """The second line of an ISBN that a narrow cell broke in two ("978-65-87955-" above "23-0")."""
     for span in spans:
@@ -92,7 +99,7 @@ def parse_by_position(pages: list[list[dict]]) -> list[dict]:
                     isbn_endings.add(id(ending))
             if len(digits) >= 13:
                 digits = digits[:13]
-            if len(digits) in (10, 13):
+            if len(digits) in (10, 13) or is_isbn_missing_a_digit(digits):
                 row_anchors.append((page_index, span["middle"], digits, span))
     if not row_anchors:
         return []
@@ -150,7 +157,7 @@ def parse_by_position(pages: list[list[dict]]) -> list[dict]:
         share = lambda predicate: sum(1 for text in texts if predicate(text)) / len(texts)
         if share(lambda text: re.fullmatch(r"(R\$\s*)?[\d\.\s]+,\d{1,2}(\s*R\$)?|R\$", text.strip())) > 0.5:
             kinds[column] = "money"
-        elif share(lambda text: PRICE_WITH_OR_WITHOUT_CENTS.fullmatch(text.strip())) > 0.9 and share(lambda text: "," in text) > 0.2:
+        elif share(lambda text: PRICE_WITH_OR_WITHOUT_CENTS.fullmatch(text.strip())) > 0.9 and share(lambda text: "," in text) > SHARE_WITH_CENTS_IN_A_PRICE_COLUMN:
             kinds[column] = "money"
         elif share(lambda text: "http" in text or "www" in text) > 0.5:
             kinds[column] = "url"
@@ -176,6 +183,14 @@ def parse_by_position(pages: list[list[dict]]) -> list[dict]:
             return None
         return next((column for column, right in money_right_edges.items() if abs(span["right"] - right) < 3), None)
 
+    def money_column_starting_near(span):
+        """A price written at the left of its cell ("60" above "70" aligned to the right) sits closer to the start of its money
+        column than to the start of the text column it falls in."""
+        if not PRICE_WITH_OR_WITHOUT_CENTS.fullmatch(span["text"].strip()) or not column_starts:
+            return None
+        nearest = min(range(len(column_starts)), key=lambda column: abs(span["left"] - column_starts[column]))
+        return nearest if kinds.get(nearest) == "money" else None
+
     first_money_column = min(money_columns) if money_columns else 99
     header_text_roles = [role for role in roles if role in ("title", "author", "imprint", "subject")]
     role_of_column = {}
@@ -200,9 +215,12 @@ def parse_by_position(pages: list[list[dict]]) -> list[dict]:
                 prices += money_values(span["text"])
                 continue
             column = column_of(span["left"])
-            right_aligned_money_column = money_column_ending_at(span) if kinds.get(column) != "money" else None
-            if right_aligned_money_column is not None:
-                column = right_aligned_money_column
+            if kinds.get(column) != "money":
+                misaligned_money_column = money_column_ending_at(span)
+                if misaligned_money_column is None:
+                    misaligned_money_column = money_column_starting_near(span)
+                if misaligned_money_column is not None:
+                    column = misaligned_money_column
             if column is None:
                 continue
             if kinds[column] == "money":

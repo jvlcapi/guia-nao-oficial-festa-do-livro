@@ -30,6 +30,8 @@ LOWEST_FAIR_SHARE_OF_COVER = 0.2
 LONGEST_TITLE = 250  # longer text is several rows glued together by the reader
 FAIR_PRICE_HINTS = ("desc", "feira", "festa", "%", "promo", "final", "venda", "liquido")
 ONLY_COVER_PRICE_NOTICE = "só tem preço de capa; o preço de feira não foi informado"
+FEWEST_BOOKS_TO_COMPARE_READERS = 10
+SHARE_READ_THE_SAME_WAY = 0.8
 READ_IN_STRIPS = "tabela em faixas"
 
 
@@ -118,19 +120,45 @@ def parse_price_list(pdf_path: Path) -> ParsedPriceList:
     complete = lambda books: sum(1 for book in books if book["title"] and book["fair_price"])
     if complete(from_tables) >= 0.95 * complete(from_positions) and complete(from_tables) > 0:
         # In strips, the ISBN and its prices sit on different pages, so the price check reports them as divergences.
-        chosen, method = from_tables, READ_IN_STRIPS if printed_in_strips else "tabela"
+        chosen, other, method = from_tables, from_positions, READ_IN_STRIPS if printed_in_strips else "tabela"
     else:
-        chosen, method = from_positions, "posição do texto"
-    books = [clean_parsed_book(book) for book in chosen if book["title"] and book["fair_price"]]
-    books = [book for book in books if book["title"]]
+        chosen, other, method = from_positions, from_tables, "posição do texto"
+    books = cleaned_complete_books(chosen)
+    fill_missing_isbns_from_text(books, plain_text)
+    books += books_only_the_other_reader_found(books, cleaned_complete_books(other))
     notice = ""
     if has_only_cover_prices(plain_text):
         for book in books:
             if book["cover_price"] is None:
                 book["cover_price"], book["fair_price"] = book["fair_price"], None
         notice = ONLY_COVER_PRICE_NOTICE
-    fill_missing_isbns_from_text(books, plain_text)
     return ParsedPriceList(books=books, method=method, plain_text=plain_text, notice=notice)
+
+
+def cleaned_complete_books(books: list[dict]) -> list[dict]:
+    cleaned = [clean_parsed_book(book) for book in books if book["title"] and book["fair_price"]]
+    return [book for book in cleaned if book["title"]]
+
+
+def books_only_the_other_reader_found(books: list[dict], other_reader_books: list[dict]) -> list[dict]:
+    """A row the chosen reader lost, like the last one of a table whose borders break (Unifesp), can still be read by the other
+    reader. Only a valid ISBN tells that it is a book the chosen reader missed, and not the same book read another way, and the
+    other reader is trusted only when it reads the books both found the same way: in some lists it mixes up the columns."""
+    books_by_isbn = {book["isbn"]: book for book in books if is_valid_isbn(book["isbn"])}
+    other_books_by_isbn = {}
+    for book in other_reader_books:
+        if is_valid_isbn(book["isbn"]):
+            other_books_by_isbn.setdefault(book["isbn"], book)
+    found_by_both = books_by_isbn.keys() & other_books_by_isbn.keys()
+    read_the_same_way = sum(1 for isbn in found_by_both if same_reading(books_by_isbn[isbn], other_books_by_isbn[isbn]))
+    if len(found_by_both) < FEWEST_BOOKS_TO_COMPARE_READERS or read_the_same_way < SHARE_READ_THE_SAME_WAY * len(found_by_both):
+        return []
+    return [book for isbn, book in other_books_by_isbn.items() if isbn not in books_by_isbn]
+
+
+def same_reading(book: dict, other_reading: dict) -> bool:
+    comparable_title = lambda title: re.sub(r"\W+", " ", without_accents_lowercase(title)).strip()
+    return comparable_title(book["title"]) == comparable_title(other_reading["title"]) and book["fair_price"] == other_reading["fair_price"]
 
 
 def safe_public_url(url: str) -> str:

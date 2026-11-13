@@ -5,6 +5,7 @@ import pytest
 
 from festa_do_livro.catalog_builder import (
     ParsedPriceList,
+    books_only_the_other_reader_found,
     build_catalog,
     has_only_cover_prices,
     imprint_repeats_exhibitor,
@@ -415,3 +416,48 @@ def test_fair_price_that_does_not_follow_the_discount_percentage_is_a_divergence
     catalog = catalog_from({"Instituto Tomie Ohtake": [parsed_book("9788553190133", "AI-5 - AINDA NÃO TERMINOU DE ACABAR", cover=120.0, fair=70.0)]})
     plain_text = "978-8553190133 AI-5 - AINDA NÃO TERMINOU DE ACABAR Paulo Miyada Instituto Tomie Ohtake R$ 120,00 50,00% POLÍTICA"
     assert verify_prices(catalog, {0: plain_text}).mismatch_count == 1
+
+
+@pytest.fixture(scope="module")
+def letra_selvagem():
+    return catalog_for("letra_selvagem.pdf", "Letra Selvagem")
+
+
+def test_rows_below_the_table_borders_are_read(letra_selvagem):
+    book = book_titled(letra_selvagem[0], "Meu Dostoiévski")
+    assert (book["i"], book["c"], book["f"]) == ("9786589841234", 80.0, 40.0)
+
+
+def test_reads_every_book_of_a_list_whose_table_loses_its_borders(letra_selvagem):
+    assert len(letra_selvagem[0]["livros"]) == 72
+
+
+def test_cover_price_written_at_the_left_of_its_cell_is_read(letra_selvagem):
+    book = book_titled(letra_selvagem[0], "Bandoleiros de Taubaté")
+    assert (book["c"], book["f"]) == (60.0, 30.0)
+
+
+def test_last_row_with_broken_cell_borders_is_read():
+    catalog, _ = catalog_for("unifesp.pdf", "Unifesp")
+    book = book_titled(catalog, "PRISMA DA RAÇA")
+    assert (book["i"], book["c"], book["f"]) == ("9786556322001", 98.0, 49.0)
+
+
+def isbn_with_check_digit(first_twelve_digits: str) -> str:
+    weighted_sum = sum(int(digit) * (3 if position % 2 else 1) for position, digit in enumerate(first_twelve_digits))
+    return first_twelve_digits + str((10 - weighted_sum % 10) % 10)
+
+
+def numbered_books(count: int, title_prefix: str = "Livro") -> list[dict]:
+    return [parsed_book(isbn_with_check_digit(f"978850000{number:03d}"), f"{title_prefix} {number}") for number in range(count)]
+
+
+def test_book_the_chosen_reader_lost_is_taken_from_the_other_reader():
+    lost_book = parsed_book(isbn_with_check_digit("978850000999"), "Livro da última linha")
+    assert books_only_the_other_reader_found(numbered_books(10), numbered_books(10) + [lost_book]) == [lost_book]
+
+
+def test_other_reader_is_not_trusted_when_it_reads_the_shared_books_another_way():
+    lost_book = parsed_book(isbn_with_check_digit("978850000999"), "Livro da última linha")
+    codes_read_as_titles = numbered_books(10, title_prefix="21144")
+    assert books_only_the_other_reader_found(numbered_books(10), codes_read_as_titles + [lost_book]) == []
