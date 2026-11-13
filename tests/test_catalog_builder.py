@@ -13,6 +13,7 @@ from festa_do_livro.catalog_builder import (
     safe_public_url,
     same_content,
     tidy_subject,
+    without_garbled_copies,
 )
 from festa_do_livro.fair_site import EventDetails, Publisher
 from festa_do_livro.isbn import isbn_of_book_id
@@ -437,10 +438,18 @@ def test_cover_price_written_at_the_left_of_its_cell_is_read(letra_selvagem):
     assert (book["c"], book["f"]) == (60.0, 30.0)
 
 
-def test_last_row_with_broken_cell_borders_is_read():
-    catalog, _ = catalog_for("unifesp.pdf", "Unifesp")
-    book = book_titled(catalog, "PRISMA DA RAÇA")
+@pytest.fixture(scope="module")
+def unifesp():
+    return catalog_for("unifesp.pdf", "Unifesp")
+
+
+def test_last_row_with_broken_cell_borders_is_read(unifesp):
+    book = book_titled(unifesp[0], "PRISMA DA RAÇA")
     assert (book["i"], book["c"], book["f"]) == ("9786556322001", 98.0, 49.0)
+
+
+def test_last_row_with_broken_cell_borders_is_shown_once(unifesp):
+    assert len([book for book in unifesp[0]["livros"] if "PRISMA DA RAÇA" in book["t"]]) == 1
 
 
 def isbn_with_check_digit(first_twelve_digits: str) -> str:
@@ -461,3 +470,27 @@ def test_other_reader_is_not_trusted_when_it_reads_the_shared_books_another_way(
     lost_book = parsed_book(isbn_with_check_digit("978850000999"), "Livro da última linha")
     codes_read_as_titles = numbered_books(10, title_prefix="21144")
     assert books_only_the_other_reader_found(numbered_books(10), codes_read_as_titles + [lost_book]) == []
+
+
+def test_row_read_with_its_isbn_inside_the_title_goes_away_when_the_other_reader_brings_the_book():
+    garbled_row = parsed_book("", "9786556322001 PRISMA DA RAÇA, O Lehmann, David", cover=98.0, fair=49.0)
+    same_book_with_isbn = parsed_book("9786556322001", "PRISMA DA RAÇA, O", cover=98.0, fair=49.0)
+    assert without_garbled_copies(numbered_books(3) + [garbled_row], [same_book_with_isbn]) == numbered_books(3)
+
+
+def test_row_read_without_its_isbn_goes_away_when_the_other_reader_brings_the_same_title():
+    row_without_isbn = parsed_book("", "ANTROPOLOGIA", fair=67.5)
+    same_book_with_isbn = parsed_book(isbn_with_check_digit("978853265015"), "Antropologia", fair=67.5)
+    assert without_garbled_copies([row_without_isbn], [same_book_with_isbn]) == []
+
+
+def test_another_volume_without_isbn_stays_when_the_other_reader_brings_a_volume_with_the_same_price():
+    third_volume = parsed_book("", "EXERCICIOS PRATICOS PARA ESTIMULAR A MEMORIA VOL. 3", fair=26.25)
+    second_volume = parsed_book(isbn_with_check_digit("978853264000"), "EXERCICIOS PRATICOS PARA ESTIMULAR A MEMORIA VOL. 2", fair=26.25)
+    assert without_garbled_copies([third_volume], [second_volume]) == [third_volume]
+
+
+def test_book_without_isbn_with_another_price_stays_when_the_other_reader_brings_the_same_title():
+    book_without_isbn = parsed_book("", "ANTROPOLOGIA", fair=40.0)
+    book_with_isbn = parsed_book(isbn_with_check_digit("978853265015"), "ANTROPOLOGIA", fair=67.5)
+    assert without_garbled_copies([book_without_isbn], [book_with_isbn]) == [book_without_isbn]

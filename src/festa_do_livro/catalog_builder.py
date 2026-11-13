@@ -125,7 +125,8 @@ def parse_price_list(pdf_path: Path) -> ParsedPriceList:
         chosen, other, method = from_positions, from_tables, "posição do texto"
     books = cleaned_complete_books(chosen)
     fill_missing_isbns_from_text(books, plain_text)
-    books += books_only_the_other_reader_found(books, cleaned_complete_books(other))
+    found_only_by_other_reader = books_only_the_other_reader_found(books, cleaned_complete_books(other))
+    books = without_garbled_copies(books, found_only_by_other_reader) + found_only_by_other_reader
     notice = ""
     if has_only_cover_prices(plain_text):
         for book in books:
@@ -156,9 +157,31 @@ def books_only_the_other_reader_found(books: list[dict], other_reader_books: lis
     return [book for isbn, book in other_books_by_isbn.items() if isbn not in books_by_isbn]
 
 
+def without_garbled_copies(books: list[dict], found_only_by_other_reader: list[dict]) -> list[dict]:
+    """The chosen reader can read a row and lose only its ISBN, like "9786556322001 PRISMA DA RAÇA, O Lehmann, David" in a single
+    cell (Unifesp). When the other reader brings that book with its ISBN, the garbled copy goes away instead of showing the book
+    twice. Only the whole title counts: volumes 2 and 3 of a series share the price and the start of the title (Vozes)."""
+    remaining = list(books)
+    for book_with_isbn in found_only_by_other_reader:
+        garbled_copy = next((book for book in remaining if is_garbled_copy(book, book_with_isbn)), None)
+        if garbled_copy is not None:
+            remaining.remove(garbled_copy)
+    return remaining
+
+
+def is_garbled_copy(book: dict, book_with_isbn: dict) -> bool:
+    if is_valid_isbn(book["isbn"]) or book["fair_price"] != book_with_isbn["fair_price"]:
+        return False
+    isbn_inside_title = book_with_isbn["isbn"] in re.sub(r"\D", "", book["title"])
+    return isbn_inside_title or comparable_title(book["title"]) == comparable_title(book_with_isbn["title"])
+
+
 def same_reading(book: dict, other_reading: dict) -> bool:
-    comparable_title = lambda title: re.sub(r"\W+", " ", without_accents_lowercase(title)).strip()
     return comparable_title(book["title"]) == comparable_title(other_reading["title"]) and book["fair_price"] == other_reading["fair_price"]
+
+
+def comparable_title(title: str) -> str:
+    return re.sub(r"\W+", " ", without_accents_lowercase(title)).strip()
 
 
 def safe_public_url(url: str) -> str:
