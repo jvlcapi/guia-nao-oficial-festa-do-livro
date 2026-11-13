@@ -1,9 +1,9 @@
 # Relatório do catálogo: 28 Festa do Livro da USP
 
 - Edição: `28-festa-do-livro-da-usp` · 25 e 29 de novembro
-- Editoras no site: 57
-- Livros no catálogo: 11502
-- Livros sem ISBN (preço não conferível automaticamente): 89
+- Editoras no site: 60
+- Livros no catálogo: 11680
+- Livros sem ISBN (preço não conferível automaticamente): 90
 - Preços que não bateram com o PDF: 416
 - Livros sem preço de capa: 0
 - Livros só com preço de capa (feira não informado): 2479
@@ -22,8 +22,10 @@
 | Ars et Vita | 21 | 21 | 0 | tabela | 1 |
 | Autonomia Literária | 155 | 155 | 0 | tabela | 0 |
 | AUTORES ASSOCIADOS | 285 | 285 | 0 | tabela | 0 |
+| Azuco | 21 | 21 | 0 | tabela | 0 |
 | Baião | 48 | 48 | 0 | tabela | 0 |
 | Barbatana | 51 | 51 | 0 | tabela | 0 |
+| Buzz Editora | 83 | 83 | 0 | tabela | 0 |
 | CORTEZ EDITORA | 150 | 150 | 0 | tabela | 0 |
 | DBA Literatura | 52 | 52 | 0 | tabela | 0 |
 | Dublinense | 103 | 103 | 0 | tabela | 0 |
@@ -41,7 +43,7 @@
 | Editora Panda Books | 139 | 139 | 0 | tabela | 0 |
 | Editora UFPR | 133 | 133 | 0 | tabela | 0 |
 | Editora UFSC | 297 | 297 | 0 | tabela | 0 |
-| Eduem | 149 | 150 | 0 | tabela | 0 |
+| Eduem | 150 | 151 | 0 | tabela | 0 |
 | EdUFSCar | 100 | 100 | 0 | tabela | 0 |
 | Edusp | 1007 | 1021 | 0 | tabela | 0 |
 | Grua | 102 | 102 | 0 | tabela | 0 |
@@ -51,7 +53,7 @@
 | HarperCollins Brasil | 415 | 415 | 0 | tabela | 0 |
 | Instituto Tomie Ohtake | 17 | 18 | 0 | tabela | 0 |
 | Jujuba Editora | 60 | 60 | 0 | tabela | 0 |
-| Letra Selvagem | 49 | 50 | 0 | tabela | 0 |
+| Letra Selvagem | 72 | 72 | 0 | posição do texto | 0 |
 | Livros da Matriz | 33 | 33 | 0 | tabela | 0 |
 | Maria Antonia Edições - GMARX | 11 | 11 | 0 | tabela | 0 |
 | Martins Fontes - Selo Martins | 678 | 678 | 0 | tabela | 0 |
@@ -64,13 +66,14 @@
 | Pontes Editores | 2479 | 2479 | 0 | tabela | 0 |
 | Publicações BBM | 39 | 39 | 0 | tabela | 0 |
 | Pulo do Gato | 86 | 86 | 0 | tabela | 0 |
+| Quatro Cantos | 49 | 49 | 0 | tabela | 0 |
 | Quina Editora | 21 | 21 | 0 | tabela | 0 |
 | Seiva | 8 | 8 | 0 | tabela | 0 |
 | Sisko Editora | 19 | 19 | 0 | tabela | 0 |
 | Telos Editora | 166 | 166 | 0 | tabela | 0 |
 | Terra Virgem Edições | 36 | 36 | 0 | tabela | 0 |
 | Ubu Editora | 166 | 166 | 0 | tabela | 0 |
-| Unifesp | 197 | 200 | 0 | tabela | 0 |
+| Unifesp | 198 | 201 | 0 | tabela | 0 |
 | Universo dos livros | 358 | 358 | 0 | tabela em faixas | 356 |
 | Via Lettera | 119 | 119 | 0 | tabela | 0 |
 
