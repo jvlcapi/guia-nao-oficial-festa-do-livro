@@ -1,12 +1,16 @@
 # Relatório do catálogo: 28 Festa do Livro da USP
 
 - Edição: `28-festa-do-livro-da-usp` · 25 e 29 de novembro
-- Editoras no site: 60
-- Livros no catálogo: 11679
+- Editoras no site: 70
+- Livros no catálogo: 13899
 - Livros sem ISBN (preço não conferível automaticamente): 89
 - Preços que não bateram com o PDF: 416
-- Livros sem preço de capa: 0
+- Livros sem preço de capa: 1
 - Livros só com preço de capa (feira não informado): 2479
+
+## Listas para conferir
+
+- **Editora Miolo Mole**: livros perdidos (15 das 36 linhas lidas viraram livro)
 
 ## Avisos sobre listas
 
@@ -26,6 +30,8 @@
 | Baião | 48 | 48 | 0 | tabela | 0 |
 | Barbatana | 51 | 51 | 0 | tabela | 0 |
 | Buzz Editora | 83 | 83 | 0 | tabela | 0 |
+| Catapulta | 369 | 369 | 0 | posição do texto | 0 |
+| Caxinguelê | 37 | 37 | 0 | tabela | 0 |
 | CORTEZ EDITORA | 150 | 150 | 0 | tabela | 0 |
 | DBA Literatura | 52 | 52 | 0 | tabela | 0 |
 | Dublinense | 103 | 103 | 0 | tabela | 0 |
@@ -36,13 +42,21 @@
 | Editora Cosac | 30 | 30 | 0 | tabela | 0 |
 | Editora da Unicamp | 453 | 453 | 0 | tabela | 0 |
 | Editora escala | 111 | 111 | 0 | tabela | 0 |
+| EDITORA ESCUTA | 127 | 127 | 0 | tabela | 0 |
+| Editora Estação Liberdade | 225 | 225 | 0 | posição do texto | 0 |
 | EDITORA INSTANTE | 60 | 60 | 0 | tabela | 0 |
 | Editora Joaquina | 12 | 12 | 0 | tabela | 0 |
+| EDITORA KITEMBO | 15 | 15 | 0 | tabela | 0 |
+| Editora Melhoramentos | 223 | 223 | 0 | tabela | 0 |
+| Editora Miolo Mole | 15 | 36 | 0 | tabela | 0 |
 | Editora Mostarda | 102 | 102 | 0 | tabela | 0 |
 | Editora Olhares | 79 | 79 | 0 | posição do texto | 0 |
 | Editora Panda Books | 139 | 139 | 0 | tabela | 0 |
+| Editora Peirópolis | 271 | 271 | 0 | tabela | 0 |
+| EDITORA UFMG | 245 | 247 | 1 | tabela | 0 |
 | Editora UFPR | 133 | 133 | 0 | tabela | 0 |
 | Editora UFSC | 297 | 297 | 0 | tabela | 0 |
+| Editora Unesp | 693 | 694 | 0 | tabela | 0 |
 | Eduem | 150 | 150 | 0 | tabela | 0 |
 | EdUFSCar | 100 | 100 | 0 | tabela | 0 |
 | Edusp | 1007 | 1021 | 0 | tabela | 0 |
