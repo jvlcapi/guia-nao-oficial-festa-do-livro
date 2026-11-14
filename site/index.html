@@ -238,6 +238,15 @@ footer { font-size: 13px; color: var(--muted); }
 .person:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .notice { font-size: 14px; color: var(--muted); background: var(--surface); border: 1px dashed var(--line); border-radius: 12px; padding: 10px 14px; }
 .notice strong { color: var(--fg); font-weight: 600; }
+.bring-list { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 8px; }
+.empty .bring-list { justify-content: center; margin-top: 14px; }
+.empty .bring-list p { margin: 0; flex-basis: 100%; }
+.brought-notice { display: grid; gap: 14px; }
+.brought-list { display: grid; gap: 8px; justify-items: start; }
+.brought-list p { margin: 0; }
+.brought-list details { width: 100%; }
+.brought-list summary { cursor: pointer; color: var(--fg); }
+.brought-list ul { margin: 6px 0 0; padding-left: 20px; overflow-wrap: anywhere; }
 .budget-edit { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-size: 14px; }
 .budget-edit input { font: inherit; font-family: var(--font-mono); width: 9em; color: var(--fg); background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; }
 .budget-edit input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; border-color: transparent; }
@@ -302,6 +311,7 @@ footer a { color: inherit; }
       </div>
     </div>
     <div class="notice" id="view-notice" hidden></div>
+    <section class="notice brought-notice" id="brought-lists-notice" hidden aria-label="Livros da lista de uma edição anterior que ainda faltam"></section>
 
     <section class="share-bar" id="share-bar" aria-label="Compartilhar">
       <p class="share-text" id="share-text">Sua lista fica salva só neste navegador.</p>
@@ -470,6 +480,7 @@ const pct = new Intl.NumberFormat("pt-BR", { style: "percent", maximumFractionDi
 const intFormat = new Intl.NumberFormat("pt-BR");
 const collator = new Intl.Collator("pt-BR", { numeric: true, sensitivity: "base" });
 const RESULTS_PAGE_SIZE = 50;
+const FIRST_EDITION_YEAR = 1999;
 
 const state = {
   event: null,
@@ -868,6 +879,187 @@ if (navigator.share) {
 
 document.getElementById("share-panel").addEventListener("submit", event => event.preventDefault());
 
+/* ---------- Bringing the list of a previous edition ---------- */
+// The Festa happens every year since 1999, the year of the 1st edition (the pipeline's edition_year says the same).
+function editionYear(edition) {
+  if (edition === currentEdition() && state.event?.ano) return state.event.ano;
+  const number = parseInt(edition, 10);
+  return number ? FIRST_EDITION_YEAR + number - 1 : null;
+}
+
+function previousEditionsWithBooks() {
+  const currentNumber = parseInt(currentEdition(), 10) || 0;
+  return Object.keys(state.saved.edicoes)
+    .filter(edition => (parseInt(edition, 10) || 0) < currentNumber && Object.keys(state.saved.edicoes[edition]?.livros || {}).length)
+    .sort((a, b) => (parseInt(b, 10) || 0) - (parseInt(a, 10) || 0));
+}
+
+// Publishers write their names another way from one edition to the next: "Aller" became "Aller Editora", "Cortez Editora"
+// became "CORTEZ EDITORA" and "Editora 34" became "34 Editora" in 2026.
+function publisherKey(name) {
+  return normalizeText(name).replace(/\b(editora|editorial|edicoes|livros|grupo|ltda)\b/g, " ").replace(/[^a-z0-9]+/g, " ").trim();
+}
+
+// The same book in this year's catalog: by ISBN, preferring the same publisher, or by the same title at the same
+// publisher, which also finds a book without ISBN and a book reprinted with a new ISBN.
+function sameBookInCatalog(entryId, entry) {
+  const entryPublisherKey = publisherKey(entry.editora);
+  const sameIsbn = catalogByIsbn.get(isbnOf(entryId)) || [];
+  if (sameIsbn.length) return sameIsbn.find(book => book.publisherKey === entryPublisherKey) || sameIsbn[0];
+  const titleKey = normalizeText(entry.titulo);
+  return catalog.books.find(book => book.publisherKey === entryPublisherKey && book.titleKey === titleKey) || null;
+}
+
+// Returns true when the book is new to the list; a book already there only gets the tag of the list it also came from.
+function addBroughtBook(record, book, entry, sourceKey) {
+  const existing = record.livros[book.i];
+  if (existing) {
+    record.livros[book.i] = { ...existing, origens: [...new Set([...(existing.origens || []), sourceKey])] };
+    return false;
+  }
+  record.livros[book.i] = { ...entryFromCatalog(book), origens: [...new Set([...(entry.origens || []), sourceKey])] };
+  return true;
+}
+
+function missingBookEntry(entry) {
+  const missing = { titulo: entry.titulo, autor: entry.autor || "", editora: entry.editora || "" };
+  if (entry.origens?.length) missing.origens = entry.origens;
+  return missing;
+}
+
+function bringListFromEdition(sourceEdition, button) {
+  button.disabled = true;
+  loadCatalog().then(() => {
+    button.disabled = false;
+    if (!catalogById) {
+      showToast("Não deu para abrir o catálogo deste ano. Verifique a internet e tente de novo.");
+      return;
+    }
+    const sourceKey = ensureSource(String(editionYear(sourceEdition)));
+    const missing = {};
+    let added = 0;
+    let alreadyThere = 0;
+    state.viewedEdition = currentEdition();
+    updateMyList(record => {
+      for (const [entryId, entry] of Object.entries(listRecord(sourceEdition)?.livros || {})) {
+        const book = sameBookInCatalog(entryId, entry);
+        if (!book) missing[entryId] = missingBookEntry(entry);
+        else if (addBroughtBook(record, book, entry, sourceKey)) added += 1;
+        else alreadyThere += 1;
+      }
+      record.listasTrazidas = { ...record.listasTrazidas, [sourceEdition]: { trazidaEm: new Date().toISOString(), naoEncontrados: missing } };
+      return record;
+    });
+    const missingCount = Object.keys(missing).length;
+    const found = [];
+    if (added) found.push(`${added} ${added === 1 ? "livro entrou" : "livros entraram"} com o preço de ${editionYear(currentEdition())}`);
+    if (alreadyThere) found.push(`${alreadyThere} já ${alreadyThere === 1 ? "estava" : "estavam"} na lista`);
+    const foundText = found.length ? `${found.join(" e ")}.` : `Nenhum livro da lista de ${editionYear(sourceEdition)} está no catálogo deste ano ainda.`;
+    showToast(missingCount ? `${foundText} Faltam ${missingCount}: veja o aviso no alto da lista.` : foundText);
+  });
+}
+
+function bringButton(sourceEdition) {
+  const count = Object.keys(listRecord(sourceEdition)?.livros || {}).length;
+  const button = el("button", { type: "button", class: "btn primary small", text: `Trazer ${count === 1 ? "o livro" : `os ${count} livros`} para a lista de ${editionYear(currentEdition())}` });
+  button.addEventListener("click", () => bringListFromEdition(sourceEdition, button));
+  return button;
+}
+
+function bringOfferForPreviousEdition(sourceEdition) {
+  const broughtAt = listRecord(currentEdition())?.listasTrazidas?.[sourceEdition]?.trazidaEm;
+  return el("div", { class: "bring-list" }, [
+    bringButton(sourceEdition),
+    broughtAt ? el("span", { class: "status", text: `Você já trouxe esta lista em ${new Date(broughtAt).toLocaleDateString("pt-BR")}.` }) : null,
+  ]);
+}
+
+function bringOfferForEmptyList() {
+  const broughtLists = listRecord(currentEdition())?.listasTrazidas || {};
+  const sourceEdition = previousEditionsWithBooks().find(edition => !broughtLists[edition]);
+  if (!sourceEdition) return null;
+  return el("div", { class: "bring-list" }, [
+    el("p", { text: `Ou traga a lista que você montou para a Festa de ${editionYear(sourceEdition)}, com os preços deste ano.` }),
+    bringButton(sourceEdition),
+  ]);
+}
+
+// Lists keep arriving until the Festa: every catalog update looks again for the books still missing and brings the ones that came.
+function bringBooksThatArrived() {
+  const record = listRecord(currentEdition());
+  if (!record?.listasTrazidas || !catalogById) return;
+  const arrivals = [];
+  for (const [sourceEdition, brought] of Object.entries(record.listasTrazidas)) {
+    for (const [entryId, entry] of Object.entries(brought.naoEncontrados || {})) {
+      const book = sameBookInCatalog(entryId, entry);
+      if (book) arrivals.push({ sourceEdition, entryId, entry, book });
+    }
+  }
+  if (!arrivals.length) return;
+  updateMyList(next => {
+    const broughtLists = JSON.parse(JSON.stringify(next.listasTrazidas));
+    for (const { sourceEdition, entryId, entry, book } of arrivals) {
+      delete broughtLists[sourceEdition].naoEncontrados[entryId];
+      addBroughtBook(next, book, entry, ensureSource(String(editionYear(sourceEdition))));
+    }
+    next.listasTrazidas = broughtLists;
+    return next;
+  });
+  const years = [...new Set(arrivals.map(arrival => editionYear(arrival.sourceEdition)))];
+  showToast(arrivals.length === 1
+    ? `"${arrivals[0].book.t}" chegou ao catálogo de ${editionYear(currentEdition())} e entrou na sua lista.`
+    : `${arrivals.length} livros que faltavam da ${years.length === 1 ? `sua lista de ${years[0]}` : "suas listas anteriores"} chegaram ao catálogo e entraram na lista.`);
+}
+
+function forgetMissingBooks(sourceEdition) {
+  updateMyList(record => {
+    record.listasTrazidas = { ...record.listasTrazidas, [sourceEdition]: { ...record.listasTrazidas[sourceEdition], naoEncontrados: {} } };
+    return record;
+  });
+  showToast("Pronto: o guia não procura mais esses livros.");
+}
+
+function missingBooksGroup(summaryText, entries) {
+  if (!entries.length) return null;
+  const sorted = [...entries].sort((a, b) => collator.compare(a.titulo, b.titulo));
+  return el("details", {}, [
+    el("summary", { text: summaryText }),
+    el("ul", {}, sorted.map(entry => el("li", { text: `${[entry.titulo, entry.autor].filter(Boolean).join(" · ")}${entry.editora ? ` (${entry.editora})` : ""}` }))),
+  ]);
+}
+
+function missingBooksNotice(sourceEdition, brought) {
+  const fromYear = editionYear(sourceEdition);
+  const toYear = editionYear(currentEdition());
+  const missing = Object.values(brought.naoEncontrados);
+  let groups = [missingBooksGroup("Ver os livros", missing)];
+  if (catalog) {
+    const publisherPostedList = entry => catalog.publisherKeysWithBooks.has(publisherKey(entry.editora));
+    const waitingForList = missing.filter(entry => !publisherPostedList(entry));
+    const leftOut = missing.filter(publisherPostedList);
+    groups = [
+      missingBooksGroup(`${waitingForList.length} de editoras que ainda não publicaram a lista de ${toYear}`, waitingForList),
+      missingBooksGroup(`${leftOut.length} que a editora não trouxe na lista de ${toYear}`, leftOut),
+    ];
+  }
+  const forgetButton = el("button", { type: "button", class: "btn small", text: "Esquecer esses livros" });
+  forgetButton.addEventListener("click", () => forgetMissingBooks(sourceEdition));
+  return el("div", { class: "brought-list" }, [
+    el("strong", { text: `${missing.length} ${missing.length === 1 ? "livro" : "livros"} da sua lista de ${fromYear} ainda não ${missing.length === 1 ? "está" : "estão"} no catálogo de ${toYear}.` }),
+    el("p", { text: "Toda vez que o catálogo atualiza, o guia procura esses livros de novo e traz os que chegarem, com o preço deste ano." }),
+    ...groups,
+    forgetButton,
+  ]);
+}
+
+function renderBroughtListsNotice() {
+  const container = document.getElementById("brought-lists-notice");
+  const broughtLists = isEditable() ? Object.entries(listRecord(currentEdition())?.listasTrazidas || {}) : [];
+  const withMissingBooks = broughtLists.filter(([, brought]) => Object.keys(brought.naoEncontrados || {}).length);
+  container.hidden = !withMissingBooks.length;
+  container.replaceChildren(...withMissingBooks.map(([sourceEdition, brought]) => missingBooksNotice(sourceEdition, brought)));
+}
+
 /* ---------- Rendering ---------- */
 function sumBy(list, key) {
   const totals = new Map();
@@ -915,7 +1107,11 @@ function renderHeader(books) {
   } else if (isViewingShared() && state.sharedList.edition !== currentEdition() && currentEdition()) {
     message = [`Esta lista foi feita para a ${editionLabel(state.sharedList.edition)}. Os livros aparecem com os preços do catálogo atual quando ainda estão nele.`];
   } else if (!isViewingShared() && state.viewedEdition && state.viewedEdition !== currentEdition()) {
-    message = [el("strong", { text: `Lista da ${editionLabel(state.viewedEdition)}. ` }), "É de uma edição anterior: fica guardada só para consulta, com os preços daquela época."];
+    message = [
+      el("strong", { text: `Lista da ${editionLabel(state.viewedEdition)}. ` }),
+      "É de uma edição anterior: fica guardada só para consulta, com os preços daquela época.",
+      previousEditionsWithBooks().includes(state.viewedEdition) ? bringOfferForPreviousEdition(state.viewedEdition) : null,
+    ].filter(Boolean);
   }
   const notice = document.getElementById("view-notice");
   notice.hidden = !message;
@@ -1033,7 +1229,7 @@ function renderList(books) {
       : isViewingShared()
         ? (catalogById ? "Nenhum livro desta lista está no catálogo atual." : "Carregando os livros…")
         : isEditable() ? "Sua lista está vazia. Vá na aba Catálogo da feira, busque um livro e toque em Adicionar." : "Nenhum livro nesta lista.";
-    container.replaceChildren(el("div", { class: "empty", text }));
+    container.replaceChildren(el("div", { class: "empty" }, [text, isEditable() ? bringOfferForEmptyList() : null]));
     return;
   }
   const byPublisher = sumBy(books, "editora");
@@ -1120,6 +1316,7 @@ function renderAll() {
   const budgetValue = isViewingShared() ? null : toNumber(listRecord(state.viewedEdition)?.orcamento) || null;
   renderEventTexts();
   renderHeader(books);
+  renderBroughtListsNotice();
   renderSummary(books, budgetValue);
   renderBars("bars-publisher", sumBy(books, "editora"));
   renderBars("bars-genre", largestGroupsAndTheRest(sumBy(books, "genero"), "Outros gêneros"));
@@ -1173,13 +1370,14 @@ function loadCatalog() {
     .then(response => { if (!response.ok) throw new Error(`HTTP ${response.status}`); return response.json(); })
     .then(data => {
       const exhibitors = data.expositores;
+      const publisherKeys = exhibitors.map(exhibitor => publisherKey(exhibitor.nome));
       catalog = {
         exhibitors,
         books: data.livros.map(book => {
           const exhibitor = exhibitors[book.x]?.nome || "";
           const fairPriceUnknown = book.f === undefined;
           return {
-            ...book, f: fairPriceUnknown ? book.c : book.f, fairPriceUnknown, exhibitor,
+            ...book, f: fairPriceUnknown ? book.c : book.f, fairPriceUnknown, exhibitor, publisherKey: publisherKeys[book.x] || "",
             haystack: normalizeText(`${book.t} ${book.a || ""} ${book.s || ""} ${exhibitor} ${book.g || ""} ${book.i}`), titleKey: normalizeText(book.t),
           };
         }),
@@ -1198,12 +1396,14 @@ function loadCatalog() {
         .filter(option => option.count > 0)
         .sort((a, b) => collator.compare(a.name, b.name));
       catalog.exhibitorsWithLists = options.length;
+      catalog.publisherKeysWithBooks = new Set(options.map(option => publisherKeys[option.index]));
       catalogExhibitorByName = new Map(exhibitors.map(exhibitor => [exhibitor.nome, exhibitor]));
       catalog.exhibitorsThatPosted = exhibitors.filter((exhibitor, index) => counts.get(index) || exhibitor.aviso).length;
       select.append(...options.map(option => el("option", { value: String(option.index), text: `${option.name} (${intFormat.format(option.count)})` })));
       restoreCatalogFilters();
       refreshPricesFromCatalog();
       runSearch();
+      bringBooksThatArrived();
       renderAll();
     })
     .catch(error => {
