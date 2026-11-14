@@ -2,17 +2,31 @@
 import re
 
 ISBN_AT_START_OF_BOOK_ID = re.compile(r"^(\d{13}|\d{9}[\dXx])(?:-|$)")
+ISBN_PRINTED_WITHOUT_ITS_CHECK_DIGIT = re.compile(r"\s*(97[89][\d\-]*-)\s*")
+
+
+def isbn13_check_digit(first_twelve_digits: str) -> str:
+    weighted_sum = sum(int(digit) * (3 if position % 2 else 1) for position, digit in enumerate(first_twelve_digits))
+    return str((10 - weighted_sum % 10) % 10)
 
 
 def is_valid_isbn(digits: str) -> bool:
     if len(digits) == 13 and digits.isdigit():
-        weighted_sum = sum(int(digit) * (3 if position % 2 else 1) for position, digit in enumerate(digits[:12]))
-        return (10 - weighted_sum % 10) % 10 == int(digits[12])
+        return isbn13_check_digit(digits[:12]) == digits[12]
     if len(digits) == 10 and digits[:9].isdigit() and (digits[9].isdigit() or digits[9] in "Xx"):
         check_value = 10 if digits[9] in "Xx" else int(digits[9])
         weighted_sum = sum(int(digit) * (10 - position) for position, digit in enumerate(digits[:9]))
         return (weighted_sum + check_value) % 11 == 0
     return False
+
+
+def isbn_with_restored_check_digit(printed: str) -> str:
+    """Some lists print the ISBN without its last digit but keep the hyphen before it ("978-65-81555-00-", Miolo Mole). That digit
+    is the check digit, which the other twelve decide, so the ISBN comes back whole. Without the hyphen at the end, as in a typo
+    that dropped a digit in the middle ("978-658984119", Letra Selvagem), the missing digit could be any of them."""
+    match = ISBN_PRINTED_WITHOUT_ITS_CHECK_DIGIT.fullmatch(printed)
+    digits = re.sub(r"\D", "", match.group(1)) if match else ""
+    return digits + isbn13_check_digit(digits) if len(digits) == 12 else ""
 
 
 def isbn_of_book_id(book_id: str) -> str:

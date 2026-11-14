@@ -419,6 +419,37 @@ def test_fair_price_that_does_not_follow_the_discount_percentage_is_a_divergence
     assert verify_prices(catalog, {0: plain_text}).mismatch_count == 1
 
 
+def test_price_of_an_isbn_printed_without_its_check_digit_is_found_in_the_pdf():
+    catalog = catalog_from({"Editora Miolo Mole": [parsed_book("9786581555009", "GAROTO AVATAR", cover=49.9, fair=24.95)]})
+    plain_text = "978-65-81555-00-\nGAROTO AVATAR\nCaeto, Luana Vignon\nMiolo Mole\n49,90\n24,95 comportamento, videogame, cotidiano"
+    assert verify_prices(catalog, {0: plain_text}).mismatch_count == 0
+
+
+def test_price_check_of_an_isbn_without_its_check_digit_stops_at_the_next_one():
+    catalog = catalog_from({"Editora Miolo Mole": [parsed_book("9786581555009", "GAROTO AVATAR", cover=35.0, fair=17.5)]})
+    plain_text = "978-65-81555-00-\nGAROTO AVATAR\n49,90\n24,95\n978-65-88749-03-\nGIRAFA?\nFelipe Tognoli\n35,00\n17,50"
+    assert verify_prices(catalog, {0: plain_text}).mismatch_count == 1
+
+
+@pytest.fixture(scope="module")
+def miolo_mole():
+    return catalog_for("miolo_mole.pdf", "Editora Miolo Mole")
+
+
+def test_book_whose_isbn_was_printed_without_its_check_digit_is_read(miolo_mole):
+    book = book_titled(miolo_mole[0], "GAROTO AVATAR")
+    assert (book["i"], book["a"], book["c"], book["f"]) == ("9786581555009", "Caeto, Luana Vignon", 49.9, 24.95)
+
+
+def test_reads_every_book_of_a_list_whose_isbns_lost_their_check_digit(miolo_mole):
+    assert len(miolo_mole[0]["livros"]) == 36
+
+
+def test_every_price_of_a_list_whose_isbns_lost_their_check_digit_matches_the_pdf(miolo_mole):
+    catalog, parsed = miolo_mole
+    assert verify_prices(catalog, {0: parsed.plain_text}).mismatch_count == 0
+
+
 @pytest.fixture(scope="module")
 def letra_selvagem():
     return catalog_for("letra_selvagem.pdf", "Letra Selvagem")

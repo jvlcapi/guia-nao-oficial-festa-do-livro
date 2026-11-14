@@ -3,6 +3,7 @@ import collections
 import itertools
 import re
 
+from .isbn import isbn_with_restored_check_digit
 from .text_helpers import without_accents_lowercase
 
 STRICT_MONEY = re.compile(
@@ -40,7 +41,7 @@ def isbn_in_cell(cell: str) -> str:
     if cell.lower().startswith("ean") or re.fullmatch(r"[\d\-\s\.xX]+", cell.strip()):
         if len(digits) in (10, 13):
             return digits
-    return ""
+    return isbn_with_restored_check_digit(cell)
 
 
 def looks_like_url(cell: str) -> bool:

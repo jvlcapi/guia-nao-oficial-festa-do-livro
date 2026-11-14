@@ -6,6 +6,8 @@ from dataclasses import dataclass, field
 from .isbn import isbn_of_book_id
 
 DISCOUNT_PERCENTAGE = re.compile(r"(\d{1,2}(?:[.,]\d+)?)\s*%")
+# Whole, or printed without its check digit and kept as twelve digits and the hyphen before it ("978658155500-").
+ISBN_IN_COMPACT_TEXT = re.compile(r"97[89]\d{9}[\d-]")
 
 
 @dataclass
@@ -58,10 +60,12 @@ def verify_prices(catalog: dict, plain_text_by_exhibitor: dict[int, str]) -> Ver
             compacted[exhibitor_index] = compact_text(plain_text_by_exhibitor.get(exhibitor_index, ""))
         text = compacted[exhibitor_index]
         position = text.find(isbn)
+        if position < 0 and len(isbn) == 13:
+            position = text.find(isbn[:12] + "-")
         if position < 0:
             report.mismatches_by_exhibitor[exhibitor_index].append((book["t"], "ISBN não aparece no PDF"))
             continue
-        next_isbn = re.search(r"97[89]\d{10}", text[position + 13:position + 1500])
+        next_isbn = ISBN_IN_COMPACT_TEXT.search(text[position + 13:position + 1500])
         window = text[max(0, position - 200):position + 13 + (next_isbn.start() if next_isbn else 900)]
         window_without_spaces = window.replace(" ", "")
         found = lambda value: any(form in window or form in window_without_spaces for form in written_forms(value, True))

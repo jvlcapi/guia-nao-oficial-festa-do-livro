@@ -123,3 +123,13 @@ def test_rows_with_isbn_and_price_together_are_never_glued_as_strips():
         ["", "", "", "", "R$ 94,90", "R$ 47,00", "", ""],
     ]
     assert [book["title"] for book in parse_table_rows(rows)] == ["1984"]
+
+
+def test_isbn_printed_without_its_check_digit_keeps_title_author_and_imprint_in_place():
+    rows = [
+        HEADER,
+        ["978-65-99145-69-8", "FOLHINHAS", "André Calixto", "Miolo Mole", "45,00", "22,50", "cooperação", "https://www.editoramiolomole.com/livros/folhinhas"],
+        ["978-65-81555-00-", "GAROTO AVATAR", "Caeto, Luana Vignon", "Miolo Mole", "49,90", "24,95", "comportamento", "https://www.editoramiolomole.com/livros/garoto-avatar"],
+    ]
+    book = parse_table_rows(rows)[1]
+    assert (book["isbn"], book["title"], book["author"], book["imprint"]) == ("9786581555009", "GAROTO AVATAR", "Caeto, Luana Vignon", "Miolo Mole")
