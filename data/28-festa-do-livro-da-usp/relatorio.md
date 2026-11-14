@@ -2,15 +2,11 @@
 
 - Edição: `28-festa-do-livro-da-usp` · 25 e 29 de novembro
 - Editoras no site: 70
-- Livros no catálogo: 13899
+- Livros no catálogo: 13920
 - Livros sem ISBN (preço não conferível automaticamente): 89
 - Preços que não bateram com o PDF: 416
 - Livros sem preço de capa: 1
 - Livros só com preço de capa (feira não informado): 2479
-
-## Listas para conferir
-
-- **Editora Miolo Mole**: livros perdidos (15 das 36 linhas lidas viraram livro)
 
 ## Avisos sobre listas
 
@@ -48,7 +44,7 @@
 | Editora Joaquina | 12 | 12 | 0 | tabela | 0 |
 | EDITORA KITEMBO | 15 | 15 | 0 | tabela | 0 |
 | Editora Melhoramentos | 223 | 223 | 0 | tabela | 0 |
-| Editora Miolo Mole | 15 | 36 | 0 | tabela | 0 |
+| Editora Miolo Mole | 36 | 36 | 0 | tabela | 0 |
 | Editora Mostarda | 102 | 102 | 0 | tabela | 0 |
 | Editora Olhares | 79 | 79 | 0 | posição do texto | 0 |
 | Editora Panda Books | 139 | 139 | 0 | tabela | 0 |
