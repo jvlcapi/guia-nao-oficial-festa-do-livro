@@ -1,4 +1,5 @@
 import json
+import re
 from pathlib import Path
 
 import pytest
@@ -93,6 +94,59 @@ def test_publisher_records_do_not_carry_contact_emails():
     publishers = FairSite(BASE_URL, http).list_publishers("27-festa-do-livro-da-usp")
 
     assert "email" not in json.dumps([publisher.__dict__ for publisher in publishers])
+
+
+def publishers_page(names: list[str], page: int, total: int) -> HttpResponse:
+    items = [{"name": name, "url": name.lower(), "price_list": f"https://example.com/{name}.pdf", "site": ""} for name in names]
+    meta = {"current_page": page, "last_page": 2, "per_page": 2, "total": total}
+    return HttpResponse(status=200, content_type="application/json", body=json.dumps({"data": items, "meta": meta}).encode())
+
+
+class SiteThatChangesBetweenReadings:
+    """Answers each page with the next answer prepared for it, the way the official site answers while publishers sign up."""
+
+    def __init__(self, answers_by_page: dict[int, list[HttpResponse]]):
+        self.answers_by_page = {page: list(answers) for page, answers in answers_by_page.items()}
+        self.requested_pages = []
+
+    def __call__(self, url):
+        page = int(re.search(r"[?&]page=(\d+)", url).group(1))
+        self.requested_pages.append(page)
+        answers = self.answers_by_page[page]
+        return answers.pop(0) if len(answers) > 1 else answers[0]
+
+
+def test_reads_the_pages_again_when_a_publisher_signs_up_while_they_are_read():
+    site = SiteThatChangesBetweenReadings({
+        1: [publishers_page(["Aletria", "Balão"], page=1, total=3), publishers_page(["Novata", "Aletria"], page=1, total=4)],
+        2: [publishers_page(["Balão", "Ciranda"], page=2, total=4)],
+    })
+
+    publishers = FairSite(BASE_URL, site).list_publishers("28-festa-do-livro-da-usp")
+
+    assert [publisher.name for publisher in publishers] == ["Novata", "Aletria", "Balão", "Ciranda"]
+
+
+def test_reads_each_page_once_when_the_list_does_not_change():
+    site = SiteThatChangesBetweenReadings({
+        1: [publishers_page(["Aletria", "Balão"], page=1, total=3)],
+        2: [publishers_page(["Ciranda"], page=2, total=3)],
+    })
+
+    FairSite(BASE_URL, site).list_publishers("28-festa-do-livro-da-usp")
+
+    assert site.requested_pages == [1, 2]
+
+
+def test_never_repeats_a_publisher_when_the_list_keeps_changing():
+    site = SiteThatChangesBetweenReadings({
+        1: [publishers_page(["Aletria", "Balão"], page=1, total=3)],
+        2: [publishers_page(["Balão", "Ciranda"], page=2, total=4)],
+    })
+
+    publishers = FairSite(BASE_URL, site).list_publishers("28-festa-do-livro-da-usp")
+
+    assert [publisher.name for publisher in publishers] == ["Aletria", "Balão", "Ciranda"]
 
 
 def test_settings_auto_edition(tmp_path):

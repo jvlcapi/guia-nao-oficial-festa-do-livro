@@ -10,6 +10,7 @@ USER_AGENT = "guia-nao-oficial-festa-do-livro/0.1 (+https://github.com/jvlcapi/g
 CURRENT_EDITION_PATTERN = re.compile(r'const\s+event\s*=\s*"([^"]+)"')
 ANY_EDITION_PATTERN = re.compile(r"\b(\d+-festa-do-livro[a-z0-9\-]*)")
 PERIOD_PATTERN = re.compile(r"entre os dias ([^,.]+)", re.IGNORECASE)
+PUBLISHER_LIST_READINGS = 3
 
 
 class EditionNotFoundError(RuntimeError):
@@ -84,7 +85,20 @@ class FairSite:
         return EventDetails(edition=edition, name=data.get("name", edition).strip(), period=period.group(1).strip() if period else "")
 
     def list_publishers(self, edition: str) -> list[Publisher]:
+        """The site lists the publishers a page at a time. One that signs up while the pages are read moves the others one place, so
+        one comes twice and another never comes (16/11/2026: Sisko twice, Seja Breve missing). The pages are read again until every
+        page gives the same total and the reading has that many different publishers. A list that keeps changing gives its last
+        reading without repeats, and the next update brings whoever is missing."""
+        for _ in range(PUBLISHER_LIST_READINGS):
+            publishers, totals = self.read_publisher_pages(edition)
+            different_publishers = list(dict.fromkeys(publishers))
+            if len(different_publishers) == len(publishers) and totals == {len(publishers)}:
+                return publishers
+        return different_publishers
+
+    def read_publisher_pages(self, edition: str) -> tuple[list[Publisher], set[int | None]]:
         publishers: list[Publisher] = []
+        totals: set[int | None] = set()
         page = 1
         while True:
             response = self.fetch(f"{self.base_url}/api/v1/event-publishers?page={page}&flag={edition}&filter=")
@@ -98,6 +112,7 @@ class FairSite:
                     price_list_url=(item.get("price_list") or "").strip(),
                     site=(item.get("site") or "").strip(),
                 ))
+            totals.add(payload.get("meta", {}).get("total"))
             if page >= int(payload.get("meta", {}).get("last_page", page)):
-                return publishers
+                return publishers, totals
             page += 1
