@@ -32,6 +32,7 @@ FAIR_PRICE_HINTS = ("desc", "feira", "festa", "%", "promo", "final", "venda", "l
 ONLY_COVER_PRICE_NOTICE = "só tem preço de capa; o preço de feira não foi informado"
 FEWEST_BOOKS_TO_COMPARE_READERS = 10
 SHARE_READ_THE_SAME_WAY = 0.8
+LOWEST_SHARE_OF_OTHER_READER_ISBNS = 0.5
 READ_IN_STRIPS = "tabela em faixas"
 
 
@@ -104,8 +105,8 @@ def has_only_cover_prices(plain_text: str) -> bool:
 
 
 def parse_price_list(pdf_path: Path) -> ParsedPriceList:
-    """Runs both readers and keeps the one that found more complete books. In a list with only cover prices the single price
-    is the cover: the book keeps it and has no fair price, instead of showing the cover as the fair price, twice the real one."""
+    """Runs both readers and keeps the one that read the list better (table_reader_wins). In a list with only cover prices the single
+    price is the cover: the book keeps it and has no fair price, instead of showing the cover as the fair price, twice the real one."""
     plain_text = extract_plain_text(pdf_path)
     try:
         table_rows = extract_table_rows(pdf_path)
@@ -117,8 +118,7 @@ def parse_price_list(pdf_path: Path) -> ParsedPriceList:
         from_positions = parse_by_position(extract_text_spans(pdf_path))
     except Exception:
         from_positions = []
-    complete = lambda books: sum(1 for book in books if book["title"] and book["fair_price"])
-    if complete(from_tables) >= 0.95 * complete(from_positions) and complete(from_tables) > 0:
+    if table_reader_wins(from_tables, from_positions, plain_text):
         # In strips, the ISBN and its prices sit on different pages, so the price check reports them as divergences.
         chosen, other, method = from_tables, from_positions, READ_IN_STRIPS if printed_in_strips else "tabela"
     else:
@@ -134,6 +134,34 @@ def parse_price_list(pdf_path: Path) -> ParsedPriceList:
                 book["cover_price"], book["fair_price"] = book["fair_price"], None
         notice = ONLY_COVER_PRICE_NOTICE
     return ParsedPriceList(books=books, method=method, plain_text=plain_text, notice=notice)
+
+
+def table_reader_wins(from_tables: list[dict], from_positions: list[dict], plain_text: str) -> bool:
+    """The reader that found more complete books wins, and a tie goes to the table reader. A reader that mixed up the columns can
+    read as many rows as the other one, only without their ISBNs (Vozes 2026: 1,099 rows and no ISBN, against 1,092 books that
+    have one), so the reader that found less than half the ISBNs of the other one loses first."""
+    isbns_in_tables = count_valid_isbns(from_tables, plain_text)
+    isbns_in_positions = count_valid_isbns(from_positions, plain_text)
+    if lost_the_isbns(isbns_in_tables, isbns_in_positions):
+        return False
+    if lost_the_isbns(isbns_in_positions, isbns_in_tables):
+        return True
+    complete = lambda books: sum(1 for book in books if book["title"] and book["fair_price"])
+    return complete(from_tables) >= 0.95 * complete(from_positions) and complete(from_tables) > 0
+
+
+def count_valid_isbns(books: list[dict], plain_text: str) -> int:
+    """The ISBNs the books would end up with if this reader were chosen, the ones printed right before a title included."""
+    cleaned = cleaned_complete_books(books)
+    fill_missing_isbns_from_text(cleaned, plain_text)
+    return sum(1 for book in cleaned if is_valid_isbn(book["isbn"]))
+
+
+def lost_the_isbns(isbns_found: int, isbns_found_by_other_reader: int) -> bool:
+    return (
+        isbns_found_by_other_reader >= FEWEST_BOOKS_TO_COMPARE_READERS
+        and isbns_found < LOWEST_SHARE_OF_OTHER_READER_ISBNS * isbns_found_by_other_reader
+    )
 
 
 def cleaned_complete_books(books: list[dict]) -> list[dict]:

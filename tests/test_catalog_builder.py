@@ -12,11 +12,12 @@ from festa_do_livro.catalog_builder import (
     parse_price_list,
     safe_public_url,
     same_content,
+    table_reader_wins,
     tidy_subject,
     without_garbled_copies,
 )
 from festa_do_livro.fair_site import EventDetails, Publisher
-from festa_do_livro.isbn import isbn_of_book_id
+from festa_do_livro.isbn import isbn13_check_digit, isbn_of_book_id
 from festa_do_livro.price_verification import verify_prices
 
 PRICE_LISTS = Path(__file__).parent / "fixtures" / "price_lists"
@@ -448,6 +449,70 @@ def test_reads_every_book_of_a_list_whose_isbns_lost_their_check_digit(miolo_mol
 def test_every_price_of_a_list_whose_isbns_lost_their_check_digit_matches_the_pdf(miolo_mole):
     catalog, parsed = miolo_mole
     assert verify_prices(catalog, {0: parsed.plain_text}).mismatch_count == 0
+
+
+def isbn_with_serial(serial: int) -> str:
+    first_twelve_digits = f"978853260{serial:03d}"
+    return first_twelve_digits + isbn13_check_digit(first_twelve_digits)
+
+
+def books_read(count: int, with_isbn: bool) -> list[dict]:
+    return [parsed_book(isbn_with_serial(serial) if with_isbn else "", f"Livro número {serial}") for serial in range(count)]
+
+
+def test_table_reader_that_lost_the_isbns_loses_even_reading_more_rows():
+    assert not table_reader_wins(books_read(12, with_isbn=False), books_read(11, with_isbn=True), plain_text="")
+
+
+def test_position_reader_that_lost_the_isbns_loses_even_reading_more_rows():
+    assert table_reader_wins(books_read(11, with_isbn=True), books_read(20, with_isbn=False), plain_text="")
+
+
+def test_with_isbns_on_both_sides_a_tie_goes_to_the_table_reader():
+    assert table_reader_wins(books_read(12, with_isbn=True), books_read(12, with_isbn=True), plain_text="")
+
+
+def test_with_isbns_on_both_sides_the_reader_with_clearly_more_books_wins():
+    assert not table_reader_wins(books_read(10, with_isbn=True), books_read(12, with_isbn=True), plain_text="")
+
+
+def test_a_handful_of_isbns_does_not_decide_the_reader():
+    assert table_reader_wins(books_read(6, with_isbn=False), books_read(5, with_isbn=True), plain_text="")
+
+
+def test_isbns_printed_before_the_titles_count_for_the_table_reader():
+    """The chosen reader's books get the ISBN printed right before their title, so those ISBNs count in the choice."""
+    tables = books_read(12, with_isbn=False)
+    plain_text = "\n".join(f"{isbn_with_serial(serial)} {book['title']}" for serial, book in enumerate(tables))
+    assert table_reader_wins(tables, books_read(11, with_isbn=True), plain_text=plain_text)
+
+
+@pytest.fixture(scope="module")
+def vozes():
+    """The first three pages of the Vozes list of 2026. Its table borders split only some columns, so the table reader glued each
+    page's ISBNs, titles and cover prices into one cell and read the rows without them."""
+    return catalog_for("vozes.pdf", "EDITORA VOZES")
+
+
+def test_book_of_a_list_whose_table_reader_lost_the_isbns_is_read_whole(vozes):
+    book = book_titled(vozes[0], "A AGUIA E A GALINHA")
+    assert (book["i"], book["a"], book["c"], book["f"]) == ("9788532655011", "Leonardo Boff", 49.9, 24.95)
+
+
+def test_every_row_of_a_list_whose_table_reader_lost_the_isbns_is_a_book_with_its_isbn(vozes):
+    isbns = [isbn_of_book_id(book["i"]) for book in vozes[0]["livros"]]
+    assert (len(isbns), all(isbns)) == (115, True)
+
+
+def test_every_price_of_a_list_whose_table_reader_lost_the_isbns_matches_the_pdf(vozes):
+    catalog, parsed = vozes
+    assert verify_prices(catalog, {0: parsed.plain_text}).mismatch_count == 0
+
+
+def test_isbn_and_author_the_table_reader_glued_to_the_title_are_read_apart():
+    catalog, _ = catalog_for("ercolano.pdf", "Ercolano")
+    book = book_titled(catalog, "A Condessa Ensanguentada")
+    assert (book["i"], book["t"], book["a"], book["c"], book["f"]) == ("9786585960489", "A Condessa Ensanguentada", "Valentine Penrose", 116.0, 58.0)
 
 
 @pytest.fixture(scope="module")
