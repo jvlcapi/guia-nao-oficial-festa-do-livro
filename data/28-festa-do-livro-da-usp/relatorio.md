@@ -1,12 +1,17 @@
 # Relatório do catálogo: 28 Festa do Livro da USP
 
 - Edição: `28-festa-do-livro-da-usp` · 25 e 29 de novembro
-- Editoras no site: 70
-- Livros no catálogo: 13920
-- Livros sem ISBN (preço não conferível automaticamente): 89
+- Editoras no site: 87
+- Livros no catálogo: 17897
+- Livros sem ISBN (preço não conferível automaticamente): 854
 - Preços que não bateram com o PDF: 416
-- Livros sem preço de capa: 1
+- Livros sem preço de capa: 688
 - Livros só com preço de capa (feira não informado): 2479
+
+## Listas para conferir
+
+- **EDITORA VOZES**: livros perdidos (644 das 1099 linhas lidas viraram livro)
+- **EDITORA VOZES**: sem preço de capa (644 de 644 livros)
 
 ## Avisos sobre listas
 
@@ -24,6 +29,7 @@
 | AUTORES ASSOCIADOS | 285 | 285 | 0 | tabela | 0 |
 | Azuco | 21 | 21 | 0 | tabela | 0 |
 | Baião | 48 | 48 | 0 | tabela | 0 |
+| Balão Editorial | 32 | 32 | 0 | tabela | 0 |
 | Barbatana | 51 | 51 | 0 | tabela | 0 |
 | Buzz Editora | 83 | 83 | 0 | tabela | 0 |
 | Catapulta | 369 | 369 | 0 | posição do texto | 0 |
@@ -53,24 +59,38 @@
 | Editora UFPR | 133 | 133 | 0 | tabela | 0 |
 | Editora UFSC | 297 | 297 | 0 | tabela | 0 |
 | Editora Unesp | 693 | 694 | 0 | tabela | 0 |
+| EDITORA VOZES | 644 | 1099 | 644 | tabela | 0 |
 | Eduem | 150 | 150 | 0 | tabela | 0 |
 | EdUFSCar | 100 | 100 | 0 | tabela | 0 |
 | Edusp | 1007 | 1021 | 0 | tabela | 0 |
+| Ercolano | 34 | 34 | 0 | tabela | 0 |
 | Grua | 102 | 102 | 0 | tabela | 0 |
+| Grupo Ciranda Cultural | 865 | 865 | 0 | tabela | 0 |
+| Grupo Editorial Aletria | 84 | 85 | 0 | tabela | 0 |
 | Grupo Editorial Bookone | 183 | 183 | 0 | tabela | 0 |
 | Grupo Editorial Pensamento | 290 | 290 | 0 | tabela | 0 |
 | Grupo Summus | 402 | 402 | 0 | tabela | 0 |
 | HarperCollins Brasil | 415 | 415 | 0 | tabela | 0 |
+| Hucitec Editora | 365 | 367 | 39 | tabela | 0 |
+| IMS | 140 | 141 | 0 | tabela | 0 |
 | Instituto Tomie Ohtake | 17 | 18 | 0 | tabela | 0 |
 | Jujuba Editora | 60 | 60 | 0 | tabela | 0 |
+| LavraPalavra | 70 | 70 | 0 | tabela | 0 |
 | Letra Selvagem | 72 | 72 | 0 | posição do texto | 0 |
 | Livros da Matriz | 33 | 33 | 0 | tabela | 0 |
+| Lote 42 | 45 | 45 | 0 | tabela | 0 |
+| LVM Editora | 209 | 211 | 0 | tabela | 0 |
 | Maria Antonia Edições - GMARX | 11 | 11 | 0 | tabela | 0 |
 | Martins Fontes - Selo Martins | 678 | 678 | 0 | tabela | 0 |
+| Moinhos | 152 | 152 | 0 | tabela | 0 |
 | Movimento Neomarginal | 22 | 22 | 0 | posição do texto | 0 |
+| NewPOP Editora | 405 | 405 | 1 | tabela | 0 |
 | Nós | 143 | 143 | 0 | posição do texto | 0 |
+| Nova Fronteira / Trama | 166 | 166 | 0 | tabela | 0 |
 | Odysseus Editora | 81 | 82 | 0 | tabela | 0 |
+| ÔZé | 67 | 67 | 0 | tabela | 0 |
 | Paco Editorial | 91 | 91 | 0 | tabela | 0 |
+| Paulinas Editora | 525 | 525 | 0 | tabela | 0 |
 | Phorte Editora | 60 | 60 | 0 | tabela em faixas | 59 |
 | Pinard | 33 | 33 | 0 | tabela | 0 |
 | Pontes Editores | 2479 | 2479 | 0 | tabela | 0 |
@@ -78,7 +98,9 @@
 | Pulo do Gato | 86 | 86 | 0 | tabela | 0 |
 | Quatro Cantos | 49 | 49 | 0 | tabela | 0 |
 | Quina Editora | 21 | 21 | 0 | tabela | 0 |
+| Relicário | 155 | 155 | 3 | tabela | 0 |
 | Seiva | 8 | 8 | 0 | tabela | 0 |
+| Sisko Editora | 19 | 19 | 0 | tabela | 0 |
 | Sisko Editora | 19 | 19 | 0 | tabela | 0 |
 | Telos Editora | 166 | 166 | 0 | tabela | 0 |
 | Terra Virgem Edições | 36 | 36 | 0 | tabela | 0 |
