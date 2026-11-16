@@ -1,12 +1,17 @@
 # Relatório do catálogo: 28 Festa do Livro da USP
 
 - Edição: `28-festa-do-livro-da-usp` · 25 e 29 de novembro
-- Editoras no site: 87
-- Livros no catálogo: 18340
-- Livros sem ISBN (preço não conferível automaticamente): 176
-- Preços que não bateram com o PDF: 416
-- Livros sem preço de capa: 44
+- Editoras no site: 89
+- Livros no catálogo: 18576
+- Livros sem ISBN (preço não conferível automaticamente): 184
+- Preços que não bateram com o PDF: 419
+- Livros sem preço de capa: 187
 - Livros só com preço de capa (feira não informado): 2495
+
+## Listas para conferir
+
+- **Ateliê Editorial**: livros perdidos (190 das 329 linhas lidas viraram livro)
+- **Ateliê Editorial**: sem preço de capa (182 de 190 livros)
 
 ## Avisos sobre listas
 
@@ -21,6 +26,7 @@
 | Aller Editora | 60 | 60 | 0 | tabela | 0 |
 | Arquipélago | 63 | 63 | 0 | tabela | 0 |
 | Ars et Vita | 21 | 21 | 0 | tabela | 1 |
+| Ateliê Editorial | 190 | 329 | 182 | tabela | 3 |
 | Autonomia Literária | 155 | 155 | 0 | tabela | 0 |
 | AUTORES ASSOCIADOS | 285 | 285 | 0 | tabela | 0 |
 | Azuco | 21 | 21 | 0 | tabela | 0 |
@@ -37,6 +43,7 @@
 | Edições Sesc | 299 | 299 | 0 | tabela | 0 |
 | Editora Bazar do Tempo | 95 | 95 | 0 | posição do texto | 0 |
 | Editora Biruta | 290 | 290 | 0 | tabela | 0 |
+| Editora Caixote | 45 | 45 | 0 | tabela | 0 |
 | Editora Cosac | 30 | 30 | 0 | tabela | 0 |
 | Editora da Unicamp | 453 | 453 | 0 | tabela | 0 |
 | Editora escala | 111 | 111 | 0 | tabela | 0 |
@@ -59,7 +66,7 @@
 | Eduem | 150 | 150 | 0 | tabela | 0 |
 | EdUFSCar | 100 | 100 | 0 | tabela | 0 |
 | Edusp | 1007 | 1021 | 0 | tabela | 0 |
-| Ercolano | 32 | 32 | 0 | posição do texto | 0 |
+| Ercolano | 33 | 33 | 0 | posição do texto | 0 |
 | Grua | 102 | 102 | 0 | tabela | 0 |
 | Grupo Ciranda Cultural | 865 | 865 | 0 | tabela | 0 |
 | Grupo Editorial Aletria | 84 | 85 | 0 | tabela | 0 |
@@ -67,7 +74,7 @@
 | Grupo Editorial Pensamento | 290 | 290 | 0 | tabela | 0 |
 | Grupo Summus | 402 | 402 | 0 | tabela | 0 |
 | HarperCollins Brasil | 415 | 415 | 0 | tabela | 0 |
-| Hucitec Editora | 365 | 367 | 39 | tabela | 0 |
+| Hucitec Editora | 365 | 367 | 0 | tabela | 0 |
 | IMS | 140 | 141 | 0 | tabela | 0 |
 | Instituto Tomie Ohtake | 17 | 18 | 0 | tabela | 0 |
 | Jujuba Editora | 60 | 60 | 0 | tabela | 0 |
@@ -109,4 +116,5 @@
 
 - **Universo dos livros** (356): A Casa Coruja: Bruxas contra Feiticeiros (capa 39.9 · feira 19.95); Aceita-me (capa 59.9 · feira 29.95); ACEITA-ME - EDIÇÃO DE LUXO LIMITADA (capa 89.9 · feira 44.95); Acelerados - Giovanna Souza (capa 89.9 · feira 44.95); Acorda pra vida! (capa 79.9 · feira 39.95)
 - **Phorte Editora** (59): A Aventura dialógica na infância (capa 95.0 · feira 47.5); A dança na arte, no esporte e na educação (capa 63.0 · feira 31.5); A escola do ser e do querer (ser) (capa 120.0 · feira 60.0); A estética no pensamento e na obra (capa 69.0 · feira 34.5); A ética no pensamento e na obra (capa 75.0 · feira 37.5)
+- **Ateliê Editorial** (3): Espuma do Fogo (ISBN não aparece no PDF); Idade da Aurora (ISBN não aparece no PDF); Música do Parna (ISBN não aparece no PDF)
 - **Ars et Vita** (1): As mãos das mulheres da minha família não eram destinadas à escrita (ISBN não aparece no PDF)
