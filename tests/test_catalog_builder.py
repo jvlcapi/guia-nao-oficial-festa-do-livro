@@ -509,10 +509,95 @@ def test_every_price_of_a_list_whose_table_reader_lost_the_isbns_matches_the_pdf
     assert verify_prices(catalog, {0: parsed.plain_text}).mismatch_count == 0
 
 
-def test_isbn_and_author_the_table_reader_glued_to_the_title_are_read_apart():
-    catalog, _ = catalog_for("ercolano.pdf", "Ercolano")
-    book = book_titled(catalog, "A Condessa Ensanguentada")
+def test_author_glued_to_a_long_title_is_read_apart(vozes):
+    book = book_titled(vozes[0], "A AMOROSIDADE DO DEUS-ABBA")
+    assert (book["t"], book["a"]) == ("A AMOROSIDADE DO DEUS-ABBA E JESUS DE NAZARE", "Leonardo Boff")
+
+
+def test_author_glued_to_a_title_the_cell_cut_in_the_middle_of_a_word_is_read_apart(vozes):
+    book = book_titled(vozes[0], "A AUTOTRANSCENDENCIA")
+    assert (book["t"], book["a"]) == ("A AUTOTRANSCENDENCIA NA LOGOTERAPIA DE VIKTO", "Ana Clara de Andrade Patricio;Clara M")
+
+
+def test_only_books_printed_without_an_author_have_none(vozes):
+    without_author = [book["t"] for book in vozes[0]["livros"] if "a" not in book]
+    assert without_author == ["150 EXERCICIOS PARA TURBINAR O SEU CEREBRO", "A CONQUISTA ESPIRITUAL DA AMERICA ESPANHOLA", "A EPOCA MODERNA"]
+
+
+@pytest.fixture(scope="module")
+def ercolano():
+    return catalog_for("ercolano.pdf", "Ercolano")
+
+
+def test_isbn_and_author_the_table_reader_glued_to_the_title_are_read_apart(ercolano):
+    book = book_titled(ercolano[0], "A Condessa Ensanguentada")
     assert (book["i"], book["t"], book["a"], book["c"], book["f"]) == ("9786585960489", "A Condessa Ensanguentada", "Valentine Penrose", 116.0, 58.0)
+
+
+def test_book_whose_isbn_lost_its_first_nine_is_read_on_its_own_without_isbn(ercolano):
+    book = book_titled(ercolano[0], "A guerra das bichas")
+    assert (isbn_of_book_id(book["i"]), book["t"], book["a"], book["c"], book["f"]) == ("", "A guerra das bichas", "Copi", 89.9, 44.95)
+
+
+def test_book_below_an_isbn_without_its_first_nine_keeps_its_own_title_and_prices(ercolano):
+    book = book_titled(ercolano[0], "A revolta dos bichos")
+    assert (book["i"], book["t"], book["a"], book["c"], book["f"]) == ("9786585960052", "A revolta dos bichos", "Mykola Kostomárov", 57.5, 28.75)
+
+
+def test_author_glued_to_a_title_the_cell_cut_short_is_read_apart(ercolano):
+    book = book_titled(ercolano[0], "Complementos à teoria sexual")
+    assert (book["t"], book["a"]) == ("Complementos à teoria sexual sobre o", "Pascal Quignard")
+
+
+def test_link_that_lost_its_start_to_the_subject_cell_is_dropped_from_the_subject(ercolano):
+    assert book_titled(ercolano[0], "Complementos à teoria sexual")["g"] == "Ensaio"
+
+
+@pytest.fixture(scope="module")
+def ims():
+    """The first page of the IMS list of 2026, whose narrow cells cut titles and authors in the middle of a letter."""
+    return catalog_for("ims.pdf", "IMS")
+
+
+def test_letter_a_narrow_cell_cut_in_half_stays_with_the_title(ims):
+    book = book_titled(ims[0], "A CRÍTICA CÚM")
+    assert (book["t"], book["a"]) == ("A CRÍTICA CÚMP", "Ana Bernstein")
+
+
+def test_no_author_of_a_list_with_narrow_cells_starts_with_the_last_letter_of_the_title(ims):
+    letter_glued_to_a_name = re.compile(r"^[^\W\d_][A-ZÀ-Ý][a-zà-ÿ]")
+    assert [book["a"] for book in ims[0]["livros"] if letter_glued_to_a_name.match(book.get("a", ""))] == []
+
+
+def test_lowercase_letter_a_narrow_cell_cut_in_half_stays_with_the_title():
+    catalog, _ = catalog_for("lavrapalavra.pdf", "LavraPalavra")
+    book = book_titled(catalog, "centralismo democr")
+    assert (book["t"], book["a"]) == ("centralismo democrát", "Vladímir Ilitch Lênin")
+
+
+@pytest.fixture(scope="module")
+def hucitec():
+    """Page 8 of the Hucitec list of 2026: below its tenth book, the cover price column lost the borders between its rows."""
+    return catalog_for("hucitec.pdf", "Hucitec Editora")
+
+
+def test_cover_price_in_a_column_that_lost_its_row_borders_is_read(hucitec):
+    book = book_titled(hucitec[0], "Estrela e o sensitivo")
+    assert (book["c"], book["f"]) == (77.0, 38.5)
+
+
+def test_book_where_the_column_lost_its_row_borders_keeps_only_its_own_cover_price(hucitec):
+    book = book_titled(hucitec[0], "Nos arredores da prisão")
+    assert (book["c"], book["f"]) == (70.0, 35.0)
+
+
+def test_every_book_of_a_page_whose_price_column_lost_its_row_borders_has_a_cover_price(hucitec):
+    assert [book["t"] for book in hucitec[0]["livros"] if "c" not in book] == []
+
+
+def test_every_price_of_a_page_whose_price_column_lost_its_row_borders_matches_the_pdf(hucitec):
+    catalog, parsed = hucitec
+    assert verify_prices(catalog, {0: parsed.plain_text}).mismatch_count == 0
 
 
 @pytest.fixture(scope="module")

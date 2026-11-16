@@ -16,6 +16,7 @@ from .table_parser import join_sheet_printed_in_strips, parse_table_rows
 from .text_helpers import without_accents_lowercase
 
 URL_IN_TEXT = re.compile(r"https?://\S+")
+LINK_CUT_AT_THE_START = re.compile(r"\S*://\S*")
 CREDENTIAL_QUERY_KEYS = {"token", "access_token", "accesstoken", "key", "apikey", "api_key", "signature", "sig", "auth", "password", "secret"}
 IMAGE_HOSTS_AND_PATHS = ("bookinfometadados", "metabooks.com/api", "/cover/")
 COMPANY_SUFFIX_WORDS = {"e", "livraria", "ltda", "me", "eireli", "distribuidora"}
@@ -74,6 +75,8 @@ def clean_parsed_book(book: dict) -> dict:
             if not book["url"]:
                 book["url"] = match.group(0)
             book[field] = URL_IN_TEXT.sub("", book[field]).strip()
+        # A link wider than its centered cell loses its start to the cell on the left: "Ensaio ps://ercolano.com.br/..." (Ercolano 2026).
+        book[field] = LINK_CUT_AT_THE_START.sub("", book[field]).strip()
     if book["url"] and not book["url"].startswith("http"):
         book["url"] = "" if " " in book["url"] or "." not in book["url"] else "https://" + book["url"].lstrip("/")
     book["url"] = book["url"].replace(" ", "")
@@ -231,9 +234,10 @@ def stable_book_id(isbn: str, exhibitor_name: str, title: str) -> str:
 
 
 def without_stray_letters(imprint: str) -> str:
-    """Cells often swallow one letter of the neighbouring cell: "oAnita Garibaldi", "MATRIX N"."""
+    """Cells often swallow one letter of the neighbouring cell: "oAnita Garibaldi", "MATRIX N". A name cut after a separator
+    keeps no dangling separator either: "ESTRALADABAO - U" is "ESTRALADABAO"."""
     imprint = re.sub(r"^[a-z]\s*(?=[A-ZÀ-Ý0-9])", "", (imprint or "").strip())
-    return re.sub(r"\s+[A-Za-z]$", "", imprint).strip()
+    return re.sub(r"\s+[A-Za-z]$", "", imprint).strip(" ;,-–")
 
 
 def imprint_repeats_exhibitor(imprint: str, exhibitor_name: str) -> bool:

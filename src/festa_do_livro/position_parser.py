@@ -5,12 +5,18 @@ import statistics
 
 from .text_helpers import without_accents_lowercase
 
-ROW_START = re.compile(r"^(?:ean:?|isbn13:?)?\s*(97[89][\d\-\s]{10,17}|\d{10}\b)", re.I)
+ROW_START = re.compile(r"^(?:ean:?|isbn13:?)?\s*(97[89][\d\-\s]{10,17}|7[89]\d{10}\b|\d{10}\b)", re.I)
 MONEY = re.compile(r"(\d{1,3}(?:\.\d{3})*,\d{2}|\d{1,3} \d{2},\d{2}|\d+,\d)")
 PRICE_WITH_OR_WITHOUT_CENTS = re.compile(r"(?:R\$\s*)?\d{1,4}(?:,\d{1,2})?")
 PRICE_LABEL = re.compile(r"preco|valor")
 # Pages, years and stall numbers never have cents, so a few prices like "44,9" among "80" and "40" are enough (Letra Selvagem).
 SHARE_WITH_CENTS_IN_A_PRICE_COLUMN = 0.05
+# A column whose text starts at the same spot, to a tenth of a point, on most of its lines is aligned to the left, and a character
+# that starts this close to that spot begins that column's text.
+SHARE_ALIGNED_TO_THE_LEFT = 0.5
+DISTANCE_FROM_COLUMN_START = 0.2
+SHARE_OF_A_REPEATED_COLUMN = 0.95
+WORD = re.compile(r"[^\W\d_]{2,}")
 HEADER_WORDS = {
     "isbn", "titulo", "autor", "editora", "assunto", "url_livro", "url livro", "url", "preco de", "capa",
     "preco com", "desconto", "preco de capa", "preco com desconto", "autor(es)", "selo", "paginas", "prc.venda", "por", "%",
@@ -67,8 +73,9 @@ def price_labels_in_header(pages: list[list[dict]]) -> int:
 
 
 def is_isbn_missing_a_digit(digits: str) -> bool:
-    """A row whose ISBN was typed with a digit missing ("978-658984119") is still a row; the catalog shows it without ISBN."""
-    return len(digits) == 12 and digits.startswith(("978", "979"))
+    """A row whose ISBN was typed with a digit missing ("978-658984119", Letra Selvagem) or without its first 9 ("786585960589",
+    Ercolano 2026) is still a row; the catalog shows it without ISBN. Missed, its book would join the row below it."""
+    return len(digits) == 12 and digits.startswith(("978", "979", "78", "79"))
 
 
 def isbn_continuation(spans: list[dict], anchor: dict, digits_so_far: str):
@@ -79,6 +86,52 @@ def isbn_continuation(spans: list[dict], anchor: dict, digits_so_far: str):
             if len(digits_so_far + re.sub(r"\D", "", span["text"])) == 13:
                 return span
     return None
+
+
+def exact_column_starts(row_spans: list[list[dict]], column_of, row_count: int) -> dict[int, float]:
+    """Where the text of each column of words aligned to the left starts: the same spot, to a tenth of a point, on most of its
+    lines, for different texts or for the one text the whole column repeats ("VOZES"). Prices aligned to the right also share a
+    start when they have as many digits, so only words count (Vozes 2025). And a centered column has a spot where its most common
+    text starts, which a longer text of the same column runs past ("FICÇÃO ESTRANGEIRA" 79 times in Todavia 2025, where "FICÇÃO
+    BRASILEIRA INFANTO-JUVENIL" was cut as "FICÇÃO B" and "RASILEIRA")."""
+    texts_by_column_and_left = collections.defaultdict(lambda: collections.defaultdict(list))
+    for spans in row_spans:
+        for span in spans:
+            column = None if span.get("glued") or not WORD.search(span["text"]) else column_of(span["left"])
+            if column is not None:
+                texts_by_column_and_left[column][round(span["left"], 1)].append(span["text"])
+    starts = {}
+    for column, texts_by_left in texts_by_column_and_left.items():
+        left, texts = max(texts_by_left.items(), key=lambda item: len(item[1]))
+        spans_in_column = sum(len(other_texts) for other_texts in texts_by_left.values())
+        different_texts = len(set(texts)) >= 3
+        whole_column_repeats_it = len(texts) >= SHARE_OF_A_REPEATED_COLUMN * spans_in_column
+        if len(texts) >= max(3, 0.15 * row_count) and len(texts) >= SHARE_ALIGNED_TO_THE_LEFT * spans_in_column and (different_texts or whole_column_repeats_it):
+            starts[column] = left
+    return starts
+
+
+def split_at_column_starts(span: dict, exact_starts: dict[int, float], column_of) -> list[dict]:
+    """A cell that cuts its text short can leave it glued to the text of the next cell in a single span: "A AUTOTRANSCENDENCIA NA
+    LOGOTERAPIA DE VIKTOAna Clara de Andrade Patricio" (Vozes 2026), where every author starts at the same spot. The span is cut
+    where one of its characters starts right where a column to its right starts its text."""
+    character_lefts = span.get("character_lefts")
+    if not character_lefts:
+        return [span]
+    own_column = column_of(span["left"])
+    for column, start in sorted(exact_starts.items()):
+        if (own_column is not None and column <= own_column) or not span["left"] < start < span["right"]:
+            continue
+        cut = next((index for index, left in enumerate(character_lefts) if index > 0 and abs(left - start) <= DISTANCE_FROM_COLUMN_START), None)
+        if cut is None or (span["text"][cut].isdigit() and span["text"][cut - 1] in "0123456789,."):
+            continue
+        before_text, after_text = span["text"][:cut].rstrip(), span["text"][cut:]
+        if not before_text or not after_text.strip():
+            continue
+        before = dict(span, text=before_text, right=start, character_lefts=character_lefts[:len(before_text)])
+        after = dict(span, left=start, text=after_text, character_lefts=character_lefts[cut:])
+        return [before] + split_at_column_starts(after, exact_starts, column_of)
+    return [span]
 
 
 def parse_by_position(pages: list[list[dict]]) -> list[dict]:
@@ -138,6 +191,9 @@ def parse_by_position(pages: list[list[dict]]) -> list[dict]:
             if left >= start - 4:
                 found = column
         return found
+
+    exact_starts = exact_column_starts(row_spans, column_of, row_count)
+    row_spans = [[piece for span in spans for piece in split_at_column_starts(span, exact_starts, column_of)] for spans in row_spans]
 
     texts_by_column = collections.defaultdict(list)
     right_edges_by_column = collections.defaultdict(list)
