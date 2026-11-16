@@ -2,11 +2,11 @@
 
 - Edição: `28-festa-do-livro-da-usp` · 25 e 29 de novembro
 - Editoras no site: 87
-- Livros no catálogo: 17897
+- Livros no catálogo: 17894
 - Livros sem ISBN (preço não conferível automaticamente): 854
 - Preços que não bateram com o PDF: 416
 - Livros sem preço de capa: 688
-- Livros só com preço de capa (feira não informado): 2479
+- Livros só com preço de capa (feira não informado): 2495
 
 ## Listas para conferir
 
@@ -16,6 +16,7 @@
 ## Avisos sobre listas
 
 - Pontes Editores: só tem preço de capa; o preço de feira não foi informado
+- Seja Breve: só tem preço de capa; o preço de feira não foi informado
 
 ## Livros por editora
 
@@ -100,7 +101,7 @@
 | Quina Editora | 21 | 21 | 0 | tabela | 0 |
 | Relicário | 155 | 155 | 3 | tabela | 0 |
 | Seiva | 8 | 8 | 0 | tabela | 0 |
-| Sisko Editora | 19 | 19 | 0 | tabela | 0 |
+| Seja Breve | 16 | 16 | 0 | tabela | 0 |
 | Sisko Editora | 19 | 19 | 0 | tabela | 0 |
 | Telos Editora | 166 | 166 | 0 | tabela | 0 |
 | Terra Virgem Edições | 36 | 36 | 0 | tabela | 0 |
