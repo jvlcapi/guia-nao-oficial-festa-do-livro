@@ -2,16 +2,11 @@
 
 - Edição: `28-festa-do-livro-da-usp` · 25 e 29 de novembro
 - Editoras no site: 87
-- Livros no catálogo: 17894
-- Livros sem ISBN (preço não conferível automaticamente): 854
+- Livros no catálogo: 18340
+- Livros sem ISBN (preço não conferível automaticamente): 176
 - Preços que não bateram com o PDF: 416
-- Livros sem preço de capa: 688
+- Livros sem preço de capa: 44
 - Livros só com preço de capa (feira não informado): 2495
-
-## Listas para conferir
-
-- **EDITORA VOZES**: livros perdidos (644 das 1099 linhas lidas viraram livro)
-- **EDITORA VOZES**: sem preço de capa (644 de 644 livros)
 
 ## Avisos sobre listas
 
@@ -60,11 +55,11 @@
 | Editora UFPR | 133 | 133 | 0 | tabela | 0 |
 | Editora UFSC | 297 | 297 | 0 | tabela | 0 |
 | Editora Unesp | 693 | 694 | 0 | tabela | 0 |
-| EDITORA VOZES | 644 | 1099 | 644 | tabela | 0 |
+| EDITORA VOZES | 1092 | 1092 | 0 | posição do texto | 0 |
 | Eduem | 150 | 150 | 0 | tabela | 0 |
 | EdUFSCar | 100 | 100 | 0 | tabela | 0 |
 | Edusp | 1007 | 1021 | 0 | tabela | 0 |
-| Ercolano | 34 | 34 | 0 | tabela | 0 |
+| Ercolano | 32 | 32 | 0 | posição do texto | 0 |
 | Grua | 102 | 102 | 0 | tabela | 0 |
 | Grupo Ciranda Cultural | 865 | 865 | 0 | tabela | 0 |
 | Grupo Editorial Aletria | 84 | 85 | 0 | tabela | 0 |
