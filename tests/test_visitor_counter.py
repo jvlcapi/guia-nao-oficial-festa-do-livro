@@ -8,7 +8,7 @@ import pytest
 ROOT = Path(__file__).resolve().parents[1]
 COUNTER_ADDRESS = re.compile(r"https://abacus\.jasoncameron\.dev/(hit|get)/([\w.-]+)/([\w.-]+)")
 SITE_PAGE = "site/index.html"
-COUNTER_READERS = ["README.md", "README.pt-BR.md", ".github/workflows/guardar-contador-de-visitantes.yml"]
+COUNTER_READERS = ["README.md", "README.en.md", ".github/workflows/guardar-contador-de-visitantes.yml"]
 
 
 def counter_references(relative_path: str) -> list[tuple[str, str]]:
