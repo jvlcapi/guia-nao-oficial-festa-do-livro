@@ -85,6 +85,10 @@ navegador de cada pessoa: busca, lista e totais (lista salva no próprio aparelh
 4. Se precisar ajustar o leitor, corrija, adicione um teste com o PDF da editora em `tests/fixtures/price_lists/` e rode de novo.
 5. Abra o site e confira que o número e as datas da nova edição aparecem no topo.
 
+### Versões
+
+Cada atualização do código vira uma versão, como `v1.8.0`, com tag no Git, release no GitHub e uma seção no [CHANGELOG.md](CHANGELOG.md) dizendo o que mudou. A tag aponta para o último commit que foi ao ar naquele dia. As atualizações diárias do catálogo, feitas pelo robô, não mudam a versão.
+
 ### Rodar localmente
 
 ```bash
@@ -112,6 +116,7 @@ O teste `tests/test_repository_hygiene.py` falha se algum arquivo versionado tiv
 ### Estrutura
 
 ```
+CHANGELOG.md                  o que mudou em cada versão (cada uma tem tag e release no GitHub)
 settings.json                 edição ("auto" ou identificador) e endereço do site oficial
 src/festa_do_livro/
   fair_site.py                página inicial, API do evento e das editoras

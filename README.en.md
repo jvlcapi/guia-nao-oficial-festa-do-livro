@@ -104,6 +104,7 @@ The site is then at http://127.0.0.1:8765. To build another edition: `--edition 
 ## Repository layout
 
 ```
+CHANGELOG.md                  what changed in each version, in Portuguese (each one has a git tag and a GitHub release)
 settings.json                 edition ("auto" or a fixed id) and source site address
 src/festa_do_livro/
   fair_site.py                homepage edition detection, event and publisher API client
