@@ -57,3 +57,24 @@ def test_cell_spanning_several_columns_keeps_its_whole_text():
     rows = [[(0, 0, 60, 10), None], [(0, 10, 20, 20), (20, 10, 60, 20)]]
     characters = letters("ISBN", 2, 2) + letters("TITULO", 30, 2) + letters("978", 2, 12) + letters("Livro", 22, 12)
     assert table_cell_texts(rows, characters) == [["ISBN TITULO", None], ["978", "Livro"]]
+
+
+def test_text_its_cell_cuts_at_the_border_is_read_whole():
+    # The page shows "ABCDE" up to the border at 20, with "E" cut in half, and hides "FGH" under the author.
+    shown = letters("ABCDE", 2, 2)
+    hidden = letters("FGH", 22, 2)
+    characters = shown + letters("Sonia", 22.5, 2) + rows_below((22.5, 22.5))
+    assert table_cell_texts(THREE_ROWS_OF_TITLE_AND_AUTHOR, characters, [(shown, hidden)])[0] == ["ABCDEFGH", "Sonia"]
+
+
+def test_text_drawn_over_several_cells_stays_as_the_table_reader_reads_it():
+    shown = letters("AB", 2, 2) + letters("CD", 22, 2)
+    hidden = letters("EF", 62, 2)
+    characters = shown + rows_below((22.5, 22.5))
+    assert table_cell_texts(THREE_ROWS_OF_TITLE_AND_AUTHOR, characters, [(shown, hidden)])[0] == ["AB", "CD"]
+
+
+def test_text_that_stops_showing_inside_its_cell_is_not_a_text_cut_at_the_border():
+    characters = letters("ABC", 2, 2) + letters("Sonia", 22.5, 2) + rows_below((22.5, 22.5))
+    hidden = letters("C", 10, 2) + letters("XYZ", 62, 2)
+    assert table_cell_texts(THREE_ROWS_OF_TITLE_AND_AUTHOR, characters, [(characters[:2], hidden)])[0] == ["ABC", "Sonia"]

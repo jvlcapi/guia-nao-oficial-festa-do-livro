@@ -133,3 +133,62 @@ def test_isbn_printed_without_its_check_digit_keeps_title_author_and_imprint_in_
     ]
     book = parse_table_rows(rows)[1]
     assert (book["isbn"], book["title"], book["author"], book["imprint"]) == ("9786581555009", "GAROTO AVATAR", "Caeto, Luana Vignon", "Miolo Mole")
+
+
+def test_fair_price_without_its_zero_cents_after_a_cover_price_with_cents():
+    rows = [
+        ["ISBN", "Título", "Autor", "Editora", "Preço capa", "Preco 50% Desc.", "Assunto"],
+        ["9786555801651", "A Cidade e os Cachorros", "Carlos Aguirre", "Ateliê", "120.00", "60", "Editoração"],
+        ["9786555800609", "A Vida Notável e Instrutiva do Mestre Tinius", "Johann Georg Tinius", "Ateliê", "83.00", "41,5", "Bibliofilia"],
+        ["9786555800760", "A Lua do Oriente e Outras Luas", "Christina Stephano de Queiroz", "Ateliê", "98.00", "49", "Biografia"],
+        ["9786555801811", "Acento de Conteúdo, O", "Luiz Tatit", "Ateliê", "76.00", "38", "Comunicação"],
+        ["9786555800715", "A Elite nos Bastidores do Modernismo Paulista", "Couto de Barros", "Ateliê", "200.00", "100", "História"],
+    ]
+    book = parse_table_rows(rows)[0]
+    assert (book["cover_price"], book["fair_price"]) == (120.0, 60.0)
+
+
+def test_whole_numbers_after_the_price_are_not_a_fair_price():
+    rows = [
+        ["ISBN", "Título", "Preço", "Estoque"],
+        ["9786555801651", "A Cidade e os Cachorros", "50,00", "20"],
+        ["9786555800609", "A Vida Notável e Instrutiva do Mestre Tinius", "60,00", "30"],
+        ["9786555800760", "A Lua do Oriente e Outras Luas", "45,00", "15"],
+        ["9786555801811", "Acento de Conteúdo, O", "40,00", "12"],
+    ]
+    book = parse_table_rows(rows)[0]
+    assert (book["cover_price"], book["fair_price"]) == (None, 50.0)
+
+
+def test_quantity_column_beside_whole_number_prices_is_not_a_price():
+    rows = [
+        ["Barras", "Titulo", "Qtd. Vend", "Vlr. Unit.", "50%"],
+        ["9786557112120", "1923", "10", "98", "49"],
+        ["9788539301843", "ABOLICAO", "3", "156", "78"],
+        ["9788539300716", "ABOLICAO - 9ª EDICAO, A", "40", "58", "29"],
+        ["9788539307814", "ACELERACAO", "6", "110", "55"],
+    ]
+    book = parse_table_rows(rows)[1]
+    assert (book["title"], book["cover_price"], book["fair_price"]) == ("ABOLICAO", 156.0, 78.0)
+
+
+def test_quantity_with_a_letter_spilled_from_the_title_is_not_the_author():
+    rows = [
+        ["Barras", "Titulo", "Qtd. Vend", "Vlr. Unit.", "50%"],
+        ["9786557112120", "1923", "10", "98", "49"],
+        ["9788539307630", "BUSCA DA LINGUA PERFEITA NA CULTURA EUROPEIA,", "A 6", "79", "40"],
+        ["9788539300716", "ABOLICAO - 9ª EDICAO, A", "40", "58", "29"],
+        ["9788539307814", "ACELERACAO", "6", "110", "55"],
+        ["9786557112403", "ACONTECIMENTO DA LITERATURA, O", "50", "76", "38"],
+    ]
+    book = parse_table_rows(rows)[1]
+    assert (book["author"], book["cover_price"], book["fair_price"]) == ("", 79.0, 40.0)
+
+
+def test_authors_that_name_a_site_are_still_the_authors():
+    rows = [
+        ["9786526116760", "Carreiras Extraordinárias", "Danila Sorrentino, Simona Bursi, Shutterstock.com, Freepik.com", "Ciranda Cultural - Coedição", "R$ 59,90", "R$ 50,00", "Profissões", "https://www.cirandacultural.com.br/produto/carreiras"],
+        ["9786526118610", "Manual De Detetive", "Danila Sorrentino, Illary Casasanta", "Ciranda Cultural - Coedição", "R$ 59,90", "R$ 50,00", "Profissões", "https://www.cirandacultural.com.br/produto/detetive"],
+    ]
+    book = parse_table_rows(rows)[0]
+    assert (book["author"], book["imprint"]) == ("Danila Sorrentino, Simona Bursi, Shutterstock.com, Freepik.com", "Ciranda Cultural - Coedição")

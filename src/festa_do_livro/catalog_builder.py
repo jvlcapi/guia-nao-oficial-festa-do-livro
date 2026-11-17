@@ -12,7 +12,7 @@ from .fair_site import EventDetails, Publisher
 from .isbn import is_valid_isbn, isbn_of_book_id
 from .pdf_reading import extract_plain_text, extract_table_rows, extract_text_spans
 from .position_parser import parse_by_position
-from .table_parser import join_sheet_printed_in_strips, parse_table_rows
+from .table_parser import LOWEST_FAIR_SHARE_OF_COVER, join_sheet_printed_in_strips, parse_table_rows
 from .text_helpers import without_accents_lowercase
 
 URL_IN_TEXT = re.compile(r"https?://\S+")
@@ -26,13 +26,16 @@ MONEY_ON_ISBN_LINE = re.compile(r"(?<![\d,.])(?:R\$\s*)?(\d{1,3}(?:\.\d{3})*,\d{
 HTML_TAG = re.compile(r"<[^>]+>")
 EDITION_BEFORE_TITLE = re.compile(r"^\d{1,2}\s*[aª]\.?\s*ed(?:ição|icao|\.)?\s+", re.I)
 SYNOPSIS_MINIMUM_LENGTH = 40
+LONGEST_SUBJECT = 60
+TAG_SEPARATOR = re.compile(r"\s*[,;]\s*")
+MOST_WORDS_IN_A_TAG = 4
 SYNOPSIS_SHARE_OF_SUBJECTS = 0.8
-LOWEST_FAIR_SHARE_OF_COVER = 0.2
 LONGEST_TITLE = 250  # longer text is several rows glued together by the reader
 FAIR_PRICE_HINTS = ("desc", "feira", "festa", "%", "promo", "final", "venda", "liquido")
 ONLY_COVER_PRICE_NOTICE = "só tem preço de capa; o preço de feira não foi informado"
 FEWEST_BOOKS_TO_COMPARE_READERS = 10
 SHARE_READ_THE_SAME_WAY = 0.8
+SHORTEST_CUT_TITLE = 10
 LOWEST_SHARE_OF_OTHER_READER_ISBNS = 0.5
 READ_IN_STRIPS = "tabela em faixas"
 
@@ -57,7 +60,18 @@ def tidy_subject(text: str) -> str:
     text = tidy(MONEY_IN_SUBJECT.sub(" ", text))
     if text.isupper():
         text = text.capitalize()
-    return text[:60]
+    if len(text) > LONGEST_SUBJECT and is_list_of_tags(text):
+        last_whole_tag_end = max(text.rfind(",", 0, LONGEST_SUBJECT + 1), text.rfind(";", 0, LONGEST_SUBJECT + 1))
+        if last_whole_tag_end > 0:
+            return text[:last_whole_tag_end].strip()
+    return text[:LONGEST_SUBJECT]
+
+
+def is_list_of_tags(text: str) -> bool:
+    """Short labels between commas ("Alfabetização, Inglês, Primeiros conceitos, Adição", Ciranda Cultural 2026), unlike a synopsis,
+    whose sentences run on between its commas."""
+    tags = TAG_SEPARATOR.split(text.strip(" ,;"))
+    return len(tags) >= 2 and all(0 < len(tag.split()) <= MOST_WORDS_IN_A_TAG for tag in tags)
 
 
 def tidy_title(text: str) -> str:
@@ -208,7 +222,12 @@ def is_garbled_copy(book: dict, book_with_isbn: dict) -> bool:
 
 
 def same_reading(book: dict, other_reading: dict) -> bool:
-    return comparable_title(book["title"]) == comparable_title(other_reading["title"]) and book["fair_price"] == other_reading["fair_price"]
+    """The same title and fair price. The other reader may see the title cut short by its cell, because the table reader reads the
+    end a cell hides and the position reader does not (LVM 2026). A longer title from the other reader is not the same reading:
+    it can be the title with the author glued to it ("Notas Dissonantes Neves, Juliano C. S.")."""
+    title, other_title = comparable_title(book["title"]), comparable_title(other_reading["title"])
+    same_title = title == other_title or (len(other_title) >= SHORTEST_CUT_TITLE and title.startswith(other_title))
+    return same_title and book["fair_price"] == other_reading["fair_price"]
 
 
 def comparable_title(title: str) -> str:
@@ -424,7 +443,8 @@ def give_each_exhibitor_its_own_id(books: list[dict], publishers: list[Publisher
 
 
 def drop_synopses_used_as_genre(books: list[dict]) -> None:
-    """Some publishers fill the subject column with a synopsis or a long list of tags: almost every value is long and different from the others."""
+    """Some publishers fill the subject column with a synopsis: almost every value is long and different from the others. A list of
+    tags is long and different from book to book too, but each tag is a genre, so it stays."""
     subjects_by_exhibitor = collections.defaultdict(list)
     for book in books:
         if book.get("g"):
@@ -433,7 +453,7 @@ def drop_synopses_used_as_genre(books: list[dict]) -> None:
         exhibitor for exhibitor, subjects in subjects_by_exhibitor.items()
         if len(subjects) >= 5
         and len(set(subjects)) >= SYNOPSIS_SHARE_OF_SUBJECTS * len(subjects)
-        and sum(1 for subject in subjects if len(subject) >= SYNOPSIS_MINIMUM_LENGTH) >= SYNOPSIS_SHARE_OF_SUBJECTS * len(subjects)
+        and sum(1 for subject in subjects if len(subject) >= SYNOPSIS_MINIMUM_LENGTH and not is_list_of_tags(subject)) >= SYNOPSIS_SHARE_OF_SUBJECTS * len(subjects)
     }
     for book in books:
         if book["x"] in exhibitors_with_synopses:

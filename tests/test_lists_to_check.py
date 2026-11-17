@@ -32,6 +32,17 @@ def test_list_where_most_books_have_no_cover_price_is_flagged():
     assert [(item.problem, item.detail) for item in found] == [("sem preço de capa", "10 de 10 livros")]
 
 
+def test_list_where_many_fair_prices_are_below_a_fifth_of_the_cover_is_flagged():
+    books = [book(number, cover=156.0, fair=3.0) for number in range(4)] + TEN_BOOKS[4:]
+    found = lists_to_check(catalog_of("Editora Unesp", books), VerificationReport(), [], {0: "tabela"}, {0: 10})
+    assert [(item.problem, item.detail) for item in found] == [("preço de feira abaixo de um quinto da capa", "4 de 10 livros")]
+
+
+def test_a_few_deep_discounts_are_not_flagged():
+    books = [book(number, cover=156.0, fair=3.0) for number in range(2)] + TEN_BOOKS[2:]
+    assert lists_to_check(catalog_of("Editora Unesp", books), VerificationReport(), [], {0: "tabela"}, {0: 10}) == []
+
+
 def test_list_with_many_prices_missing_from_the_pdf_is_flagged():
     report = VerificationReport(mismatches_by_exhibitor={0: [("Livro 1", "capa 59.9 · feira 29.95")] * 4})
     found = lists_to_check(catalog_of("Instituto Tomie Ohtake", TEN_BOOKS), report, [], {0: "tabela"}, {0: 10})

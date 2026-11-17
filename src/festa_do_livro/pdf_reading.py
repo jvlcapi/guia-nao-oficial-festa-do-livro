@@ -15,6 +15,7 @@ CUT_LETTER_DISTANCE_FROM_TEXT = 0.6
 SAME_LINE_DISTANCE = 1.0
 USUAL_START_DISTANCE = 0.3
 TALLER_THAN_ROW = 1.0
+SAME_CHARACTER_DISTANCE = 0.05  # the page shows a character where the PDF draws it, to rounding
 
 
 def extract_table_rows(pdf_path: Path) -> list[list[str]]:
@@ -23,25 +24,89 @@ def extract_table_rows(pdf_path: Path) -> list[list[str]]:
         for page in document:
             tables = page.find_tables().tables
             characters = list(pymupdf.table.CHARS)  # the characters find_tables read from this page, the ones Table.extract uses
+            partly_hidden = partly_hidden_texts(page, characters)
             for table in tables:
-                for row in table_cell_texts([row.cells for row in table.rows], characters):
+                for row in table_cell_texts([row.cells for row in table.rows], characters, partly_hidden):
                     rows.append([(cell or "").replace("\n", " ").strip() for cell in row])
     return rows
 
 
-def table_cell_texts(rows: list[list[tuple | None]], characters: list[dict]) -> list[list[str | None]]:
-    """The text of each cell as PyMuPDF's Table.extract reads it (every character in the cell that holds its middle), with two
+def partly_hidden_texts(page: pymupdf.Page, shown_characters: list[dict]) -> list[tuple[list[dict], list[dict]]]:
+    """Every text the page draws only in part, as the characters the page shows and the ones it hides. A spreadsheet clips a text
+    longer than its cell at the border, so the PDF holds the whole text and the table reader only sees the part inside the cell:
+    "A Cidade e os Ca" of "A Cidade e os Cachorros: Biografia de um Romance", and "978-85-7480-442" of the ISBN 978-85-7480-442-2
+    (Ateliê 2026). The page shows the text from its start up to the border, so the shown part is the run of shown characters from
+    the first one, and the hidden part is everything after it: a hidden letter can sit right over the same letter of the next cell
+    ("i" of "Mestre Tinius" over the "i" of "Ateliê")."""
+    shown_by_letter_and_column = collections.defaultdict(list)
+    for character in shown_characters:
+        shown_by_letter_and_column[(character["text"], round(character["x0"]))].append(character)
+    doctop_base = page.rect.height * page.number
+    texts = []
+    for drawn in page.get_texttrace():
+        shown = []
+        for code, _, _, (x0, top, x1, _) in drawn["chars"]:
+            same = shown_character_at(shown_by_letter_and_column, chr(code), x0, x1, top)
+            if same is None:
+                break
+            shown.append(same)
+            shown_by_letter_and_column[(same["text"], round(same["x0"]))].remove(same)
+        if shown and len(shown) < len(drawn["chars"]):
+            hidden = [
+                {**shown[0], "text": chr(code), "x0": x0, "x1": x1, "top": top, "bottom": bottom, "doctop": top + doctop_base, "width": x1 - x0}
+                for code, _, _, (x0, top, x1, bottom) in drawn["chars"][len(shown):]
+            ]
+            texts.append((shown, hidden))
+    return texts
+
+
+def shown_character_at(shown_by_letter_and_column: dict, letter: str, x0: float, x1: float, top: float) -> dict | None:
+    for column in (round(x0) - 1, round(x0), round(x0) + 1):
+        for character in shown_by_letter_and_column.get((letter, column), []):
+            if all(abs(character[edge] - value) < SAME_CHARACTER_DISTANCE for edge, value in (("x0", x0), ("x1", x1), ("top", top))):
+                return character
+    return None
+
+
+def table_cell_texts(rows: list[list[tuple | None]], characters: list[dict], partly_hidden: list[tuple[list[dict], list[dict]]] = ()) -> list[list[str | None]]:
+    """The text of each cell as PyMuPDF's Table.extract reads it (every character in the cell that holds its middle), with three
     repairs. A column that lost the borders between its rows comes out as one tall cell over the rows below it (Hucitec 2026: 31
-    cover prices in one cell and none in the 30 rows below), so each line goes back to the row it is printed on. And a narrow cell
+    cover prices in one cell and none in the 30 rows below), so each line goes back to the row it is printed on. A narrow cell
     cuts the last letter of its text in half, so the middle of that letter falls in the next cell ("6 PERGUNTAS" and "SSonia
-    Salzstein" in IMS 2026), and the letter goes back to the text it ends."""
+    Salzstein" in IMS 2026), and the letter goes back to the text it ends. And a text that its cell hides in part is read whole."""
     cells = cells_by_row_and_column(rows)
     characters_by_cell = {position: [character for character in characters if middle_inside(character, bbox)] for position, bbox in cells.items()}
     give_cut_letters_back(cells, characters_by_cell)
+    give_hidden_text_back(cells, characters_by_cell, partly_hidden)
     return [
         [cell_text(characters_by_cell[(row_index, column)]) if (row_index, column) in cells else None for column in range(len(row))]
         for row_index, row in enumerate(rows)
     ]
+
+
+def give_hidden_text_back(
+    cells: dict[tuple[int, int], tuple], characters_by_cell: dict[tuple[int, int], list[dict]], partly_hidden: list[tuple[list[dict], list[dict]]],
+) -> None:
+    """A text that its cell cuts at the border goes whole to the cell where it starts, with the letter the border cuts in half and
+    the letters hidden past the border. A cut text shows only inside its cell and hides from the border on; any other text stays
+    as the table reader read it, like a text drawn over several cells."""
+    cell_of_character = {id(character): position for position, characters in characters_by_cell.items() for character in characters}
+    for shown, hidden in partly_hidden:
+        start = cell_of_character.get(id(shown[0]))
+        if start is None or not all(starts_inside(character, cells[start]) for character in shown) or middle_inside(hidden[0], cells[start]):
+            continue
+        for character in shown:
+            position = cell_of_character.get(id(character))
+            if position is not None and position != start:
+                characters_by_cell[position].remove(character)
+                characters_by_cell[start].append(character)
+                cell_of_character[id(character)] = start
+        characters_by_cell[start].extend(character for character in hidden if not middle_inside(character, cells[start]))
+
+
+def starts_inside(character: dict, bbox: tuple) -> bool:
+    vertical_middle = (character["top"] + character["bottom"]) / 2
+    return bbox[0] - SAME_LINE_DISTANCE <= character["x0"] < bbox[2] and bbox[1] <= vertical_middle < bbox[3]
 
 
 def cells_by_row_and_column(rows: list[list[tuple | None]]) -> dict[tuple[int, int], tuple]:

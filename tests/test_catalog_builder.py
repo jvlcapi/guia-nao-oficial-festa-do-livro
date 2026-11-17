@@ -292,6 +292,7 @@ def test_link_to_a_front_page_is_dropped(url, published):
     ("Luiz Gama, abolição, preconceito, 26,00 justiça", "Luiz Gama, abolição, preconceito, justiça"),
     ("R$ 49,00 Biografia", "Biografia"),
     ("POESIA", "Poesia"),
+    ("Alfabetização, Inglês, Primeiros conceitos, Adição, Contagem, Matemática, Apoio escolar", "Alfabetização, Inglês, Primeiros conceitos, Adição, Contagem"),
 ])
 def test_genre_cleanup(subject, cleaned):
     assert tidy_subject(subject) == cleaned
@@ -303,6 +304,14 @@ def test_synopsis_column_is_not_used_as_genre():
              for number, isbn in enumerate(isbns)]
     catalog = catalog_from({"Editora Biruta / Gaivota": books})
     assert [book.get("g") for book in catalog["livros"]] == [None] * 5
+
+
+def test_long_lists_of_tags_are_kept_as_genres():
+    isbns = ["9788526810563", "9788526807969", "9788526806498", "9788526815223", "9786528102556"]
+    books = [parsed_book(isbn, f"Livro {number}", subject=f"Alfabetização, Inglês, Primeiros conceitos, Flash Cards {number}")
+             for number, isbn in enumerate(isbns)]
+    catalog = catalog_from({"Grupo Ciranda Cultural": books})
+    assert [book.get("g") for book in catalog["livros"]] == [f"Alfabetização, Inglês, Primeiros conceitos, Flash Cards {number}" for number in range(5)]
 
 
 def test_short_genres_are_kept():
@@ -559,9 +568,9 @@ def ims():
     return catalog_for("ims.pdf", "IMS")
 
 
-def test_letter_a_narrow_cell_cut_in_half_stays_with_the_title(ims):
+def test_title_a_narrow_cell_cuts_in_the_middle_of_a_letter_is_read_whole(ims):
     book = book_titled(ims[0], "A CRÍTICA CÚM")
-    assert (book["t"], book["a"]) == ("A CRÍTICA CÚMP", "Ana Bernstein")
+    assert (book["t"], book["a"]) == ("A CRÍTICA CÚMPLICE", "Ana Bernstein")
 
 
 def test_no_author_of_a_list_with_narrow_cells_starts_with_the_last_letter_of_the_title(ims):
@@ -569,10 +578,10 @@ def test_no_author_of_a_list_with_narrow_cells_starts_with_the_last_letter_of_th
     assert [book["a"] for book in ims[0]["livros"] if letter_glued_to_a_name.match(book.get("a", ""))] == []
 
 
-def test_lowercase_letter_a_narrow_cell_cut_in_half_stays_with_the_title():
+def test_lowercase_title_a_narrow_cell_cuts_in_the_middle_of_a_letter_is_read_whole():
     catalog, _ = catalog_for("lavrapalavra.pdf", "LavraPalavra")
     book = book_titled(catalog, "centralismo democr")
-    assert (book["t"], book["a"]) == ("centralismo democrát", "Vladímir Ilitch Lênin")
+    assert (book["t"], book["a"]) == ("centralismo democrático de Lênin", "Vladímir Ilitch Lênin")
 
 
 @pytest.fixture(scope="module")
@@ -633,6 +642,33 @@ def test_last_row_with_broken_cell_borders_is_shown_once(unifesp):
     assert len([book for book in unifesp[0]["livros"] if "PRISMA DA RAÇA" in book["t"]]) == 1
 
 
+@pytest.fixture(scope="module")
+def atelie():
+    return catalog_for("atelie.pdf", "Ateliê Editorial")
+
+
+def test_title_its_cell_cuts_at_the_border_is_read_whole(atelie):
+    assert book_titled(atelie[0], "A Cidade e os Ca")["t"] == "A Cidade e os Cachorros: Biografia de um Romance"
+
+
+def test_isbn_its_cell_cuts_at_the_border_is_read_whole(atelie):
+    assert book_titled(atelie[0], "Do Formalismo Estético")["i"] == "9788574804422"
+
+
+def test_letter_hidden_over_the_same_letter_of_the_next_cell_stays_in_the_title(atelie):
+    assert book_titled(atelie[0], "A Vida Notável")["t"] == "A Vida Notável e Instrutiva do Mestre Tinius"
+
+
+def test_fair_price_written_without_its_zero_cents_is_not_mistaken_for_the_cover_price(atelie):
+    book = book_titled(atelie[0], "A Cidade e os Ca")
+    assert (book["c"], book["f"]) == (120.0, 60.0)
+
+
+def test_every_book_of_a_list_whose_cells_cut_their_texts_is_read(atelie):
+    # The two pages have 85 rows with an ISBN: 78 with thirteen digits and 7 with ten.
+    assert len(atelie[0]["livros"]) == 85
+
+
 def isbn_with_check_digit(first_twelve_digits: str) -> str:
     weighted_sum = sum(int(digit) * (3 if position % 2 else 1) for position, digit in enumerate(first_twelve_digits))
     return first_twelve_digits + str((10 - weighted_sum % 10) % 10)
@@ -645,6 +681,19 @@ def numbered_books(count: int, title_prefix: str = "Livro") -> list[dict]:
 def test_book_the_chosen_reader_lost_is_taken_from_the_other_reader():
     lost_book = parsed_book(isbn_with_check_digit("978850000999"), "Livro da última linha")
     assert books_only_the_other_reader_found(numbered_books(10), numbered_books(10) + [lost_book]) == [lost_book]
+
+
+def test_other_reader_that_sees_the_titles_cut_short_by_their_cells_is_still_trusted():
+    lost_book = parsed_book(isbn_with_check_digit("978850000999"), "Livro da última linha")
+    whole_titles =[{**book, "title": book["title"].replace("Livro", "Livro com um título longo demais para a célula")} for book in numbered_books(10)]
+    cut_short = [{**book, "title": book["title"][:20]} for book in whole_titles]
+    assert books_only_the_other_reader_found(whole_titles, cut_short + [lost_book]) == [lost_book]
+
+
+def test_other_reader_that_glues_the_author_to_every_title_is_not_trusted():
+    lost_book = parsed_book(isbn_with_check_digit("978850000999"), "Livro da última linha")
+    titles_with_author = [{**book, "title": book["title"] + " Neves, Juliano C. S."} for book in numbered_books(10)]
+    assert books_only_the_other_reader_found(numbered_books(10), titles_with_author + [lost_book]) == []
 
 
 def test_other_reader_is_not_trusted_when_it_reads_the_shared_books_another_way():

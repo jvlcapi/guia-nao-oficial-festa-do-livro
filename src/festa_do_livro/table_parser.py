@@ -13,9 +13,17 @@ STRICT_MONEY = re.compile(
     re.I,
 )
 INTERNAL_CODE = re.compile(r"^\s*\d{1,9}\s*$")
+# Digits with the separators, check letter and exponent of a code: "2179-801x" (ISSN), "9,77E+12" (spreadsheet notation).
+CODE_CHARACTERS = re.compile(r"[\d\s\-=.,+xXE]+")
+FEWEST_DIGITS_OF_A_CODE = 4
+NUMBER_CELL = re.compile(r"(?:R\$\s*)?(\d{1,4}(?:[.,]\d{1,2})?)")
+LOWEST_FAIR_SHARE_OF_COVER = 0.2
+SHARE_OF_ROWS_IN_A_COLUMN = 0.8
 PERCENT_CELL = re.compile(r"\s*-?(\d{1,2}(?:[.,]\d+)?)\s*%\s*")
 SECTION_HEADER_WORDS = ("isbn", "ean", "cod", "titulo", "descricao", "livro", "autor", "editora", "selo", "assunto", "colecao", "pagina", "url", "link", "preco", "capa", "valor", "desconto")
 PRICE_HEADER_WORDS = ("preco", "capa", "valor", "desconto", "feira", "$", "%")
+QUANTITY_HEADER_WORDS = ("qtd", "quant", "estoque")
+LINK_WITHOUT_HTTP = re.compile(r"\S*\.com")
 HEADER_KEYWORDS = [
     ("url", ["url", "link", "endereco", "capa/url"]),
     ("isbn", ["isbn", "ean", "codigo"]),
@@ -45,7 +53,9 @@ def isbn_in_cell(cell: str) -> str:
 
 
 def looks_like_url(cell: str) -> bool:
-    return "http" in cell or "www." in cell or ".com" in cell
+    """A link, with or without "http": "carochinhaeditora.com.br/livro". A text that only names a site among other words is not
+    one ("Danila Sorrentino, Simona Bursi, Shutterstock.com, Freepik.com", the authors of a book, Ciranda Cultural 2026)."""
+    return "http" in cell or "www." in cell or bool(LINK_WITHOUT_HTTP.match(cell.strip()))
 
 
 def header_role(cell: str):
@@ -68,7 +78,8 @@ def money_values_in_cell(cell: str) -> list[float]:
 
 
 def price_columns_by_row_length(rows: list[list[str]]) -> dict[int, set[int]]:
-    """Which columns hold prices, decided per table shape so codes and row numbers are never read as prices."""
+    """Which columns hold prices, decided per table shape so codes, row numbers and quantities are never read as prices."""
+    quantity_columns = quantity_columns_by_row_length(rows)
     strict_hits = collections.defaultdict(collections.Counter)
     rows_with_money = collections.Counter()
     for row in rows:
@@ -109,6 +120,16 @@ def price_columns_by_row_length(rows: list[list[str]]) -> dict[int, set[int]]:
             if integers and is_price_column:
                 columns[length] = columns[length] | {candidate}
 
+    # A fair price that drops its zero cents ("60" and "41,5"), right after a cover price that keeps them ("120.00" and "83.00").
+    for length, price_columns in list(columns.items()):
+        data_rows = book_rows(length)
+        if len(data_rows) < 3:
+            continue
+        for column in sorted(price_columns):
+            candidate = column + 1
+            if candidate < length and candidate not in price_columns and is_discount_column(data_rows, column, candidate):
+                columns[length] = columns[length] | {candidate}
+
     # Lists that write every price as a whole number.
     for length in rows_by_length:
         if columns.get(length):
@@ -123,7 +144,38 @@ def price_columns_by_row_length(rows: list[list[str]]) -> dict[int, set[int]]:
                 found.add(column)
         if found:
             columns[length] = found
-    return columns
+    return {length: found - quantity_columns[length] for length, found in columns.items()}
+
+
+def quantity_columns_by_row_length(rows: list[list[str]]) -> dict[int, set[int]]:
+    """Columns whose header counts copies ("Qtd. Vend", Unesp 2026): whole numbers like the prices beside them, never a price.
+    Read as a price, the quantity became the fair price of most books ("ABOLICAO" for R$ 3,00 instead of R$ 78,00)."""
+    found = collections.defaultdict(set)
+    for row in rows:
+        joined = without_accents_lowercase(" ".join(row))
+        if has_isbn(row) or not ("isbn" in joined or "titulo" in joined or "ean" in joined.split()):
+            continue
+        for column, cell in enumerate(row):
+            if any(word in without_accents_lowercase(cell or "") for word in QUANTITY_HEADER_WORDS):
+                found[len(row)].add(column)
+    return found
+
+
+def is_code_without_words(cell: str) -> bool:
+    return bool(CODE_CHARACTERS.fullmatch(cell.strip())) and sum(character.isdigit() for character in cell) >= FEWEST_DIGITS_OF_A_CODE
+
+
+def number_in_cell(cell: str) -> float | None:
+    match = NUMBER_CELL.fullmatch(join_split_digits(cell))
+    return float(match.group(1).replace(",", ".")) if match else None
+
+
+def is_discount_column(data_rows: list[list[str]], price_column: int, column: int) -> bool:
+    """Most rows hold a number below the price before it and above a fifth of it, and some of those numbers have cents: a
+    quantity or a page count is a whole number, and a page count is usually above the price."""
+    pairs = [(number_in_cell(row[price_column]), number_in_cell(row[column])) for row in data_rows]
+    discounts = [fair for cover, fair in pairs if cover and fair is not None and LOWEST_FAIR_SHARE_OF_COVER * cover <= fair < cover]
+    return len(discounts) >= SHARE_OF_ROWS_IN_A_COLUMN * len(data_rows) and any(fair != int(fair) for fair in discounts)
 
 
 def numeric_columns_by_row_length(rows: list[list[str]]) -> dict[int, set[int]]:
@@ -134,7 +186,7 @@ def numeric_columns_by_row_length(rows: list[list[str]]) -> dict[int, set[int]]:
         for column, cell in enumerate(row):
             if cell and cell.strip():
                 filled[len(row)][column] += 1
-                if INTERNAL_CODE.match(cell) or isbn_in_cell(cell):
+                if INTERNAL_CODE.match(join_split_digits(cell)) or isbn_in_cell(cell):
                     numeric_hits[len(row)][column] += 1
     return {
         length: {column for column, count in counts.items() if count >= 3 and numeric_hits[length][column] >= 0.8 * count}
@@ -221,9 +273,12 @@ def parse_table_rows(rows: list[list[str]]) -> list[dict]:
         prices = [value for column in filled_price_columns for value in money_values_in_cell(row[column])]
         isbn_columns = [column for column, cell in enumerate(row) if column not in row_price_columns and isbn_in_cell(cell)]
         row_numeric_columns = numeric_columns.get(len(row), set())
+        # A code in the column of ISBNs is not the title, even when it is not an ISBN: an ISSN or a mistyped ISBN (Ateliê 2026). Nor
+        # is a quantity with the last letter of the title spilled into its cell ("A 6", Unesp 2026).
         code_columns = [
             column for column, cell in enumerate(row)
-            if column not in row_price_columns and column not in isbn_columns and column in row_numeric_columns and INTERNAL_CODE.match(cell or "")
+            if column not in row_price_columns and column not in isbn_columns and column in row_numeric_columns
+            and (INTERNAL_CODE.match(join_split_digits(cell)) or is_code_without_words(cell or ""))
         ]
         text_columns = [
             column for column, cell in enumerate(row)
