@@ -1,9 +1,9 @@
 # Relatório do catálogo: 28 Festa do Livro da USP
 
 - Edição: `28-festa-do-livro-da-usp` · 25 e 29 de novembro
-- Editoras no site: 91
-- Livros no catálogo: 18769
-- Livros sem ISBN (preço não conferível automaticamente): 192
+- Editoras no site: 97
+- Livros no catálogo: 19699
+- Livros sem ISBN (preço não conferível automaticamente): 218
 - Preços que não bateram com o PDF: 416
 - Livros sem preço de capa: 5
 - Livros só com preço de capa (feira não informado): 2495
@@ -38,6 +38,7 @@
 | Edições Sesc | 299 | 299 | 0 | tabela | 0 |
 | Editora Bazar do Tempo | 95 | 95 | 0 | posição do texto | 0 |
 | Editora Biruta | 290 | 290 | 0 | tabela | 0 |
+| Editora Brasiliense | 193 | 193 | 0 | tabela | 0 |
 | Editora Caixote | 45 | 45 | 0 | tabela | 0 |
 | Editora Cosac | 30 | 30 | 0 | tabela | 0 |
 | Editora da Unicamp | 453 | 453 | 0 | tabela | 0 |
@@ -88,6 +89,7 @@
 | Odysseus Editora | 81 | 82 | 0 | tabela | 0 |
 | ÔZé | 67 | 67 | 0 | tabela | 0 |
 | Paco Editorial | 91 | 91 | 0 | tabela | 0 |
+| Palas Athena Editora | 94 | 94 | 0 | tabela | 0 |
 | Paulinas Editora | 525 | 525 | 0 | tabela | 0 |
 | Phorte Editora | 60 | 60 | 0 | tabela em faixas | 59 |
 | Pinard | 33 | 33 | 0 | tabela | 0 |
@@ -96,17 +98,21 @@
 | Pulo do Gato | 86 | 86 | 0 | tabela | 0 |
 | Quatro Cantos | 49 | 49 | 0 | tabela | 0 |
 | Quina Editora | 21 | 21 | 0 | tabela | 0 |
+| Reformatório | 209 | 209 | 0 | tabela | 0 |
 | Relicário | 155 | 155 | 3 | tabela | 0 |
 | Seiva | 8 | 8 | 0 | tabela | 0 |
 | Seja Breve | 16 | 16 | 0 | tabela | 0 |
 | Sisko Editora | 19 | 19 | 0 | tabela | 0 |
+| Tabla | 41 | 41 | 0 | tabela | 0 |
 | TantaTinta / Carlini e Caniato | 31 | 31 | 0 | tabela | 0 |
 | Telos Editora | 166 | 166 | 0 | tabela | 0 |
 | Terra Virgem Edições | 36 | 36 | 0 | tabela | 0 |
+| Todavia | 232 | 232 | 0 | tabela | 0 |
 | Ubu Editora | 166 | 166 | 0 | tabela | 0 |
 | Unifesp | 199 | 200 | 0 | tabela | 0 |
 | Universo dos livros | 358 | 358 | 0 | tabela em faixas | 356 |
 | Via Lettera | 119 | 119 | 0 | tabela | 0 |
+| Zagodoni | 161 | 161 | 0 | tabela | 0 |
 | Zain | 16 | 16 | 0 | posição do texto | 0 |
 
 ## Divergências (amostra de até 5 por editora)
