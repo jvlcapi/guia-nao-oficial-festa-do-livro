@@ -1,17 +1,12 @@
 # Relatório do catálogo: 28 Festa do Livro da USP
 
 - Edição: `28-festa-do-livro-da-usp` · 25 e 29 de novembro
-- Editoras no site: 89
-- Livros no catálogo: 18576
-- Livros sem ISBN (preço não conferível automaticamente): 184
-- Preços que não bateram com o PDF: 419
-- Livros sem preço de capa: 187
+- Editoras no site: 91
+- Livros no catálogo: 18769
+- Livros sem ISBN (preço não conferível automaticamente): 192
+- Preços que não bateram com o PDF: 416
+- Livros sem preço de capa: 5
 - Livros só com preço de capa (feira não informado): 2495
-
-## Listas para conferir
-
-- **Ateliê Editorial**: livros perdidos (190 das 329 linhas lidas viraram livro)
-- **Ateliê Editorial**: sem preço de capa (182 de 190 livros)
 
 ## Avisos sobre listas
 
@@ -26,7 +21,7 @@
 | Aller Editora | 60 | 60 | 0 | tabela | 0 |
 | Arquipélago | 63 | 63 | 0 | tabela | 0 |
 | Ars et Vita | 21 | 21 | 0 | tabela | 1 |
-| Ateliê Editorial | 190 | 329 | 182 | tabela | 3 |
+| Ateliê Editorial | 329 | 329 | 0 | tabela | 0 |
 | Autonomia Literária | 155 | 155 | 0 | tabela | 0 |
 | AUTORES ASSOCIADOS | 285 | 285 | 0 | tabela | 0 |
 | Azuco | 21 | 21 | 0 | tabela | 0 |
@@ -69,20 +64,20 @@
 | Ercolano | 33 | 33 | 0 | posição do texto | 0 |
 | Grua | 102 | 102 | 0 | tabela | 0 |
 | Grupo Ciranda Cultural | 865 | 865 | 0 | tabela | 0 |
-| Grupo Editorial Aletria | 84 | 85 | 0 | tabela | 0 |
+| Grupo Editorial Aletria | 85 | 85 | 0 | tabela | 0 |
 | Grupo Editorial Bookone | 183 | 183 | 0 | tabela | 0 |
 | Grupo Editorial Pensamento | 290 | 290 | 0 | tabela | 0 |
 | Grupo Summus | 402 | 402 | 0 | tabela | 0 |
 | HarperCollins Brasil | 415 | 415 | 0 | tabela | 0 |
-| Hucitec Editora | 365 | 367 | 0 | tabela | 0 |
+| Hucitec Editora | 366 | 367 | 0 | tabela | 0 |
 | IMS | 140 | 141 | 0 | tabela | 0 |
-| Instituto Tomie Ohtake | 17 | 18 | 0 | tabela | 0 |
+| Instituto Tomie Ohtake | 18 | 18 | 0 | tabela | 0 |
 | Jujuba Editora | 60 | 60 | 0 | tabela | 0 |
 | LavraPalavra | 70 | 70 | 0 | tabela | 0 |
 | Letra Selvagem | 72 | 72 | 0 | posição do texto | 0 |
 | Livros da Matriz | 33 | 33 | 0 | tabela | 0 |
 | Lote 42 | 45 | 45 | 0 | tabela | 0 |
-| LVM Editora | 209 | 211 | 0 | tabela | 0 |
+| LVM Editora | 211 | 211 | 0 | tabela | 0 |
 | Maria Antonia Edições - GMARX | 11 | 11 | 0 | tabela | 0 |
 | Martins Fontes - Selo Martins | 678 | 678 | 0 | tabela | 0 |
 | Moinhos | 152 | 152 | 0 | tabela | 0 |
@@ -105,16 +100,17 @@
 | Seiva | 8 | 8 | 0 | tabela | 0 |
 | Seja Breve | 16 | 16 | 0 | tabela | 0 |
 | Sisko Editora | 19 | 19 | 0 | tabela | 0 |
+| TantaTinta / Carlini e Caniato | 31 | 31 | 0 | tabela | 0 |
 | Telos Editora | 166 | 166 | 0 | tabela | 0 |
 | Terra Virgem Edições | 36 | 36 | 0 | tabela | 0 |
 | Ubu Editora | 166 | 166 | 0 | tabela | 0 |
-| Unifesp | 197 | 200 | 0 | tabela | 0 |
+| Unifesp | 199 | 200 | 0 | tabela | 0 |
 | Universo dos livros | 358 | 358 | 0 | tabela em faixas | 356 |
 | Via Lettera | 119 | 119 | 0 | tabela | 0 |
+| Zain | 16 | 16 | 0 | posição do texto | 0 |
 
 ## Divergências (amostra de até 5 por editora)
 
 - **Universo dos livros** (356): A Casa Coruja: Bruxas contra Feiticeiros (capa 39.9 · feira 19.95); Aceita-me (capa 59.9 · feira 29.95); ACEITA-ME - EDIÇÃO DE LUXO LIMITADA (capa 89.9 · feira 44.95); Acelerados - Giovanna Souza (capa 89.9 · feira 44.95); Acorda pra vida! (capa 79.9 · feira 39.95)
 - **Phorte Editora** (59): A Aventura dialógica na infância (capa 95.0 · feira 47.5); A dança na arte, no esporte e na educação (capa 63.0 · feira 31.5); A escola do ser e do querer (ser) (capa 120.0 · feira 60.0); A estética no pensamento e na obra (capa 69.0 · feira 34.5); A ética no pensamento e na obra (capa 75.0 · feira 37.5)
-- **Ateliê Editorial** (3): Espuma do Fogo (ISBN não aparece no PDF); Idade da Aurora (ISBN não aparece no PDF); Música do Parna (ISBN não aparece no PDF)
 - **Ars et Vita** (1): As mãos das mulheres da minha família não eram destinadas à escrita (ISBN não aparece no PDF)
