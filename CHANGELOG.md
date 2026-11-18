@@ -2,6 +2,15 @@
 
 O que mudou em cada versão do guia. Cada versão tem uma tag no Git e uma release no GitHub com o mesmo texto. As atualizações diárias do catálogo, feitas pelo robô, ficam de fora: elas só trazem listas novas e preços.
 
+## v1.9.0 (18/11/2026)
+
+**Listas da Ed. UFV, da Uneb e da Monolito e código que não muda com o nome da editora**
+
+- A Ed. UFV deixou vazia a coluna do preço com desconto, e a Uneb só publicou o preço de capa. O guia mostrava a capa como preço de feira; agora os 33 livros das duas aparecem com o preço de capa e o aviso de que a editora não informou o preço de feira, como os da Pontes. A Uneb também ganha os autores.
+- A Monolito vende a revista com o código de barras do ISSN, e 15 das 52 edições sumiam do guia. As 52 estão lá agora, com o título certo, e a edição 34 deixa de levar o título da 35 colado.
+- Em 18/11 o site da Festa trocou o nome de 55 editoras ("Editora Vozes" virou "Vozes"). O código dos livros sem ISBN saía do nome da editora, e 82 deles mudaram de código: na lista salva paravam de atualizar o preço e no link compartilhado sumiam. Agora o código sai do número da editora no site da Festa, que não muda, e o guia acha o livro também pelos códigos antigos.
+- O botão que traz a lista de 2025 para 2026 volta a reconhecer as editoras que viraram "Ed." (Unesp, UFMG, Unicamp, UFPR, UFSC, UFV e Unifesp) e a Pontes.
+
 ## v1.8.0 (17/11/2026)
 
 **Texto escondido pelas células e preços da Ateliê e da Unesp**

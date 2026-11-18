@@ -3,7 +3,7 @@ import collections
 import itertools
 import re
 
-from .isbn import isbn_with_restored_check_digit
+from .isbn import is_valid_isbn, isbn_with_restored_check_digit
 from .text_helpers import without_accents_lowercase
 
 STRICT_MONEY = re.compile(
@@ -13,6 +13,8 @@ STRICT_MONEY = re.compile(
     re.I,
 )
 INTERNAL_CODE = re.compile(r"^\s*\d{1,9}\s*$")
+# A barcode that is not an ISBN, like a magazine's ISSN with the issue number after it ("977217974800703", Monolito 2026).
+LONG_BARCODE = re.compile(r"^\s*\d{12,18}\s*$")
 # Digits with the separators, check letter and exponent of a code: "2179-801x" (ISSN), "9,77E+12" (spreadsheet notation).
 CODE_CHARACTERS = re.compile(r"[\d\s\-=.,+xXE]+")
 FEWEST_DIGITS_OF_A_CODE = 4
@@ -24,11 +26,12 @@ SECTION_HEADER_WORDS = ("isbn", "ean", "cod", "titulo", "descricao", "livro", "a
 PRICE_HEADER_WORDS = ("preco", "capa", "valor", "desconto", "feira", "$", "%")
 QUANTITY_HEADER_WORDS = ("qtd", "quant", "estoque")
 LINK_WITHOUT_HTTP = re.compile(r"\S*\.com")
+# The first role whose keyword is in the header wins, so "autor" comes before "nome": "Nome dos autor(es)" is the author (Uneb 2026).
 HEADER_KEYWORDS = [
     ("url", ["url", "link", "endereco", "capa/url"]),
     ("isbn", ["isbn", "ean", "codigo"]),
-    ("title", ["titulo", "livro", "produto nome", "nome"]),
     ("author", ["autor"]),
+    ("title", ["titulo", "livro", "produto nome", "nome"]),
     ("imprint", ["editora", "selo"]),
     ("subject", ["assunto", "area", "genero", "tema"]),
 ]
@@ -49,6 +52,9 @@ def isbn_in_cell(cell: str) -> str:
     if cell.lower().startswith("ean") or re.fullmatch(r"[\d\-\s\.xX]+", cell.strip()):
         if len(digits) in (10, 13):
             return digits
+        # The barcode of a magazine issue: the ISBN and then the issue number in two or five digits ("978856627513110", Monolito 2026).
+        if len(digits) in (15, 18) and digits.startswith(("978", "979")) and is_valid_isbn(digits[:13]):
+            return digits[:13]
     return isbn_with_restored_check_digit(cell)
 
 
@@ -179,14 +185,15 @@ def is_discount_column(data_rows: list[list[str]], price_column: int, column: in
 
 
 def numeric_columns_by_row_length(rows: list[list[str]]) -> dict[int, set[int]]:
-    """Columns that hold row numbers or internal codes, so a numeric title like "1984" is still read as a title."""
+    """Columns that hold row numbers, internal codes or barcodes, so a numeric title like "1984" is still read as a title."""
     numeric_hits = collections.defaultdict(collections.Counter)
     filled = collections.defaultdict(collections.Counter)
     for row in rows:
         for column, cell in enumerate(row):
             if cell and cell.strip():
                 filled[len(row)][column] += 1
-                if INTERNAL_CODE.match(join_split_digits(cell)) or isbn_in_cell(cell):
+                digits_joined = join_split_digits(cell)
+                if INTERNAL_CODE.match(digits_joined) or LONG_BARCODE.match(digits_joined) or isbn_in_cell(cell):
                     numeric_hits[len(row)][column] += 1
     return {
         length: {column for column, count in counts.items() if count >= 3 and numeric_hits[length][column] >= 0.8 * count}

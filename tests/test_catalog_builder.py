@@ -4,11 +4,14 @@ from pathlib import Path
 import pytest
 
 from festa_do_livro.catalog_builder import (
+    NAMES_IN_OLD_IDS_FILE,
+    ONLY_COVER_PRICE_NOTICE,
     ParsedPriceList,
     books_only_the_other_reader_found,
     build_catalog,
     has_only_cover_prices,
     imprint_repeats_exhibitor,
+    load_names_in_old_ids,
     parse_price_list,
     safe_public_url,
     same_content,
@@ -343,6 +346,8 @@ def test_cover_price_between_dashes_is_read():
     ("ISBN TITULO AUTOR EDITORA PREÇO de CAPA PREÇO com DESCONT O ASSUNTO URL_LIVRO\n9788535914849", False),
     ("ISBN TITULO AUTOR(ES) EDITORA PREÇO CAPA PREÇO PRES. ASSUNTO LINKS\n9788535914849", False),
     ("ISBN TITULO AUTOR EDITORA PREÇO FEIRA\n9788535914849", False),
+    # Uneb 2026: the ISBN comes after the price, so the first book's price sits before the first ISBN.
+    ("Título do livro Assunto Preço de capa Nome dos autor(es) Código de barras\n1 Quem tem Mandioca tem tudo História R$ 40,00 Eduardo Guimarães\n9788585813574", True),
 ])
 def test_list_with_only_cover_prices_is_recognized(header, only_cover):
     assert has_only_cover_prices(header) is only_cover
@@ -724,3 +729,108 @@ def test_book_without_isbn_with_another_price_stays_when_the_other_reader_brings
     book_without_isbn = parsed_book("", "ANTROPOLOGIA", fair=40.0)
     book_with_isbn = parsed_book(isbn_with_check_digit("978853265015"), "ANTROPOLOGIA", fair=67.5)
     assert without_garbled_copies([book_without_isbn], [book_with_isbn]) == [book_without_isbn]
+
+
+@pytest.fixture(scope="module")
+def ufv():
+    return catalog_for("ufv.pdf", "Ed. UFV")
+
+
+def test_list_whose_fair_price_column_is_empty_shows_the_cover_price_with_the_notice(ufv):
+    book = book_titled(ufv[0], "A PRONUNCIA DO LATIM")
+    assert (book["c"], book.get("f"), ufv[1].notice) == (75.0, None, ONLY_COVER_PRICE_NOTICE)
+
+
+def test_every_book_of_a_list_with_an_empty_fair_price_column_keeps_its_cover_price(ufv):
+    assert [(book.get("c") is not None, book.get("f")) for book in ufv[0]["livros"]] == [(True, None)] * 19
+
+
+@pytest.fixture(scope="module")
+def uneb():
+    return catalog_for("uneb.pdf", "Uneb")
+
+
+def test_list_with_only_cover_prices_whose_isbn_comes_after_the_price_shows_the_cover_price_with_the_notice(uneb):
+    book = book_titled(uneb[0], "Quem tem Mandioca")
+    assert (book["c"], book.get("f"), uneb[1].notice) == (40.0, None, ONLY_COVER_PRICE_NOTICE)
+
+
+def test_author_column_whose_header_starts_with_nome_is_read_as_the_author(uneb):
+    assert book_titled(uneb[0], "Quem tem Mandioca")["a"] == "Eduardo Guimarães e Francisco Guimarães"
+
+
+@pytest.fixture(scope="module")
+def monolito():
+    return catalog_for("monolito.pdf", "Monolito")
+
+
+def test_magazine_issue_sold_with_its_issn_barcode_keeps_its_title_and_prices(monolito):
+    book = book_titled(monolito[0], "Monolito edição 3 - ")
+    assert (book["t"], book["c"], book["f"]) == ("Monolito edição 3 - Biselli e Katchborian", 99.0, 45.0)
+
+
+def test_magazine_issue_whose_barcode_is_its_isbn_and_the_issue_number_keeps_its_isbn_and_its_own_title(monolito):
+    book = book_titled(monolito[0], "Monolito edição 34 - ")
+    assert (book["i"], book["t"]) == ("9788566275131", "Monolito edição 34 - Humberto Serpa")
+
+
+def test_every_issue_of_a_magazine_list_is_read(monolito):
+    # 37 rows have an ISBN, 6 of them followed by the issue number, and 15 have the barcode of the magazine's ISSN.
+    assert len(monolito[0]["livros"]) == 52
+
+
+def publisher_filed_under(name: str, number: int) -> Publisher:
+    address = f"https://festadolivro.edusp.com.br/storage/event/publishers/publisher-{number}/publisher-price-list/lista.pdf"
+    return Publisher(name=name, slug="", price_list_url=address, site="")
+
+
+def catalog_of(publishers: list[Publisher], books_by_publisher: list[list[dict]], names_in_old_ids=None) -> dict:
+    parsed = {index: ParsedPriceList(books=books, method="tabela", plain_text="") for index, books in enumerate(books_by_publisher)}
+    return build_catalog(EVENT, publishers, parsed, "2026-11-18T00:00:00+00:00", names_in_old_ids)
+
+
+def test_book_without_isbn_keeps_its_id_when_the_festa_renames_its_publisher():
+    book = [parsed_book("", "Livro sem ISBN")]
+    before = catalog_of([publisher_filed_under("Editora Brasiliense", 512)], [book])
+    after = catalog_of([publisher_filed_under("Brasiliense", 512)], [book])
+    assert after["livros"][0]["i"] == before["livros"][0]["i"]
+
+
+def test_isbn_sold_at_two_stands_keeps_its_suffix_when_the_festa_renames_a_publisher():
+    book = [parsed_book("9788575593646", "Mulher, estado e revolução")]
+    before = catalog_of([publisher_filed_under("Boitempo", 1), publisher_filed_under("Iskra / Casa Marx", 2)], [book, book])
+    after = catalog_of([publisher_filed_under("Boitempo", 1), publisher_filed_under("Casa Marx | Iskra", 2)], [book, book])
+    assert [entry["i"] for entry in after["livros"]] == [entry["i"] for entry in before["livros"]]
+
+
+def test_book_without_isbn_carries_the_ids_it_had_under_each_name_of_its_publisher():
+    # Without the number of the publisher in the address of its list, the id still comes from the name, as it did until v1.9.0.
+    book = [parsed_book("", "Livro sem ISBN")]
+    ids_under_each_name = {catalog_from({name: book})["livros"][0]["i"] for name in ("Editora Brasiliense", "Brasiliense")}
+    catalog = catalog_of([publisher_filed_under("Brasiliense", 512)], [book], {"publisher-512": ["Editora Brasiliense", "Brasiliense"]})
+    assert set(catalog["livros"][0]["o"]) == ids_under_each_name
+
+
+def test_isbn_sold_at_two_stands_carries_the_ids_it_had_under_each_name_of_its_publisher():
+    book = [parsed_book("9788575593646", "Mulher, estado e revolução")]
+    id_under_the_old_name = catalog_from({"Boitempo": book, "Iskra / Casa Marx": book})["livros"][1]["i"]
+    catalog = catalog_of(
+        [publisher_filed_under("Boitempo", 1), publisher_filed_under("Casa Marx | Iskra", 2)], [book, book],
+        {"publisher-2": ["Iskra / Casa Marx", "Casa Marx | Iskra"]},
+    )
+    assert id_under_the_old_name in catalog["livros"][1]["o"]
+
+
+def test_book_whose_id_is_its_isbn_carries_no_old_id():
+    book = [parsed_book(isbn_with_check_digit("978851100000"), "Livro com ISBN")]
+    catalog = catalog_of([publisher_filed_under("Brasiliense", 512)], [book], {"publisher-512": ["Editora Brasiliense", "Brasiliense"]})
+    assert "o" not in catalog["livros"][0]
+
+
+def test_names_in_old_ids_are_read_from_the_edition_folder(tmp_path):
+    (tmp_path / NAMES_IN_OLD_IDS_FILE).write_text('{"publisher-512": ["Editora Brasiliense", "Brasiliense"]}')
+    assert load_names_in_old_ids(tmp_path) == {"publisher-512": ["Editora Brasiliense", "Brasiliense"]}
+
+
+def test_edition_without_names_in_old_ids_has_none(tmp_path):
+    assert load_names_in_old_ids(tmp_path) == {}

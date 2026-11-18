@@ -8,7 +8,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from .alert_issue import ISSUE_TITLE, GitHubIssues, sync_issue
-from .catalog_builder import build_catalog, event_summary, parse_price_list, same_content
+from .catalog_builder import build_catalog, event_summary, load_names_in_old_ids, parse_price_list, same_content
 from .fair_dates import edition_number
 from .fair_site import FairSite
 from .lists_to_check import LISTS_TO_CHECK_FILE, lists_to_check, load_lists_to_check, save_lists_to_check
@@ -85,7 +85,7 @@ def command_build(arguments) -> int:
     print(f"{len(parsed_by_index)} listas lidas, {len(download_problems)} com problema", file=sys.stderr)
 
     generated_at = datetime.now(timezone.utc).replace(microsecond=0).isoformat()
-    catalog = build_catalog(event, publishers, parsed_by_index, generated_at)
+    catalog = build_catalog(event, publishers, parsed_by_index, generated_at, load_names_in_old_ids(Path(arguments.output) / edition))
     if not catalog["livros"]:
         return refuse_empty_catalog(edition, Path(arguments.output))
     previous_count = publishers_in_previous_edition(Path(arguments.output), edition)

@@ -2,6 +2,7 @@
 import collections
 import hashlib
 import html
+import json
 import re
 from dataclasses import dataclass
 from pathlib import Path
@@ -12,7 +13,15 @@ from .fair_site import EventDetails, Publisher
 from .isbn import is_valid_isbn, isbn_of_book_id
 from .pdf_reading import extract_plain_text, extract_table_rows, extract_text_spans
 from .position_parser import parse_by_position
-from .table_parser import LOWEST_FAIR_SHARE_OF_COVER, join_sheet_printed_in_strips, parse_table_rows
+from .table_parser import (
+    LOWEST_FAIR_SHARE_OF_COVER,
+    PERCENT_CELL,
+    SHARE_OF_ROWS_IN_A_COLUMN,
+    isbn_in_cell,
+    join_sheet_printed_in_strips,
+    money_values_in_cell,
+    parse_table_rows,
+)
 from .text_helpers import without_accents_lowercase
 
 URL_IN_TEXT = re.compile(r"https?://\S+")
@@ -33,6 +42,11 @@ SYNOPSIS_SHARE_OF_SUBJECTS = 0.8
 LONGEST_TITLE = 250  # longer text is several rows glued together by the reader
 FAIR_PRICE_HINTS = ("desc", "feira", "festa", "%", "promo", "final", "venda", "liquido")
 ONLY_COVER_PRICE_NOTICE = "só tem preço de capa; o preço de feira não foi informado"
+PRICE_LABEL = re.compile(r"preco|\$|valor")
+MONEY_AMOUNT = re.compile(r"r\$\s*\d[\d.]*,\d{1,2}")
+FEWEST_ROWS_TO_JUDGE_A_COLUMN = 3
+PUBLISHER_NUMBER_IN_ADDRESS = re.compile(r"/publishers/(publisher-\d+)/")
+NAMES_IN_OLD_IDS_FILE = "nomes-usados-nos-codigos-antigos.json"
 FEWEST_BOOKS_TO_COMPARE_READERS = 10
 SHARE_READ_THE_SAME_WAY = 0.8
 SHORTEST_CUT_TITLE = 10
@@ -114,11 +128,37 @@ def fill_missing_isbns_from_text(books: list[dict], plain_text: str) -> None:
 
 
 def has_only_cover_prices(plain_text: str) -> bool:
-    """The header has one price label, it says "capa" and nothing mentions a discount: the list has no fair price at all."""
+    """The header has one price label, it says "capa" and nothing mentions a discount: the list has no fair price at all. The text
+    before the first ISBN can hold the first book's price, when the ISBN comes after it (Uneb 2026), and a price is not a label."""
     first_isbn = re.search(r"97[89][\d\-\s]{10,17}", plain_text)
     header = without_accents_lowercase(plain_text[:first_isbn.start()] if first_isbn else plain_text[:1500]).replace("descricao", "")
-    price_labels = len(re.findall(r"preco|\$|valor", header))
+    price_labels = len(PRICE_LABEL.findall(MONEY_AMOUNT.sub(" ", header)))
     return "capa" in header and price_labels <= 1 and not any(hint in header for hint in FAIR_PRICE_HINTS)
+
+
+def has_empty_fair_price_column(table_rows: list[list[str]]) -> bool:
+    """The header names a cover price and a fair price, but in nearly every row with an ISBN the fair price is empty and the cover
+    price is there: the publisher left the discount column blank (Ed. UFV 2026), so the one price of each book is its cover."""
+    for header_index, header in enumerate(table_rows):
+        labels = [without_accents_lowercase(cell or "") for cell in header]
+        cover_columns = [column for column, label in enumerate(labels) if "capa" in label and PRICE_LABEL.search(label)]
+        fair_columns = [
+            column for column, label in enumerate(labels)
+            if column not in cover_columns and PRICE_LABEL.search(label) and any(hint in label for hint in FAIR_PRICE_HINTS)
+        ]
+        if not cover_columns or not fair_columns:
+            continue
+        rows_with_isbn = [row for row in table_rows[header_index + 1:] if len(row) == len(header) and any(isbn_in_cell(cell or "") for cell in row)]
+        if len(rows_with_isbn) < FEWEST_ROWS_TO_JUDGE_A_COLUMN:
+            continue
+        rows_with_only_the_cover = [
+            row for row in rows_with_isbn
+            if money_values_in_cell(row[cover_columns[0]] or "")
+            and not any(money_values_in_cell(row[column] or "") for column in fair_columns)
+            and not any(PERCENT_CELL.fullmatch(cell or "") for cell in row)
+        ]
+        return len(rows_with_only_the_cover) >= SHARE_OF_ROWS_IN_A_COLUMN * len(rows_with_isbn)
+    return False
 
 
 def parse_price_list(pdf_path: Path) -> ParsedPriceList:
@@ -130,7 +170,7 @@ def parse_price_list(pdf_path: Path) -> ParsedPriceList:
         from_tables = parse_table_rows(table_rows)
         printed_in_strips = len(join_sheet_printed_in_strips(table_rows)) < len(table_rows)
     except Exception:
-        from_tables, printed_in_strips = [], False
+        table_rows, from_tables, printed_in_strips = [], [], False
     try:
         from_positions = parse_by_position(extract_text_spans(pdf_path))
     except Exception:
@@ -145,7 +185,7 @@ def parse_price_list(pdf_path: Path) -> ParsedPriceList:
     found_only_by_other_reader = books_only_the_other_reader_found(books, cleaned_complete_books(other))
     books = without_garbled_copies(books, found_only_by_other_reader) + found_only_by_other_reader
     notice = ""
-    if has_only_cover_prices(plain_text):
+    if has_only_cover_prices(plain_text) or has_empty_fair_price_column(table_rows):
         for book in books:
             if book["cover_price"] is None:
                 book["cover_price"], book["fair_price"] = book["fair_price"], None
@@ -248,8 +288,32 @@ def safe_public_url(url: str) -> str:
     return urlunsplit((parts.scheme, parts.netloc, parts.path, urlencode(kept_query), parts.fragment))
 
 
-def stable_book_id(isbn: str, exhibitor_name: str, title: str) -> str:
-    return isbn or "x" + hashlib.md5((exhibitor_name + title).encode()).hexdigest()[:12]
+def publisher_key(publisher: Publisher) -> str:
+    """The official site files each publisher's price list under a number ("publisher-474") that stays when the Festa renames the
+    publisher, as it did with 55 of them on 18/11/2026. Without that address, the name is the key, as it was until v1.9.0."""
+    match = PUBLISHER_NUMBER_IN_ADDRESS.search(publisher.price_list_url)
+    return match.group(1) if match else publisher.name
+
+
+def load_names_in_old_ids(edition_directory: Path) -> dict[str, list[str]]:
+    """Every name each publisher had while the ids of books without ISBN came from the publisher's name, by publisher key."""
+    path = Path(edition_directory) / NAMES_IN_OLD_IDS_FILE
+    return json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
+
+
+def stable_book_id(isbn: str, publisher_key: str, title: str) -> str:
+    return isbn or "x" + hashlib.md5((publisher_key + title).encode()).hexdigest()[:12]
+
+
+def old_ids_of_book_without_isbn(book_id: str, old_names: list[str], title: str) -> list[str]:
+    """The ids a book without ISBN had under each name of its publisher, so saved lists and shared links made before still find it."""
+    if not book_id.startswith("x"):
+        return []
+    return sorted({stable_book_id("", name, title) for name in old_names} - {book_id})
+
+
+def exhibitor_suffix(publisher_key: str) -> str:
+    return hashlib.md5(publisher_key.encode()).hexdigest()[:6]
 
 
 def without_stray_letters(imprint: str) -> str:
@@ -274,11 +338,13 @@ def imprint_repeats_exhibitor(imprint: str, exhibitor_name: str) -> bool:
     return False
 
 
-def catalog_books(publishers: list[Publisher], parsed_by_index: dict[int, ParsedPriceList]) -> list[dict]:
+def catalog_books(publishers: list[Publisher], parsed_by_index: dict[int, ParsedPriceList], names_in_old_ids: dict[str, list[str]]) -> list[dict]:
     books = []
     title_by_book_id = {}
     for publisher_index, parsed in sorted(parsed_by_index.items()):
         exhibitor_name = publishers[publisher_index].name
+        key = publisher_key(publishers[publisher_index])
+        old_names = names_in_old_ids.get(key, [])
         for parsed_book in parsed.books:
             title = tidy_title(parsed_book["title"])
             if not title or re.fullmatch(r"[\d\s\-]{5,}", title) or len(title) > LONGEST_TITLE:
@@ -286,12 +352,12 @@ def catalog_books(publishers: list[Publisher], parsed_by_index: dict[int, Parsed
             isbn = parsed_book["isbn"] if is_valid_isbn(parsed_book["isbn"]) else ""
             if not isbn and without_accents_lowercase(title) == without_accents_lowercase(exhibitor_name):
                 continue  # a broken table row that only repeats the publisher's name
-            book_id = stable_book_id(isbn, exhibitor_name, title)
+            book_id = stable_book_id(isbn, key, title)
             title_key = without_accents_lowercase(title)
             if (book_id, publisher_index) in title_by_book_id:
                 if title_by_book_id[(book_id, publisher_index)] == title_key:
                     continue  # the same row twice in the list
-                book_id = stable_book_id("", exhibitor_name, title)  # another book printed with the same ISBN
+                book_id = stable_book_id("", key, title)  # another book printed with the same ISBN
                 if (book_id, publisher_index) in title_by_book_id:
                     continue
             title_by_book_id[(book_id, publisher_index)] = title_key
@@ -299,6 +365,9 @@ def catalog_books(publishers: list[Publisher], parsed_by_index: dict[int, Parsed
                 "i": book_id, "t": title, "a": tidy(parsed_book["author"]), "s": tidy(parsed_book["imprint"]),
                 "g": tidy_subject(parsed_book["subject"]), "c": parsed_book["cover_price"], "f": parsed_book["fair_price"], "x": publisher_index,
             }
+            old_ids = old_ids_of_book_without_isbn(book_id, old_names, title)
+            if old_ids:
+                book["o"] = old_ids
             url = safe_public_url(parsed_book["url"])
             if url:
                 book["u"] = url
@@ -431,15 +500,20 @@ def complete_prices_from_isbn_lines(books: list[dict], parsed_by_index: dict[int
             book["c"], book["f"] = cover, fair
 
 
-def give_each_exhibitor_its_own_id(books: list[dict], publishers: list[Publisher]) -> None:
-    """The same ISBN at two stands is two entries with different prices; the suffix comes from the exhibitor name, so it never depends on list order."""
+def give_each_exhibitor_its_own_id(books: list[dict], publishers: list[Publisher], names_in_old_ids: dict[str, list[str]]) -> None:
+    """The same ISBN at two stands is two entries with different prices. The suffix comes from the publisher key, so it depends neither
+    on list order nor on the publisher's name, and the entry keeps the ids it had under each old name of its publisher."""
     exhibitors_by_book_id = collections.defaultdict(set)
     for book in books:
         exhibitors_by_book_id[book["i"]].add(book["x"])
     for book in books:
         if len(exhibitors_by_book_id[book["i"]]) > 1:
-            exhibitor_suffix = hashlib.md5(publishers[book["x"]].name.encode()).hexdigest()[:6]
-            book["i"] = f"{book['i']}-{exhibitor_suffix}"
+            key = publisher_key(publishers[book["x"]])
+            isbn = book["i"]
+            book["i"] = f"{isbn}-{exhibitor_suffix(key)}"
+            old_ids = {f"{isbn}-{exhibitor_suffix(name)}" for name in names_in_old_ids.get(key, [])} - {book["i"]}
+            if old_ids:
+                book["o"] = sorted(set(book.get("o", [])) | old_ids)
 
 
 def drop_synopses_used_as_genre(books: list[dict]) -> None:
@@ -481,11 +555,15 @@ def exhibitor_entry(publisher: Publisher, parsed: ParsedPriceList | None) -> dic
     return entry
 
 
-def build_catalog(event: EventDetails, publishers: list[Publisher], parsed_by_index: dict[int, ParsedPriceList], generated_at: str) -> dict:
-    books = catalog_books(publishers, parsed_by_index)
+def build_catalog(
+    event: EventDetails, publishers: list[Publisher], parsed_by_index: dict[int, ParsedPriceList], generated_at: str,
+    names_in_old_ids: dict[str, list[str]] | None = None,
+) -> dict:
+    names_in_old_ids = names_in_old_ids or {}
+    books = catalog_books(publishers, parsed_by_index, names_in_old_ids)
     repair_truncated_names(books, publishers, parsed_by_index)
     complete_prices_from_isbn_lines(books, parsed_by_index)
-    give_each_exhibitor_its_own_id(books, publishers)
+    give_each_exhibitor_its_own_id(books, publishers, names_in_old_ids)
     drop_synopses_used_as_genre(books)
     return {
         "evento": event_summary(event),

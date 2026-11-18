@@ -684,13 +684,14 @@ function isbnOf(bookId) {
   return match ? match[1] : "";
 }
 
-// A book keeps its ISBN but its id can change between catalog updates: a second stand selling the same ISBN adds a
+// An id names one book, even an old id or one saved before the Festa renamed the publisher: until v1.9.0 the id of a
+// book without ISBN, and of an ISBN sold at two stands, came from the publisher's name, and the catalog lists those old
+// ids. A book keeps its ISBN but its id can change between catalog updates: a second stand selling the same ISBN adds a
 // suffix per exhibitor, and the suffix goes away when one stand is left. The exhibitor tells the two stands apart.
 function catalogBookFor(entryId, exhibitorName) {
   const sameId = catalogById?.get(entryId);
-  if (sameId && sameId.exhibitor === exhibitorName) return sameId;
+  if (sameId) return sameId;
   const sameIsbn = catalogByIsbn?.get(isbnOf(entryId)) || [];
-  if (!sameIsbn.length) return sameId || null;
   if (sameIsbn.length === 1) return sameIsbn[0];
   return sameIsbn.find(book => book.exhibitor === exhibitorName) || null;
 }
@@ -895,9 +896,10 @@ function previousEditionsWithBooks() {
 }
 
 // Publishers write their names another way from one edition to the next: "Aller" became "Aller Editora", "Cortez Editora"
-// became "CORTEZ EDITORA" and "Editora 34" became "34 Editora" in 2026.
+// became "CORTEZ EDITORA" and "Editora 34" became "34 Editora" in 2026. On 18/11/2026 the Festa renamed 55 of them:
+// "Editora Unesp" became "Ed. Unesp" and "Pontes Editores" became "Pontes".
 function publisherKey(name) {
-  return normalizeText(name).replace(/\b(editora|editorial|edicoes|livros|grupo|ltda)\b/g, " ").replace(/[^a-z0-9]+/g, " ").trim();
+  return normalizeText(name).replace(/\b(ed|editora|editores|editorial|edicoes|livros|grupo|ltda)\b/g, " ").replace(/[^a-z0-9]+/g, " ").trim();
 }
 
 // The same book in this year's catalog: by ISBN, preferring the same publisher, or by the same title at the same
@@ -1383,6 +1385,9 @@ function loadCatalog() {
         }),
       };
       catalogById = new Map(catalog.books.map(book => [book.i, book]));
+      for (const book of catalog.books) {
+        for (const oldId of book.o || []) if (!catalogById.has(oldId)) catalogById.set(oldId, book);
+      }
       catalogByIsbn = new Map();
       for (const book of catalog.books) {
         const isbn = isbnOf(book.i);

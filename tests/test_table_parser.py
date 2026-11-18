@@ -192,3 +192,34 @@ def test_authors_that_name_a_site_are_still_the_authors():
     ]
     book = parse_table_rows(rows)[0]
     assert (book["author"], book["imprint"]) == ("Danila Sorrentino, Simona Bursi, Shutterstock.com, Freepik.com", "Ciranda Cultural - Coedição")
+
+
+def test_author_column_whose_header_starts_with_nome_is_the_author():
+    rows = [
+        ["Título do livro", "Assunto", "Preço de capa", "Nome dos autor(es) /organizador(es)", "Código de barras (apenas números)"],
+        ["Quem tem Mandioca tem tudo: A planta do século XXI", "História", "R$ 40,00", "Eduardo Guimarães e Francisco Guimarães", "9788585813574"],
+        ["Filosofia Pé-no-Chão: uma filosofia enraizada em nosso contexto", "Filosofia", "R$ 40,00", "Hamilton Barreto Queiroz", "9788585813529"],
+        ["Plataformas Digitais e o Futuro do Trabalho", "Administração", "R$ 40,00", "Vamberto Ferreira Miranda Filho", "9788585813680"],
+    ]
+    assert [book["author"] for book in parse_table_rows(rows)] == ["Eduardo Guimarães e Francisco Guimarães", "Hamilton Barreto Queiroz", "Vamberto Ferreira Miranda Filho"]
+
+
+def test_magazine_barcode_in_the_isbn_column_is_not_the_title():
+    rows = [
+        ["977217974800703", "Monolito edição 3 - Biselli e Katchboria", "Fernando Serapião", "Monolito", "-R$ 99,00-", "-R$ 45,00-"],
+        ["9788566275049", "Monolito edição 27 - Vilanova Artigas e a FAU/USP", "Fernando Serapião", "Monolito", "-R$ 112,00-", "-R$ 56,00-"],
+        ["9788566275056", "Monolito edição 28 - Triptyque", "Fernando Serapião", "Monolito", "-R$ 112,00-", "-R$ 45,00-"],
+        ["9788566275070", "Monolito edição 29 - Gui Mattos", "Fernando Serapião", "Monolito", "-R$ 121,00-", "-R$ 45,00-"],
+    ]
+    book = parse_table_rows(rows)[0]
+    assert (book["isbn"], book["title"], book["author"]) == ("", "Monolito edição 3 - Biselli e Katchboria", "Fernando Serapião")
+
+
+def test_isbn_followed_by_the_issue_number_of_a_magazine_is_the_isbn():
+    rows = [
+        ["978856627513110", "Monolito edição 34 - Humberto Serpa", "Fernando Serapião", "Monolito", "-R$ 121,00-", "-R$ 55,00-"],
+        ["9788566275049", "Monolito edição 27 - Vilanova Artigas e a FAU/USP", "Fernando Serapião", "Monolito", "-R$ 112,00-", "-R$ 56,00-"],
+        ["9788566275056", "Monolito edição 28 - Triptyque", "Fernando Serapião", "Monolito", "-R$ 112,00-", "-R$ 45,00-"],
+    ]
+    book = parse_table_rows(rows)[0]
+    assert (book["isbn"], book["title"]) == ("9788566275131", "Monolito edição 34 - Humberto Serpa")
