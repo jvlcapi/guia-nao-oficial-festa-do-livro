@@ -1,12 +1,16 @@
 # Relatório do catálogo: 28 Festa do Livro da USP
 
 - Edição: `28-festa-do-livro-da-usp` · 25 e 29 de novembro
-- Editoras no site: 146
-- Livros no catálogo: 26681
-- Livros sem ISBN (preço não conferível automaticamente): 289
+- Editoras no site: 148
+- Livros no catálogo: 26952
+- Livros sem ISBN (preço não conferível automaticamente): 292
 - Preços que não bateram com o PDF: 418
 - Livros sem preço de capa: 6
 - Livros só com preço de capa (feira não informado): 2528
+
+## Listas para conferir
+
+- **Com-Arte**: preço de feira abaixo de um quinto da capa (80 de 124 livros)
 
 ## Listas que ficaram de fora
 
@@ -53,11 +57,13 @@
 | Buzz | 83 | 83 | 0 | tabela | 0 |
 | Caixote | 45 | 45 | 0 | tabela | 0 |
 | Carambaia | 97 | 97 | 0 | posição do texto | 0 |
+| Carochinha | 147 | 147 | 0 | tabela | 0 |
 | Casa de Letras | 55 | 55 | 0 | tabela | 0 |
 | Casa Marx | Iskra | 21 | 21 | 0 | tabela | 0 |
 | Catapulta | 369 | 369 | 0 | posição do texto | 0 |
 | Caxinguelê | 37 | 37 | 0 | tabela | 0 |
 | Ciranda Cultural (Grupo) | 865 | 865 | 0 | tabela | 0 |
+| Com-Arte | 124 | 124 | 0 | tabela | 0 |
 | Contracorrente | 206 | 208 | 0 | tabela | 0 |
 | Cortez | 150 | 150 | 0 | tabela | 0 |
 | Cosac | 30 | 30 | 0 | tabela | 0 |
