@@ -8,5 +8,10 @@
     "editora": "Monolito",
     "problema": "livros perdidos",
     "detalhe": "37 das 52 linhas lidas viraram livro"
+  },
+  {
+    "editora": "Uneb",
+    "problema": "sem preço de capa",
+    "detalhe": "14 de 14 livros"
   }
 ]

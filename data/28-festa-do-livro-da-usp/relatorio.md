@@ -1,17 +1,18 @@
 # Relatório do catálogo: 28 Festa do Livro da USP
 
 - Edição: `28-festa-do-livro-da-usp` · 25 e 29 de novembro
-- Editoras no site: 132
-- Livros no catálogo: 24350
-- Livros sem ISBN (preço não conferível automaticamente): 270
+- Editoras no site: 146
+- Livros no catálogo: 26666
+- Livros sem ISBN (preço não conferível automaticamente): 274
 - Preços que não bateram com o PDF: 418
-- Livros sem preço de capa: 24
+- Livros sem preço de capa: 39
 - Livros só com preço de capa (feira não informado): 2495
 
 ## Listas para conferir
 
 - **Ed. UFV**: sem preço de capa (19 de 19 livros)
 - **Monolito**: livros perdidos (37 das 52 linhas lidas viraram livro)
+- **Uneb**: sem preço de capa (14 de 14 livros)
 
 ## Listas que ficaram de fora
 
@@ -19,6 +20,7 @@
 - GLAC: sem lista de preços
 - nVersos: sem lista de preços
 - Solaris: sem lista de preços
+- Valentina: sem lista de preços
 
 ## Avisos sobre listas
 
@@ -32,10 +34,13 @@
 | 34 Editora | 700 | 700 | 0 | tabela | 0 |
 | Aletria | 85 | 85 | 0 | tabela | 0 |
 | Aller | 60 | 60 | 0 | tabela | 0 |
+| Anita Garibaldi | 68 | 68 | 0 | tabela | 0 |
+| Antofágica | 65 | 65 | 0 | tabela | 0 |
 | Arquipélago | 63 | 63 | 0 | tabela | 0 |
 | Ars et Vita | 21 | 21 | 0 | tabela | 1 |
 | Arte & Letra | 103 | 103 | 0 | tabela | 0 |
 | Ateliê | 329 | 329 | 0 | tabela | 0 |
+| Autêntica (Grupo) | 510 | 510 | 0 | tabela | 0 |
 | Autonomia Literária | 155 | 155 | 0 | tabela | 0 |
 | Autores Associados | 285 | 285 | 0 | tabela | 0 |
 | Azuco | 21 | 21 | 0 | tabela | 0 |
@@ -60,6 +65,7 @@
 | Contracorrente | 206 | 208 | 0 | tabela | 0 |
 | Cortez | 150 | 150 | 0 | tabela | 0 |
 | Cosac | 30 | 30 | 0 | tabela | 0 |
+| DarkSide / Magnética | 287 | 287 | 0 | tabela | 0 |
 | DBA Literatura | 52 | 52 | 0 | tabela | 0 |
 | Diadorim | 23 | 23 | 0 | tabela | 2 |
 | Dublinense | 103 | 103 | 0 | tabela | 0 |
@@ -73,6 +79,7 @@
 | Ed. Unesp | 693 | 694 | 0 | tabela | 0 |
 | Ed. Unifesp | 199 | 200 | 0 | tabela | 0 |
 | Edições Loyola | 94 | 94 | 0 | tabela | 0 |
+| Eduefs | 10 | 10 | 0 | posição do texto | 0 |
 | Eduel | 15 | 15 | 0 | tabela | 0 |
 | Eduem | 150 | 150 | 0 | tabela | 0 |
 | EdUFSCar | 100 | 100 | 0 | tabela | 0 |
@@ -85,11 +92,14 @@
 | Expressão Popular | 186 | 186 | 0 | tabela | 0 |
 | Fino Traço | 117 | 117 | 0 | tabela | 0 |
 | Fiocruz | 186 | 186 | 0 | posição do texto | 0 |
+| Fósforo | 269 | 269 | 0 | posição do texto | 0 |
 | Girassol (Grupo) | 488 | 488 | 0 | tabela | 0 |
 | Global | 641 | 643 | 0 | tabela | 0 |
 | Grua | 102 | 102 | 0 | tabela | 0 |
 | HarperCollins Brasil | 415 | 415 | 0 | tabela | 0 |
+| Hedra | 497 | 497 | 0 | posição do texto | 0 |
 | Hucitec | 366 | 367 | 0 | tabela | 0 |
+| Hyperion Comics | 21 | 21 | 1 | posição do texto | 0 |
 | IMS | 140 | 141 | 0 | tabela | 0 |
 | Iná | 414 | 414 | 0 | tabela | 0 |
 | Instante | 60 | 60 | 0 | tabela | 0 |
@@ -97,6 +107,7 @@
 | Joaquina | 12 | 12 | 0 | tabela | 0 |
 | Jujuba | 60 | 60 | 0 | tabela | 0 |
 | Kitembo | 15 | 15 | 0 | tabela | 0 |
+| Kotter Editorial | 61 | 61 | 0 | tabela | 0 |
 | LavraPalavra | 70 | 70 | 0 | tabela | 0 |
 | Letra Selvagem | 72 | 72 | 0 | posição do texto | 0 |
 | Livros da Matriz | 33 | 33 | 0 | tabela | 0 |
@@ -113,6 +124,7 @@
 | Mostarda | 102 | 102 | 0 | tabela | 0 |
 | Movimento Neomarginal | 22 | 22 | 0 | posição do texto | 0 |
 | Mundaréu | Manjuba | 49 | 49 | 0 | tabela | 0 |
+| N-1 edições | 158 | 158 | 0 | tabela | 0 |
 | NewPOP | 405 | 405 | 1 | tabela | 0 |
 | Nós | 143 | 143 | 0 | posição do texto | 0 |
 | Nova Fronteira | Trama | 166 | 166 | 0 | tabela | 0 |
@@ -121,6 +133,7 @@
 | ÔZé | 67 | 67 | 0 | tabela | 0 |
 | Paco | 91 | 91 | 0 | tabela | 0 |
 | Palas Athena | 94 | 94 | 0 | tabela | 0 |
+| Pallas | 316 | 316 | 0 | tabela | 0 |
 | Panda Books | 139 | 139 | 0 | tabela | 0 |
 | Patuá | 97 | 97 | 0 | tabela | 0 |
 | Paulinas | 525 | 525 | 0 | tabela | 0 |
@@ -144,14 +157,16 @@
 | Sobinfluencia | 33 | 33 | 0 | tabela | 0 |
 | Summus (Grupo) | 402 | 402 | 0 | tabela | 0 |
 | Sundermann | 68 | 68 | 0 | tabela | 0 |
-| Tabla | 41 | 41 | 0 | tabela | 0 |
+| Tabla | 29 | 29 | 0 | tabela | 0 |
 | TantaTinta / Carlini e Caniato | 31 | 31 | 0 | tabela | 0 |
 | Telos | 166 | 166 | 0 | tabela | 0 |
 | Temporal | 35 | 35 | 0 | tabela | 0 |
 | Terra Virgem | 36 | 36 | 0 | tabela | 0 |
+| Tinta-da-China | 52 | 52 | 0 | posição do texto | 0 |
 | todavia | 232 | 232 | 0 | tabela | 0 |
 | Ubu | 166 | 166 | 0 | tabela | 0 |
 | UK'A - Arte e Literatura | 19 | 19 | 0 | tabela | 0 |
+| Uneb | 14 | 14 | 14 | tabela | 0 |
 | Universo dos Livros | 358 | 358 | 0 | tabela em faixas | 356 |
 | Via Lettera | 119 | 119 | 0 | tabela | 0 |
 | Vozes | 1092 | 1092 | 0 | posição do texto | 0 |
