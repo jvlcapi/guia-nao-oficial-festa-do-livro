@@ -834,3 +834,17 @@ def test_names_in_old_ids_are_read_from_the_edition_folder(tmp_path):
 
 def test_edition_without_names_in_old_ids_has_none(tmp_path):
     assert load_names_in_old_ids(tmp_path) == {}
+
+
+@pytest.fixture(scope="module")
+def brasiliense():
+    return catalog_for("brasiliense.pdf", "Brasiliense")
+
+
+def test_title_its_cell_hides_on_both_sides_is_read_whole_with_its_isbn_and_author(brasiliense):
+    book = book_titled(brasiliense[0], "A CIDADE DE SAO PAULO")
+    assert (book["i"], book["t"], book["a"]) == ("9788511020786", "A CIDADE DE SAO PAULO GEOGRAFIA E HISTORIA", "CAIO DA SILVA PRADO JUNIOR")
+
+
+def test_no_title_of_a_list_whose_cells_hide_centered_text_is_an_isbn_with_a_letter(brasiliense):
+    assert [book["t"] for book in brasiliense[0]["livros"] if re.match(r"97[89]\d{10}", book["t"])] == []

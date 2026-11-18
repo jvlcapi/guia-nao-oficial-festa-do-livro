@@ -1,4 +1,4 @@
-from festa_do_livro.pdf_reading import table_cell_texts
+from festa_do_livro.pdf_reading import DrawnText, table_cell_texts
 
 LETTER_WIDTH = 4.0
 THREE_ROWS_OF_TITLE_AND_AUTHOR = [[(0, top, 20, top + 10), (20, top, 60, top + 10)] for top in (0, 10, 20)]
@@ -64,17 +64,66 @@ def test_text_its_cell_cuts_at_the_border_is_read_whole():
     shown = letters("ABCDE", 2, 2)
     hidden = letters("FGH", 22, 2)
     characters = shown + letters("Sonia", 22.5, 2) + rows_below((22.5, 22.5))
-    assert table_cell_texts(THREE_ROWS_OF_TITLE_AND_AUTHOR, characters, [(shown, hidden)])[0] == ["ABCDEFGH", "Sonia"]
+    assert table_cell_texts(THREE_ROWS_OF_TITLE_AND_AUTHOR, characters, [DrawnText([], shown, hidden)])[0] == ["ABCDEFGH", "Sonia"]
 
 
 def test_text_drawn_over_several_cells_stays_as_the_table_reader_reads_it():
     shown = letters("AB", 2, 2) + letters("CD", 22, 2)
     hidden = letters("EF", 62, 2)
     characters = shown + rows_below((22.5, 22.5))
-    assert table_cell_texts(THREE_ROWS_OF_TITLE_AND_AUTHOR, characters, [(shown, hidden)])[0] == ["AB", "CD"]
+    assert table_cell_texts(THREE_ROWS_OF_TITLE_AND_AUTHOR, characters, [DrawnText([], shown, hidden)])[0] == ["AB", "CD"]
 
 
 def test_text_that_stops_showing_inside_its_cell_is_not_a_text_cut_at_the_border():
     characters = letters("ABC", 2, 2) + letters("Sonia", 22.5, 2) + rows_below((22.5, 22.5))
     hidden = letters("C", 10, 2) + letters("XYZ", 62, 2)
-    assert table_cell_texts(THREE_ROWS_OF_TITLE_AND_AUTHOR, characters, [(characters[:2], hidden)])[0] == ["ABC", "Sonia"]
+    assert table_cell_texts(THREE_ROWS_OF_TITLE_AND_AUTHOR, characters, [DrawnText([], characters[:2], hidden)])[0] == ["ABC", "Sonia"]
+
+
+def test_text_its_cell_hides_on_both_sides_is_read_whole():
+    # A centered title wider than its cell (20 to 60): the page hides "XY" over the ISBN, shows "Z" cut in half by the border
+    # (its middle, 19, falls in the ISBN cell) and "ABCDEFGHIJ", and hides "KLM" past the right border.
+    hidden_before = letters("XY", 9, 2)
+    shown = letters("ZABCDEFGHIJ", 17, 2)
+    hidden_after = letters("KLM", 61, 2)
+    characters = letters("978", 1, 2) + shown + rows_below((22.5, 22.5))
+    rows = table_cell_texts(THREE_ROWS_OF_TITLE_AND_AUTHOR, characters, [DrawnText(hidden_before, shown, hidden_after)])
+    assert rows[0] == ["978", "XYZABCDEFGHIJKLM"]
+
+
+def test_text_hidden_on_the_left_that_shows_in_two_cells_stays_as_the_table_reader_reads_it():
+    hidden_before = letters("XY", -7, 2)
+    shown = letters("AB", 2, 2) + letters("CD", 22, 2)
+    characters = shown + rows_below((22.5, 22.5))
+    assert table_cell_texts(THREE_ROWS_OF_TITLE_AND_AUTHOR, characters, [DrawnText(hidden_before, shown, [])])[0] == ["AB", "CD"]
+
+
+def test_text_that_starts_with_a_letter_cut_by_the_left_border_goes_whole_to_its_cell():
+    # "O QUE E..." centered in a cell (20 to 60) it barely outgrows: the page shows "O" cut in half by the border (its middle,
+    # 19, falls in the ISBN cell) and hides "KLM" past the right border.
+    shown = letters("OABCDEFGHIJ", 17, 2)
+    hidden_after = letters("KLM", 61, 2)
+    characters = letters("978", 1, 2) + shown + rows_below((22.5, 22.5))
+    rows = table_cell_texts(THREE_ROWS_OF_TITLE_AND_AUTHOR, characters, [DrawnText([], shown, hidden_after)])
+    assert rows[0] == ["978", "OABCDEFGHIJKLM"]
+
+
+def test_text_the_page_shows_whole_but_a_little_wider_than_its_cell_goes_whole_to_it():
+    # "A REFORMA..." centered in a cell (20 to 60) it barely outgrows, all of it shown: the middle of its first letter (19)
+    # falls in the ISBN cell.
+    shown = letters("AREFORMAXYZ", 17, 2)
+    characters = letters("978", 1, 2) + shown + rows_below((22.5, 22.5))
+    assert table_cell_texts(THREE_ROWS_OF_TITLE_AND_AUTHOR, characters, [DrawnText([], shown, [])])[0] == ["978", "AREFORMAXYZ"]
+
+
+def test_text_the_page_shows_whole_over_two_cells_stays_as_the_table_reader_reads_it():
+    shown = letters("ABCD", 2, 2) + letters("EFGHI", 22, 2)
+    characters = shown + rows_below((22.5, 22.5))
+    assert table_cell_texts(THREE_ROWS_OF_TITLE_AND_AUTHOR, characters, [DrawnText([], shown, [])])[0] == ["ABCD", "EFGHI"]
+
+
+def test_texts_of_two_cells_drawn_in_one_piece_with_a_gap_stay_in_their_cells():
+    # Paulinas 2026 draws the title and a short author as one piece ("Cabe ...Fê"), with a gap between the two cells' texts.
+    shown = letters("ABCD", 2, 2) + letters("EF", 22.5, 2)
+    characters = shown + rows_below((22.5, 22.5))
+    assert table_cell_texts(THREE_ROWS_OF_TITLE_AND_AUTHOR, characters, [DrawnText([], shown, [])])[0] == ["ABCD", "EF"]

@@ -469,6 +469,8 @@ const EDITION_KEY = "festa-do-livro:edicao";
 const SHARE_PREFIX = "lista=";
 const SHARED_BOOK_ID = /^[0-9x][0-9a-fA-FxX-]{5,30}$/;
 const ISBN_AT_START_OF_BOOK_ID = /^(\d{13}|\d{9}[\dXx])(?:-|$)/;
+const ISBN_AT_START_OF_TITLE = /^(97[89]\d{10})(?!\d)/;
+const SHORTEST_TITLE_TO_COMPLETE = 5;
 const GENRE_BARS_SHOWN = 8;
 const PUBLISHER_NAMES_SHOWN = 3;
 const SHARE_OF_PUBLISHERS_FOR_COMPLETE_CATALOG = 0.9;
@@ -696,30 +698,63 @@ function catalogBookFor(entryId, exhibitorName) {
   return sameIsbn.find(book => book.exhibitor === exhibitorName) || null;
 }
 
+// A title read with its ISBN glued to the front ("9788511020786 D", Brasiliense 2026) made the book one without ISBN, with an id
+// of its own; once the reader reads the ISBN, the saved book is the one with the ISBN its title starts with.
+function catalogBookByIsbnInTitle(entry) {
+  const isbn = ISBN_AT_START_OF_TITLE.exec(entry.titulo || "")?.[1];
+  return isbn ? catalogBookFor(isbn, entry.editora) : null;
+}
+
+// A reader fix completes a title its cell cut ("DRINHO E O SACI" is "PEDRINHO E O SACI") or drops a stray character ("4A lei"),
+// and a saved book without ISBN loses its id: it is the one book of the same publisher, at the same fair price, whose title holds
+// the saved one, give or take two characters at each end, with the saved title at least half as long.
+function catalogBookByCompletedTitle(entry) {
+  const words = text => normalizeText(text).replace(/[^a-z0-9]+/g, " ").trim();
+  const saved = words(entry.titulo);
+  const cores = [];
+  for (let left = 0; left <= 2; left++) {
+    for (let right = 0; right <= 2; right++) {
+      const core = saved.slice(left, saved.length - right).trim();
+      if (core.length >= SHORTEST_TITLE_TO_COMPLETE) cores.push(core);
+    }
+  }
+  if (!cores.length || !catalog) return null;
+  const key = publisherKey(entry.editora);
+  const fair = toNumber(entry.precoFeira);
+  const candidates = catalog.books.filter(book => {
+    if (book.publisherKey !== key || book.f !== fair) return false;
+    const title = words(book.t);
+    return cores.some(core => title.includes(core) && core.length * 2 >= title.length);
+  });
+  return candidates.length === 1 ? candidates[0] : null;
+}
+
+// The catalog also gives each saved book its title, author and publisher name: a reader fix completes a title, and the Festa
+// renamed 55 publishers on 18/11/2026.
 function refreshPricesFromCatalog() {
   const record = listRecord(currentEdition());
   if (!record || !catalogById) return;
   let pricesChanged = 0;
-  let entriesMoved = 0;
+  let entriesChanged = 0;
   const livros = {};
   for (const [entryId, entry] of Object.entries(record.livros)) {
-    const book = catalogBookFor(entryId, entry.editora);
+    const book = catalogBookFor(entryId, entry.editora) || catalogBookByIsbnInTitle(entry) || catalogBookByCompletedTitle(entry);
     if (!book) {
       livros[entryId] = livros[entryId] || entry;
       continue;
     }
     const cover = book.c || book.f;
-    let updated = { ...entry, editora: book.exhibitor || entry.editora };
+    let updated = { ...entry, titulo: book.t, autor: book.a || "", editora: book.exhibitor || entry.editora };
     if (toNumber(entry.precoFeira) !== book.f || toNumber(entry.precoCapa) !== cover || Boolean(entry.semPrecoDeFeira) !== book.fairPriceUnknown) {
       updated = { ...updated, precoFeira: book.f, precoCapa: cover };
       if (book.fairPriceUnknown) updated.semPrecoDeFeira = true;
       else delete updated.semPrecoDeFeira;
       pricesChanged += 1;
     }
-    if (book.i !== entryId) entriesMoved += 1;
+    if (book.i !== entryId || updated.titulo !== entry.titulo || updated.autor !== entry.autor || updated.editora !== entry.editora) entriesChanged += 1;
     livros[book.i] = livros[book.i] || updated;
   }
-  if (pricesChanged || entriesMoved) {
+  if (pricesChanged || entriesChanged) {
     state.saved.edicoes[currentEdition()] = { ...record, livros };
     persist();
   }
