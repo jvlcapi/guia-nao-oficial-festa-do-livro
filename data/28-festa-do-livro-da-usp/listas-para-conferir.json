@@ -1,1 +1,12 @@
-[]
+[
+  {
+    "editora": "Ed. UFV",
+    "problema": "sem preço de capa",
+    "detalhe": "19 de 19 livros"
+  },
+  {
+    "editora": "Monolito",
+    "problema": "livros perdidos",
+    "detalhe": "37 das 52 linhas lidas viraram livro"
+  }
+]
