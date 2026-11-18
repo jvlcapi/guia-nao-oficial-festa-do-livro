@@ -2,17 +2,11 @@
 
 - Edição: `28-festa-do-livro-da-usp` · 25 e 29 de novembro
 - Editoras no site: 146
-- Livros no catálogo: 26666
-- Livros sem ISBN (preço não conferível automaticamente): 274
+- Livros no catálogo: 26681
+- Livros sem ISBN (preço não conferível automaticamente): 289
 - Preços que não bateram com o PDF: 418
-- Livros sem preço de capa: 39
-- Livros só com preço de capa (feira não informado): 2495
-
-## Listas para conferir
-
-- **Ed. UFV**: sem preço de capa (19 de 19 livros)
-- **Monolito**: livros perdidos (37 das 52 linhas lidas viraram livro)
-- **Uneb**: sem preço de capa (14 de 14 livros)
+- Livros sem preço de capa: 6
+- Livros só com preço de capa (feira não informado): 2528
 
 ## Listas que ficaram de fora
 
@@ -24,8 +18,10 @@
 
 ## Avisos sobre listas
 
+- Ed. UFV: só tem preço de capa; o preço de feira não foi informado
 - Pontes: só tem preço de capa; o preço de feira não foi informado
 - Seja Breve: só tem preço de capa; o preço de feira não foi informado
+- Uneb: só tem preço de capa; o preço de feira não foi informado
 
 ## Livros por editora
 
@@ -74,7 +70,7 @@
 | Ed. UFMG | 245 | 247 | 1 | tabela | 0 |
 | Ed. UFPR | 133 | 133 | 0 | tabela | 0 |
 | Ed. UFSC | 297 | 297 | 0 | tabela | 0 |
-| Ed. UFV | 19 | 19 | 19 | tabela | 0 |
+| Ed. UFV | 19 | 19 | 0 | tabela | 0 |
 | Ed. UnB | 245 | 245 | 0 | tabela | 0 |
 | Ed. Unesp | 693 | 694 | 0 | tabela | 0 |
 | Ed. Unifesp | 199 | 200 | 0 | tabela | 0 |
@@ -120,7 +116,7 @@
 | Miolo Mole | 36 | 36 | 0 | tabela | 0 |
 | Mnema | 40 | 40 | 0 | tabela | 0 |
 | Moinhos | 152 | 152 | 0 | tabela | 0 |
-| Monolito | 37 | 52 | 0 | tabela | 0 |
+| Monolito | 52 | 52 | 0 | tabela | 0 |
 | Mostarda | 102 | 102 | 0 | tabela | 0 |
 | Movimento Neomarginal | 22 | 22 | 0 | posição do texto | 0 |
 | Mundaréu | Manjuba | 49 | 49 | 0 | tabela | 0 |
@@ -166,7 +162,7 @@
 | todavia | 232 | 232 | 0 | tabela | 0 |
 | Ubu | 166 | 166 | 0 | tabela | 0 |
 | UK'A - Arte e Literatura | 19 | 19 | 0 | tabela | 0 |
-| Uneb | 14 | 14 | 14 | tabela | 0 |
+| Uneb | 14 | 14 | 0 | tabela | 0 |
 | Universo dos Livros | 358 | 358 | 0 | tabela em faixas | 356 |
 | Via Lettera | 119 | 119 | 0 | tabela | 0 |
 | Vozes | 1092 | 1092 | 0 | posição do texto | 0 |
