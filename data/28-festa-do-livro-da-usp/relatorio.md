@@ -1,8 +1,8 @@
 # Relatório do catálogo: 28 Festa do Livro da USP
 
 - Edição: `28-festa-do-livro-da-usp` · 25 e 29 de novembro
-- Editoras no site: 161
-- Livros no catálogo: 28439
+- Editoras no site: 162
+- Livros no catálogo: 28541
 - Livros sem ISBN (preço não conferível automaticamente): 299
 - Preços que não bateram com o PDF: 418
 - Livros sem preço de capa: 6
@@ -119,6 +119,7 @@
 | Livros da Matriz | 33 | 33 | 0 | tabela | 0 |
 | Lote 42 | 45 | 45 | 0 | tabela | 0 |
 | LVM | 209 | 209 | 0 | tabela | 0 |
+| Malê | 102 | 102 | 0 | tabela | 0 |
 | Maria Antonia Edições - GMARX | 11 | 11 | 0 | tabela | 0 |
 | Martins Fontes - Selo Martins | 678 | 678 | 0 | tabela | 0 |
 | Melhoramentos | 223 | 223 | 0 | tabela | 0 |
