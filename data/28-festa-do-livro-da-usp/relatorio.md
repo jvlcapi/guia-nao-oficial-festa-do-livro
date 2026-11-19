@@ -1,9 +1,9 @@
 # Relatório do catálogo: 28 Festa do Livro da USP
 
 - Edição: `28-festa-do-livro-da-usp` · 25 e 29 de novembro
-- Editoras no site: 156
-- Livros no catálogo: 27688
-- Livros sem ISBN (preço não conferível automaticamente): 293
+- Editoras no site: 161
+- Livros no catálogo: 28439
+- Livros sem ISBN (preço não conferível automaticamente): 299
 - Preços que não bateram com o PDF: 418
 - Livros sem preço de capa: 6
 - Livros só com preço de capa (feira não informado): 2528
@@ -13,7 +13,6 @@
 - Contraponto: sem lista de preços
 - GLAC: sem lista de preços
 - nVersos: sem lista de preços
-- Solaris: sem lista de preços
 - Valentina: sem lista de preços
 
 ## Avisos sobre listas
@@ -29,6 +28,7 @@
 |---|---:|---:|---:|---|---:|
 | 34 Editora | 700 | 700 | 0 | tabela | 0 |
 | Alameda | 71 | 71 | 0 | tabela | 0 |
+| Aleph | 237 | 238 | 0 | tabela | 0 |
 | Aletria | 85 | 85 | 0 | tabela | 0 |
 | Aller | 60 | 60 | 0 | tabela | 0 |
 | Anita Garibaldi | 68 | 68 | 0 | tabela | 0 |
@@ -50,6 +50,8 @@
 | BEĨ | 50 | 50 | 0 | tabela | 0 |
 | Biruta | 290 | 290 | 0 | tabela | 0 |
 | Blucher | 784 | 784 | 0 | tabela | 0 |
+| Boitatá | 64 | 64 | 0 | tabela | 0 |
+| Boitempo | 300 | 300 | 0 | tabela | 0 |
 | Book One | 183 | 183 | 0 | tabela | 0 |
 | Brasiliense | 193 | 193 | 0 | tabela | 0 |
 | Buzz | 83 | 83 | 0 | tabela | 0 |
@@ -62,6 +64,7 @@
 | Caxinguelê | 37 | 37 | 0 | tabela | 0 |
 | Ciranda Cultural (Grupo) | 865 | 865 | 0 | tabela | 0 |
 | Com-Arte | 124 | 124 | 0 | tabela | 0 |
+| Contexto | 120 | 120 | 0 | tabela | 0 |
 | Contracorrente | 206 | 208 | 0 | tabela | 0 |
 | Cortez | 150 | 150 | 0 | tabela | 0 |
 | Cosac | 30 | 30 | 0 | tabela | 0 |
@@ -84,6 +87,7 @@
 | Eduel | 15 | 15 | 0 | tabela | 0 |
 | Eduem | 150 | 150 | 0 | tabela | 0 |
 | EdUFSCar | 100 | 100 | 0 | tabela | 0 |
+| EDUNILA | 11 | 11 | 0 | tabela | 0 |
 | Edusp | 1116 | 1116 | 0 | tabela | 0 |
 | Elefante | 131 | 131 | 0 | tabela | 0 |
 | Ercolano | 33 | 33 | 0 | posição do texto | 0 |
@@ -159,6 +163,7 @@
 | Sesc SP | 299 | 299 | 0 | tabela | 0 |
 | Sisko | 19 | 19 | 0 | tabela | 0 |
 | Sobinfluencia | 33 | 33 | 0 | tabela | 0 |
+| Solaris | 19 | 19 | 0 | tabela | 0 |
 | Summus (Grupo) | 402 | 402 | 0 | tabela | 0 |
 | Sundermann | 68 | 68 | 0 | tabela | 0 |
 | Tabla | 41 | 41 | 0 | tabela | 0 |
