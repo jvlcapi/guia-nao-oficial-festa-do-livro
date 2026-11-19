@@ -2,6 +2,13 @@
 
 O que mudou em cada versão do guia. Cada versão tem uma tag no Git e uma release no GitHub com o mesmo texto. As atualizações diárias do catálogo, feitas pelo robô, ficam de fora: elas só trazem listas novas e preços.
 
+## v1.11.0 (19/11/2026)
+
+**Links dos livros que passam da última coluna da tabela**
+
+- Quando o endereço do livro é mais largo que a última coluna da tabela, a letra que a borda de fora corta ao meio não caía em célula nenhuma e sumia, e o link levava a uma página que não existe: "produto/icho-bolota", na Boitatá, no lugar de "produto/bicho-bolota". 682 links de 25 editoras voltam a abrir a página do livro, entre eles 124 da Martins Fontes, 95 da Ed. UnB e 82 da Boitempo.
+- Os 7 assuntos que perdiam uma letra na mesma borda também voltam inteiros, na Jujuba, na LVM e na Relicário ("Romance/História Or l" vira "Romance/História Oral").
+
 ## v1.10.0 (19/11/2026)
 
 **Títulos centralizados da Brasiliense, listas da Com-Arte e da Edusp e listas salvas que acompanham o catálogo**

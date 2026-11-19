@@ -91,6 +91,16 @@ def test_text_its_cell_hides_on_both_sides_is_read_whole():
     assert rows[0] == ["978", "XYZABCDEFGHIJKLM"]
 
 
+def test_text_cut_by_the_right_border_of_the_table_keeps_the_letter_that_crosses_it():
+    # A link wider than the last column (20 to 60): the page shows up to "J", which starts inside the cell and has its middle
+    # (60.5) past the border, in no cell at all, and hides "KLM" past it ("produto/o" of "produto/o-anarquista", Boitatá 2026).
+    shown = letters("ABCDEFGHIJ", 22.5, 2)
+    hidden_after = letters("KLM", 62.5, 2)
+    characters = letters("978", 1, 2) + shown + rows_below((22.5, 22.5))
+    rows = table_cell_texts(THREE_ROWS_OF_TITLE_AND_AUTHOR, characters, [DrawnText([], shown, hidden_after)])
+    assert rows[0] == ["978", "ABCDEFGHIJKLM"]
+
+
 def test_text_hidden_on_the_left_that_shows_in_two_cells_stays_as_the_table_reader_reads_it():
     hidden_before = letters("XY", -7, 2)
     shown = letters("AB", 2, 2) + letters("CD", 22, 2)

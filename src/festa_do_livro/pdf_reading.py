@@ -109,8 +109,9 @@ def keep_each_drawn_text_in_its_cell(
 ) -> None:
     """A spreadsheet draws the text of each cell in one piece. A text that its cell cuts at the borders goes whole to that cell, with
     the letters each border cuts in half and the letters hidden past the borders, and a text the page shows whole that spills a letter
-    or two into the cells beside it goes whole to the cell that holds the rest. Any other text stays as the table reader read it,
-    like a text drawn over several cells."""
+    or two into the cells beside it goes whole to the cell that holds the rest. A letter cut in half by the outer border of the table
+    has its middle in no cell, and it goes to its text too: "o" of "produto/o-anarquista", a link wider than the last column, whose
+    loss broke the link (Boitatá 2026). Any other text stays as the table reader read it, like a text drawn over several cells."""
     cell_of_character = {id(character): position for position, characters in characters_by_cell.items() for character in characters}
     for text in texts:
         if text.hidden_before or text.hidden_after:
@@ -121,10 +122,12 @@ def keep_each_drawn_text_in_its_cell(
             continue
         for character in text.shown:
             position = cell_of_character.get(id(character))
-            if position is not None and position != cell:
+            if position == cell:
+                continue
+            if position is not None:
                 characters_by_cell[position].remove(character)
-                characters_by_cell[cell].append(character)
-                cell_of_character[id(character)] = cell
+            characters_by_cell[cell].append(character)
+            cell_of_character[id(character)] = cell
         characters_by_cell[cell].extend(character for character in text.hidden_before + text.hidden_after if not middle_inside(character, cells[cell]))
 
 

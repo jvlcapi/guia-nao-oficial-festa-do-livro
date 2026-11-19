@@ -872,3 +872,18 @@ def test_quantity_written_with_a_parenthesis_is_not_glued_to_the_author(edusp):
 
 def test_no_author_of_a_list_with_quantities_in_parentheses_ends_with_a_number(edusp):
     assert [book["a"] for book in edusp[0]["livros"] if re.search(r"\d\)?$", book.get("a", ""))] == []
+
+
+@pytest.fixture(scope="module")
+def boitata():
+    return catalog_for("boitata.pdf", "Boitatá")
+
+
+def test_link_wider_than_the_last_column_keeps_the_letter_that_crosses_the_border(boitata):
+    book = book_titled(boitata[0], "BICHO BOLOTA")
+    assert book["u"] == "https://www.boitempoeditorial.com.br/produto/bicho-bolota-153014"
+
+
+def test_every_link_of_a_list_whose_links_cross_the_border_is_printed_in_the_pdf(boitata):
+    printed = re.sub(r"\s+", "", boitata[1].plain_text)
+    assert [book["u"] for book in boitata[0]["livros"] if book["u"] not in printed] == []
