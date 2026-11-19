@@ -2,21 +2,16 @@
 
 - Edição: `28-festa-do-livro-da-usp` · 25 e 29 de novembro
 - Editoras no site: 156
-- Livros no catálogo: 27465
+- Livros no catálogo: 27688
 - Livros sem ISBN (preço não conferível automaticamente): 293
 - Preços que não bateram com o PDF: 418
 - Livros sem preço de capa: 6
 - Livros só com preço de capa (feira não informado): 2528
 
-## Listas para conferir
-
-- **Melhoramentos**: lista não baixada (resposta inesperada: 404 text/html; charset=UTF-8)
-
 ## Listas que ficaram de fora
 
 - Contraponto: sem lista de preços
 - GLAC: sem lista de preços
-- Melhoramentos: resposta inesperada: 404 text/html; charset=UTF-8
 - nVersos: sem lista de preços
 - Solaris: sem lista de preços
 - Valentina: sem lista de preços
@@ -122,6 +117,7 @@
 | LVM | 209 | 209 | 0 | tabela | 0 |
 | Maria Antonia Edições - GMARX | 11 | 11 | 0 | tabela | 0 |
 | Martins Fontes - Selo Martins | 678 | 678 | 0 | tabela | 0 |
+| Melhoramentos | 223 | 223 | 0 | tabela | 0 |
 | Mil Caramiolas | 20 | 20 | 0 | posição do texto | 0 |
 | Miolo Mole | 36 | 36 | 0 | tabela | 0 |
 | Mnema | 38 | 38 | 0 | tabela | 0 |
