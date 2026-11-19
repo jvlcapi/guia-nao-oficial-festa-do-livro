@@ -1,21 +1,22 @@
 # Relatório do catálogo: 28 Festa do Livro da USP
 
 - Edição: `28-festa-do-livro-da-usp` · 25 e 29 de novembro
-- Editoras no site: 148
-- Livros no catálogo: 26952
-- Livros sem ISBN (preço não conferível automaticamente): 292
+- Editoras no site: 156
+- Livros no catálogo: 27465
+- Livros sem ISBN (preço não conferível automaticamente): 293
 - Preços que não bateram com o PDF: 418
 - Livros sem preço de capa: 6
 - Livros só com preço de capa (feira não informado): 2528
 
 ## Listas para conferir
 
-- **Com-Arte**: preço de feira abaixo de um quinto da capa (80 de 124 livros)
+- **Melhoramentos**: lista não baixada (resposta inesperada: 404 text/html; charset=UTF-8)
 
 ## Listas que ficaram de fora
 
 - Contraponto: sem lista de preços
 - GLAC: sem lista de preços
+- Melhoramentos: resposta inesperada: 404 text/html; charset=UTF-8
 - nVersos: sem lista de preços
 - Solaris: sem lista de preços
 - Valentina: sem lista de preços
@@ -32,6 +33,7 @@
 | Editora | Livros | Lidos | Sem capa | Leitura | Divergências |
 |---|---:|---:|---:|---|---:|
 | 34 Editora | 700 | 700 | 0 | tabela | 0 |
+| Alameda | 71 | 71 | 0 | tabela | 0 |
 | Aletria | 85 | 85 | 0 | tabela | 0 |
 | Aller | 60 | 60 | 0 | tabela | 0 |
 | Anita Garibaldi | 68 | 68 | 0 | tabela | 0 |
@@ -40,9 +42,10 @@
 | Ars et Vita | 21 | 21 | 0 | tabela | 1 |
 | Arte & Letra | 103 | 103 | 0 | tabela | 0 |
 | Ateliê | 329 | 329 | 0 | tabela | 0 |
+| Atheneu | 140 | 140 | 0 | tabela | 0 |
 | Autêntica (Grupo) | 510 | 510 | 0 | tabela | 0 |
 | Autonomia Literária | 155 | 155 | 0 | tabela | 0 |
-| Autores Associados | 285 | 285 | 0 | tabela | 0 |
+| Autores Associados | 287 | 287 | 0 | tabela | 0 |
 | Azuco | 21 | 21 | 0 | tabela | 0 |
 | baião | 48 | 48 | 0 | tabela | 0 |
 | Balão | 32 | 32 | 0 | tabela | 0 |
@@ -72,6 +75,7 @@
 | Diadorim | 23 | 23 | 0 | tabela | 2 |
 | Dublinense | 103 | 103 | 0 | tabela | 0 |
 | Ed. da Unicamp | 453 | 453 | 0 | tabela | 0 |
+| Ed. Mackenzie | 29 | 29 | 0 | tabela | 0 |
 | Ed. UFABC | 18 | 18 | 0 | tabela | 0 |
 | Ed. UFMG | 245 | 247 | 1 | tabela | 0 |
 | Ed. UFPR | 133 | 133 | 0 | tabela | 0 |
@@ -85,7 +89,7 @@
 | Eduel | 15 | 15 | 0 | tabela | 0 |
 | Eduem | 150 | 150 | 0 | tabela | 0 |
 | EdUFSCar | 100 | 100 | 0 | tabela | 0 |
-| Edusp | 1007 | 1021 | 0 | tabela | 0 |
+| Edusp | 1116 | 1116 | 0 | tabela | 0 |
 | Elefante | 131 | 131 | 0 | tabela | 0 |
 | Ercolano | 33 | 33 | 0 | posição do texto | 0 |
 | Escala | 111 | 111 | 0 | tabela | 0 |
@@ -95,6 +99,7 @@
 | Fino Traço | 117 | 117 | 0 | tabela | 0 |
 | Fiocruz | 186 | 186 | 0 | posição do texto | 0 |
 | Fósforo | 269 | 269 | 0 | posição do texto | 0 |
+| Funilaria | 33 | 33 | 0 | tabela | 0 |
 | Girassol (Grupo) | 488 | 488 | 0 | tabela | 0 |
 | Global | 641 | 643 | 0 | tabela | 0 |
 | Grua | 102 | 102 | 0 | tabela | 0 |
@@ -109,18 +114,17 @@
 | Joaquina | 12 | 12 | 0 | tabela | 0 |
 | Jujuba | 60 | 60 | 0 | tabela | 0 |
 | Kitembo | 15 | 15 | 0 | tabela | 0 |
-| Kotter Editorial | 61 | 61 | 0 | tabela | 0 |
+| Kotter | 61 | 61 | 0 | tabela | 0 |
 | LavraPalavra | 70 | 70 | 0 | tabela | 0 |
 | Letra Selvagem | 72 | 72 | 0 | posição do texto | 0 |
 | Livros da Matriz | 33 | 33 | 0 | tabela | 0 |
 | Lote 42 | 45 | 45 | 0 | tabela | 0 |
-| LVM | 211 | 211 | 0 | tabela | 0 |
+| LVM | 209 | 209 | 0 | tabela | 0 |
 | Maria Antonia Edições - GMARX | 11 | 11 | 0 | tabela | 0 |
 | Martins Fontes - Selo Martins | 678 | 678 | 0 | tabela | 0 |
-| Melhoramentos | 223 | 223 | 0 | tabela | 0 |
 | Mil Caramiolas | 20 | 20 | 0 | posição do texto | 0 |
 | Miolo Mole | 36 | 36 | 0 | tabela | 0 |
-| Mnema | 40 | 40 | 0 | tabela | 0 |
+| Mnema | 38 | 38 | 0 | tabela | 0 |
 | Moinhos | 152 | 152 | 0 | tabela | 0 |
 | Monolito | 52 | 52 | 0 | tabela | 0 |
 | Mostarda | 102 | 102 | 0 | tabela | 0 |
@@ -146,12 +150,14 @@
 | Pinard | 33 | 33 | 0 | tabela | 0 |
 | Planeta | 301 | 301 | 0 | tabela | 0 |
 | Pontes | 2479 | 2479 | 0 | tabela | 0 |
-| Publicações BBM | 39 | 39 | 0 | tabela | 0 |
+| Publicações BBM | 29 | 29 | 0 | tabela | 0 |
 | Pulo do Gato | 86 | 86 | 0 | tabela | 0 |
 | Quatro Cantos | 49 | 49 | 0 | tabela | 0 |
 | Quina | 21 | 21 | 0 | tabela | 0 |
 | Reformatório | 209 | 209 | 0 | tabela | 0 |
 | Relicário | 155 | 155 | 3 | tabela | 0 |
+| Revista IEA | 18 | 18 | 0 | tabela | 0 |
+| Rocco | 185 | 185 | 0 | tabela | 0 |
 | Seiva | 8 | 8 | 0 | tabela | 0 |
 | Seja Breve | 16 | 16 | 0 | tabela | 0 |
 | Sesc SP | 299 | 299 | 0 | tabela | 0 |
@@ -159,8 +165,8 @@
 | Sobinfluencia | 33 | 33 | 0 | tabela | 0 |
 | Summus (Grupo) | 402 | 402 | 0 | tabela | 0 |
 | Sundermann | 68 | 68 | 0 | tabela | 0 |
-| Tabla | 29 | 29 | 0 | tabela | 0 |
-| TantaTinta / Carlini e Caniato | 31 | 31 | 0 | tabela | 0 |
+| Tabla | 41 | 41 | 0 | tabela | 0 |
+| TantaTinta | Carlini e Caniato | 31 | 31 | 0 | tabela | 0 |
 | Telos | 166 | 166 | 0 | tabela | 0 |
 | Temporal | 35 | 35 | 0 | tabela | 0 |
 | Terra Virgem | 36 | 36 | 0 | tabela | 0 |
@@ -171,9 +177,11 @@
 | Uneb | 14 | 14 | 0 | tabela | 0 |
 | Universo dos Livros | 358 | 358 | 0 | tabela em faixas | 356 |
 | Via Lettera | 119 | 119 | 0 | tabela | 0 |
+| Viajante do Tempo | 120 | 120 | 0 | tabela | 0 |
 | Vozes | 1092 | 1092 | 0 | posição do texto | 0 |
 | Zagodoni | 161 | 161 | 0 | tabela | 0 |
 | Zain | 16 | 16 | 0 | posição do texto | 0 |
+| Zapata | 31 | 31 | 0 | tabela | 0 |
 
 ## Divergências (amostra de até 5 por editora)
 
