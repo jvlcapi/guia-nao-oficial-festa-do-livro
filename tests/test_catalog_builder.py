@@ -848,3 +848,27 @@ def test_title_its_cell_hides_on_both_sides_is_read_whole_with_its_isbn_and_auth
 
 def test_no_title_of_a_list_whose_cells_hide_centered_text_is_an_isbn_with_a_letter(brasiliense):
     assert [book["t"] for book in brasiliense[0]["livros"] if re.match(r"97[89]\d{10}", book["t"])] == []
+
+
+@pytest.fixture(scope="module")
+def com_arte():
+    return catalog_for("com_arte.pdf", "Com-Arte")
+
+
+def test_quantity_in_a_list_whose_header_is_one_cell_is_not_the_fair_price(com_arte):
+    book = book_titled(com_arte[0], "A Casa & Outros Poemas")
+    assert (book["c"], book["f"]) == (36.0, 18.0)
+
+
+@pytest.fixture(scope="module")
+def edusp():
+    return catalog_for("edusp.pdf", "Edusp")
+
+
+def test_quantity_written_with_a_parenthesis_is_not_glued_to_the_author(edusp):
+    book = book_titled(edusp[0], "(Re)Produção do Espaço Urbano")
+    assert book["a"] == "CARLOS, Ana Fani Alessandri"
+
+
+def test_no_author_of_a_list_with_quantities_in_parentheses_ends_with_a_number(edusp):
+    assert [book["a"] for book in edusp[0]["livros"] if re.search(r"\d\)?$", book.get("a", ""))] == []

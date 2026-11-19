@@ -185,6 +185,18 @@ def test_quantity_with_a_letter_spilled_from_the_title_is_not_the_author():
     assert (book["author"], book["cover_price"], book["fair_price"]) == ("", 79.0, 40.0)
 
 
+def test_quantity_before_a_cover_and_a_fair_price_with_cents_is_not_a_price():
+    rows = [
+        ["ISBN Título Autor Qtde. Valor 50% Venda", "", "", "", "", ""],
+        ["9788571661820", "A Casa & Outros Poemas", "BOSI, Ecléa", "10", "36,00", "18,00"],
+        ["9788571661608", "Algo a Declarar?", "ESCALEIRA, Bruna", "5", "30,00", "15,00"],
+        ["9786589321057", "Árvore do Desconhecimento, A", "RENOVATO, Jurandir", "3", "71,00", "35,50"],
+        ["9788571660502", "Duas Casas", "DRAGONETTI, Cláudia", "30", "16,00", "8,00"],
+    ]
+    book = parse_table_rows(rows)[0]
+    assert (book["cover_price"], book["fair_price"]) == (36.0, 18.0)
+
+
 def test_authors_that_name_a_site_are_still_the_authors():
     rows = [
         ["9786526116760", "Carreiras Extraordinárias", "Danila Sorrentino, Simona Bursi, Shutterstock.com, Freepik.com", "Ciranda Cultural - Coedição", "R$ 59,90", "R$ 50,00", "Profissões", "https://www.cirandacultural.com.br/produto/carreiras"],

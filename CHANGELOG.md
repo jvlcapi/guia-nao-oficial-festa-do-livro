@@ -2,12 +2,13 @@
 
 O que mudou em cada versão do guia. Cada versão tem uma tag no Git e uma release no GitHub com o mesmo texto. As atualizações diárias do catálogo, feitas pelo robô, ficam de fora: elas só trazem listas novas e preços.
 
-## v1.10.0 (18/11/2026)
+## v1.10.0 (19/11/2026)
 
-**Títulos centralizados da Brasiliense e listas salvas que acompanham o catálogo**
+**Títulos centralizados da Brasiliense, listas da Com-Arte e da Edusp e listas salvas que acompanham o catálogo**
 
 - A Brasiliense centraliza títulos e autores mais largos que a célula, e a planilha esconde o começo e o fim do texto. O guia mostrava 18 livros com o ISBN e uma letra no lugar do título ("9788511020786 D") e o resto do título no lugar do autor. Agora os 193 livros têm ISBN, esses 18 têm o título e o autor certos, como "A CIDADE DE SAO PAULO GEOGRAFIA E HISTORIA", de Caio da Silva Prado Junior, e outros 23 títulos, 31 autores e 17 assuntos que vinham cortados aparecem inteiros.
 - A mesma leitura completa títulos, autores e assuntos cortados em outras listas, como a da Mnema ("ELEGIA GREGA ARCAICA: UMA ANTOLOGIA") e a da Instante ("O ruído de uma época"), e tira 4 cópias quebradas de livros que já estavam no guia.
+- A Com-Arte e a Edusp usam o mesmo modelo de planilha, com a quantidade de exemplares antes dos preços e o cabeçalho numa célula só. Na Com-Arte, a quantidade virava o preço de feira de 104 dos 124 livros: "A Casa & Outros Poemas" aparecia por R$ 10,00, e o preço de feira é R$ 18,00. Na Edusp, que trocou a lista em 19/11, a quantidade grudava no autor de 1.055 dos 1.116 livros ("CARLOS, Ana Fani Alessandri25)").
 - A lista salva no aparelho passa a pegar do catálogo o título, o autor e o nome da editora, e não só o preço. Um livro salvo com o título quebrado acha o livro certo, e um livro com ISBN de editora renomeada em 18/11 passa a mostrar o nome novo.
 
 ## v1.9.0 (18/11/2026)

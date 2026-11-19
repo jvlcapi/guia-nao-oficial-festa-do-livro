@@ -316,6 +316,14 @@ def exhibitor_suffix(publisher_key: str) -> str:
     return hashlib.md5(publisher_key.encode()).hexdigest()[:6]
 
 
+def without_quantity_closed_by_a_parenthesis(text: str) -> str:
+    """The quantity after the author, glued to it or not, with the parenthesis a spreadsheet number format keeps ("CARLOS, Ana Fani
+    Alessandri25)" and "MOURA, Clóvis 24)", Edusp 2026). A year that closes a parenthesis the text opened stays ("Perspectiva, 1974)")."""
+    if text.count(")") > text.count("("):
+        return re.sub(r"\s*\d+\)$", "", text)
+    return text
+
+
 def without_stray_letters(imprint: str) -> str:
     """Cells often swallow one letter of the neighbouring cell: "oAnita Garibaldi", "MATRIX N". A name cut after a separator
     keeps no dangling separator either: "ESTRALADABAO - U" is "ESTRALADABAO"."""
@@ -428,7 +436,7 @@ def repair_truncated_names(books: list[dict], publishers: list[Publisher], parse
             if position > 0:
                 cut = position if cut is None else min(cut, position)
 
-        full_author = segment[:cut] if cut is not None else segment
+        full_author = without_quantity_closed_by_a_parenthesis(segment[:cut] if cut is not None else segment)
         full_author = re.sub(r"(\s+\d+)+\s*$", "", full_author)
         full_author = re.sub(r"\s+[A-Za-z]$", "", full_author.strip()).strip(" ,;")
         publisher_words = {word.lower() for word in re.findall(r"\w+", exhibitor_name + " " + (book.get("s") or "")) if len(word) >= 3}

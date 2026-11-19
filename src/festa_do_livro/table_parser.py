@@ -20,6 +20,7 @@ CODE_CHARACTERS = re.compile(r"[\d\s\-=.,+xXE]+")
 FEWEST_DIGITS_OF_A_CODE = 4
 NUMBER_CELL = re.compile(r"(?:R\$\s*)?(\d{1,4}(?:[.,]\d{1,2})?)")
 LOWEST_FAIR_SHARE_OF_COVER = 0.2
+MOST_PRICES_OF_A_BOOK = 2
 SHARE_OF_ROWS_IN_A_COLUMN = 0.8
 PERCENT_CELL = re.compile(r"\s*-?(\d{1,2}(?:[.,]\d+)?)\s*%\s*")
 SECTION_HEADER_WORDS = ("isbn", "ean", "cod", "titulo", "descricao", "livro", "autor", "editora", "selo", "assunto", "colecao", "pagina", "url", "link", "preco", "capa", "valor", "desconto")
@@ -113,10 +114,12 @@ def price_columns_by_row_length(rows: list[list[str]]) -> dict[int, set[int]]:
         integers = [int(value) for value in values if re.fullmatch(r"\d{1,4}", value)]
         return integers, len(integers) >= 0.8 * len(data_rows) and sorted(integers)[len(integers) // 2] >= 5
 
-    # A cover price written as a whole number, right before a decimal fair price.
+    # A cover price written as a whole number, right before a decimal fair price. When the cover and the fair price both have cents,
+    # whole numbers right before one of them are no price, since a book has two prices at most: a quantity ("Qtde.", Com-Arte 2026,
+    # whose header is drawn as one cell, so the column is not found by its name) or a discount without its % ("50", Martin Claret 2025).
     for length, price_columns in list(columns.items()):
         data_rows = book_rows(length)
-        if not data_rows:
+        if not data_rows or len(price_columns) >= MOST_PRICES_OF_A_BOOK:
             continue
         for column in sorted(price_columns):
             candidate = column - 1
