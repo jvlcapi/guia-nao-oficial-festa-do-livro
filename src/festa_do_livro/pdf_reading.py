@@ -26,6 +26,9 @@ LIGATURE_NEXT_LETTER_DISTANCE = 0.5
 SAME_POSITION = 0.001
 LETTERS_OF_THE_LONGEST_LIGATURE = 3  # "ffi"
 UNDERSCORE = "_"
+LINE_OVER_A_BORDER = 1.0  # a line lies across the border between two rows when it reaches at least this far into each of them
+NEAREST_TEXTS_THAT_TELL_THE_ROW = 4
+SPACE_DISTANCE = 0.5
 VERTICAL_POSITION_KEYS = ("top", "bottom", "doctop", "y0", "y1", "height")
 
 
@@ -95,16 +98,18 @@ def shown_character_at(shown_by_letter_and_column: dict, letter: str, x0: float,
 
 
 def table_cell_texts(rows: list[list[tuple | None]], characters: list[dict], texts: list[DrawnText] = ()) -> list[list[str | None]]:
-    """The text of each cell as PyMuPDF's Table.extract reads it (every character in the cell that holds its middle), with three
+    """The text of each cell as PyMuPDF's Table.extract reads it (every character in the cell that holds its middle), with four
     repairs. A column that lost the borders between its rows comes out as one tall cell over the rows below it (Hucitec 2026: 31
     cover prices in one cell and none in the 30 rows below), so each line goes back to the row it is printed on. A narrow cell
     cuts the last letter of its text in half, so the middle of that letter falls in the next cell ("6 PERGUNTAS" and "SSonia
-    Salzstein" in IMS 2026), and the letter goes back to the text it ends. And each text the page draws in one piece goes whole
-    to its cell, with what the cell hides."""
+    Salzstein" in IMS 2026), and the letter goes back to the text it ends. Each text the page draws in one piece goes whole
+    to its cell, with what the cell hides. And a line of text that lies across the border between two rows goes to the row of
+    the texts drawn around it."""
     cells = cells_by_row_and_column(rows)
     characters_by_cell = {position: [character for character in characters if middle_inside(character, bbox)] for position, bbox in cells.items()}
     give_cut_letters_back(cells, characters_by_cell)
-    keep_each_drawn_text_in_its_cell(cells, characters_by_cell, texts)
+    texts_kept_in_a_cell = keep_each_drawn_text_in_its_cell(cells, characters_by_cell, texts)
+    keep_each_line_in_its_row(cells, characters_by_cell, texts, texts_kept_in_a_cell, characters)
     return [
         [cell_text(characters_by_cell[(row_index, column)]) if (row_index, column) in cells else None for column in range(len(row))]
         for row_index, row in enumerate(rows)
@@ -113,13 +118,15 @@ def table_cell_texts(rows: list[list[tuple | None]], characters: list[dict], tex
 
 def keep_each_drawn_text_in_its_cell(
     cells: dict[tuple[int, int], tuple], characters_by_cell: dict[tuple[int, int], list[dict]], texts: list[DrawnText],
-) -> None:
+) -> set[int]:
     """A spreadsheet draws the text of each cell in one piece. A text that its cell cuts at the borders goes whole to that cell, with
     the letters each border cuts in half and the letters hidden past the borders, and a text the page shows whole that spills a letter
     or two into the cells beside it goes whole to the cell that holds the rest. A letter cut in half by the outer border of the table
     has its middle in no cell, and it goes to its text too: "o" of "produto/o-anarquista", a link wider than the last column, whose
-    loss broke the link (Boitatá 2026). Any other text stays as the table reader read it, like a text drawn over several cells."""
+    loss broke the link (Boitatá 2026). Any other text stays as the table reader read it, like a text drawn over several cells.
+    Gives back the texts it kept in a cell."""
     cell_of_character = {id(character): position for position, characters in characters_by_cell.items() for character in characters}
+    kept = set()
     for text in texts:
         if text.hidden_before or text.hidden_after:
             cell = cell_that_cuts(text, cells, cell_of_character)
@@ -127,15 +134,108 @@ def keep_each_drawn_text_in_its_cell(
             cell = cell_a_shown_text_spills_out_of(text, cells, cell_of_character)
         if cell is None:
             continue
-        for character in text.shown:
-            position = cell_of_character.get(id(character))
-            if position == cell:
-                continue
-            if position is not None:
-                characters_by_cell[position].remove(character)
-            characters_by_cell[cell].append(character)
-            cell_of_character[id(character)] = cell
+        move_to_cell(text.shown, cell, characters_by_cell, cell_of_character)
         characters_by_cell[cell].extend(character for character in text.hidden_before + text.hidden_after if not middle_inside(character, cells[cell]))
+        kept.add(id(text))
+    return kept
+
+
+def move_to_cell(
+    characters: list[dict], cell: tuple[int, int], characters_by_cell: dict[tuple[int, int], list[dict]], cell_of_character: dict[int, tuple[int, int]],
+) -> None:
+    for character in characters:
+        position = cell_of_character.get(id(character))
+        if position == cell:
+            continue
+        if position is not None:
+            characters_by_cell[position].remove(character)
+        characters_by_cell[cell].append(character)
+        cell_of_character[id(character)] = cell
+
+
+def keep_each_line_in_its_row(
+    cells: dict[tuple[int, int], tuple], characters_by_cell: dict[tuple[int, int], list[dict]], texts: list[DrawnText],
+    texts_kept_in_a_cell: set[int], characters: list[dict],
+) -> None:
+    """A row too short for a text of two lines lets one of its lines stick out over the row beside it, and the table reader gave
+    that line to the wrong book. "50 ANIMAIS", the second line of "UMA BREVE HISTORIA DO MUNDO EM 50 ANIMAIS", lay over the first
+    line of the book below, and the two came out mixed ("5U0M AAN BIMREAVISE HISTORIA DO MUNDO EM", Valentina 2026). "99 Teses
+    para uma", the first line of "99 Teses para uma Revaloração do Valor", stuck out over the book above, and its cell hid it all
+    but the "p", which ended the title of that book ("Dark Deleuze p", GLAC 2026), and the second line of the last title of a page
+    ran out of the table below it ("50 LUGARES", Valentina 2026). The page draws the texts of a row one after the other, so a line
+    that lies across the border between two rows, or across the edge of the table, goes, with what its cell hides, to the row of
+    the nearest texts drawn before and after it that sit inside one row, when the two agree."""
+    cell_of_character = {id(character): position for position, characters_in_cell in characters_by_cell.items() for character in characters_in_cell}
+    shown_by_letter_and_column = collections.defaultdict(list)
+    for character in characters:
+        shown_by_letter_and_column[(character["text"], round(character["x0"]))].append(character)
+    placements = [placement_of(text, cells) for text in texts]
+    for position, text in enumerate(texts):
+        placement = placements[position]
+        if id(text) in texts_kept_in_a_cell or placement is None or not placement.lies_across_a_border:
+            continue
+        row_before = row_of_the_nearest_text_inside_a_row(placements, range(position - 1, max(-1, position - 1 - NEAREST_TEXTS_THAT_TELL_THE_ROW), -1))
+        row_after = row_of_the_nearest_text_inside_a_row(placements, range(position + 1, min(len(texts), position + 1 + NEAREST_TEXTS_THAT_TELL_THE_ROW)))
+        if row_before is None or row_before != row_after or row_before not in placement.rows:
+            continue
+        cell = placement.cell_in_row[row_before]
+        shown_after_all, hidden = [], []
+        for character in text.hidden_before + text.hidden_after:
+            same = shown_character_at(shown_by_letter_and_column, character["text"], character["x0"], character["x1"], character["top"])
+            if same is None and not character["text"].strip():
+                same = shown_space_at(shown_by_letter_and_column, character)
+            (shown_after_all if same is not None else hidden).append(same or character)
+        move_to_cell(text.shown + shown_after_all, cell, characters_by_cell, cell_of_character)
+        characters_by_cell[cell].extend(hidden)
+
+
+class Placement(NamedTuple):
+    """Where a drawn text lies in the table: the cell of each row under the middle of what it shows, the rows whose cell it reaches
+    into by at least LINE_OVER_A_BORDER, and whether it reaches that far out of the table too."""
+    cell_in_row: dict[int, tuple[int, int]]
+    rows: list[int]
+    out_of_the_table: bool
+
+    @property
+    def lies_across_a_border(self) -> bool:
+        return len(self.rows) >= 2 or (len(self.rows) == 1 and self.out_of_the_table)
+
+    @property
+    def inside_one_row(self) -> bool:
+        return len(self.rows) == 1 and not self.out_of_the_table
+
+
+def placement_of(text: DrawnText, cells: dict[tuple[int, int], tuple]) -> Placement | None:
+    """The placement of a drawn text, by the cells under the middle of the letters it shows, whichever cells its letters fell in: a
+    line over the title of the list, a cell over every column, would take the column of the first cell ("a-furia-da-", the first
+    line of a link, Intrínseca 2025), and a line out of the table falls in no cell ("GOZZI", Boitempo 2026). None for a text
+    outside the table."""
+    every_character = text.hidden_before + text.shown + text.hidden_after
+    top, bottom = min(character["top"] for character in every_character), max(character["bottom"] for character in every_character)
+    middle = (text.shown[0]["x0"] + text.shown[-1]["x1"]) / 2
+    under = {row: ((row, column), bbox) for (row, column), bbox in cells.items() if bbox[0] <= middle < bbox[2]}
+    if not under:
+        return None
+    rows = sorted(row for row, (_, bbox) in under.items() if min(bottom, bbox[3]) - max(top, bbox[1]) >= LINE_OVER_A_BORDER)
+    table_top, table_bottom = min(bbox[1] for _, bbox in under.values()), max(bbox[3] for _, bbox in under.values())
+    return Placement({row: cell for row, (cell, _) in under.items()}, rows, table_top - top >= LINE_OVER_A_BORDER or bottom - table_bottom >= LINE_OVER_A_BORDER)
+
+
+def row_of_the_nearest_text_inside_a_row(placements: list[Placement | None], positions) -> int | None:
+    for position in positions:
+        if placements[position] is not None and placements[position].inside_one_row:
+            return placements[position].rows[0]
+    return None
+
+
+def shown_space_at(shown_by_letter_and_column: dict, space: dict) -> dict | None:
+    """The space the table reader keeps where the page draws this one: PyMuPDF stretches a space over the gap between the letters
+    around it, so it can start up to SPACE_DISTANCE away ("50 ANIMAIS", Valentina 2026)."""
+    for column in (round(space["x0"]) - 1, round(space["x0"]), round(space["x0"]) + 1):
+        for character in shown_by_letter_and_column.get((space["text"], column), []):
+            if abs(character["x0"] - space["x0"]) < SPACE_DISTANCE and abs(character["top"] - space["top"]) < SAME_CHARACTER_DISTANCE:
+                return character
+    return None
 
 
 def cell_a_shown_text_spills_out_of(

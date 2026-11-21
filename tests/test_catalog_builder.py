@@ -939,3 +939,32 @@ def contracorrente():
 def test_every_link_of_a_list_whose_font_draws_several_ligatures_is_printed_in_the_pdf(contracorrente):
     printed = re.sub(r"\s+", "", contracorrente[1].plain_text)
     assert [book["u"] for book in contracorrente[0]["livros"] if book.get("u", "") not in printed] == []
+
+
+@pytest.fixture(scope="module")
+def valentina():
+    return catalog_for("valentina.pdf", "Valentina")
+
+
+def test_second_line_of_a_title_in_a_row_too_short_for_it_stays_with_its_book(valentina):
+    book = next(book for book in valentina[0]["livros"] if book["i"] == "9788558891219")
+    assert book["t"] == "UMA BREVE HISTORIA DO MUNDO EM 50 LIVROS"
+
+
+def test_every_title_of_a_list_whose_rows_are_too_short_for_two_lines_is_printed_in_the_pdf(valentina):
+    printed = re.sub(r"\s+", "", valentina[1].plain_text)
+    assert [book["t"] for book in valentina[0]["livros"] if re.sub(r"\s+", "", book["t"]) not in printed] == []
+
+
+@pytest.fixture(scope="module")
+def glac():
+    return catalog_for("glac.pdf", "GLAC")
+
+
+def test_first_line_of_a_title_its_cell_hides_above_the_row_is_read_with_the_title(glac):
+    book = next(book for book in glac[0]["livros"] if book["i"] == "9786580421053")
+    assert book["t"] == "99 Teses para uma Revaloração do Valor"
+
+
+def test_no_title_of_a_list_whose_rows_are_too_short_for_two_lines_ends_with_a_stray_letter(glac):
+    assert [book["t"] for book in glac[0]["livros"] if re.search(r"\s\w$", book["t"])] == []

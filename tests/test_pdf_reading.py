@@ -2,6 +2,7 @@ from festa_do_livro.pdf_reading import DrawnText, table_cell_texts, with_undersc
 
 LETTER_WIDTH = 4.0
 THREE_ROWS_OF_TITLE_AND_AUTHOR = [[(0, top, 20, top + 10), (20, top, 60, top + 10)] for top in (0, 10, 20)]
+SHORT_ROWS_OF_ISBN_TITLE_AND_AUTHOR = [[(0, top, 20, top + 9), (20, top, 60, top + 9), (60, top, 90, top + 9)] for top in (0, 9, 18)]
 
 
 def letters(text: str, left: float, top: float) -> list[dict]:
@@ -151,6 +152,53 @@ def test_letters_that_start_at_the_very_same_spot_keep_the_order_the_page_draws_
     i = {**letters("i", 26.5, 2)[0], "x1": 27.9}
     characters = letters("978", 1, 2) + letters("f", 22.5, 2) + [i] + letters("na", 26.5, 2) + rows_below((22.5, 22.5))
     assert table_cell_texts(THREE_ROWS_OF_TITLE_AND_AUTHOR, characters)[0] == ["978", "fina"]
+
+
+def test_second_line_of_a_title_that_sticks_out_below_its_row_stays_with_its_book():
+    # Rows 9 points tall and a title of two lines: "XY" lies over the border with the row below, at the height of that row's
+    # title, and the two came out mixed ("5U0M AAN BIMREAVISE HISTORIA DO MUNDO EM", Valentina 2026).
+    pieces = [
+        letters("978", 1, 1.5), letters("ABC", 22, 1), letters("XY", 22, 7.5), letters("Ana", 62, 1.5),
+        letters("979", 1, 10.5), letters("DEF", 22, 9.5), letters("Bia", 62, 10.5),
+        letters("977", 1, 19.5), letters("GHI", 22, 19), letters("Caio", 62, 19.5),
+    ]
+    characters = [character for piece in pieces for character in piece]
+    rows = table_cell_texts(SHORT_ROWS_OF_ISBN_TITLE_AND_AUTHOR, characters, [DrawnText([], piece, []) for piece in pieces])
+    assert [row[1] for row in rows] == ["ABC\nXY", "DEF", "GHI"]
+
+
+def test_second_line_of_the_last_title_that_runs_out_of_the_table_stays_with_its_book():
+    # The second line of the last title of a page lay below the table, in no cell, and the book lost it ("50 LUGARES", Valentina
+    # 2026).
+    pieces = [letters("978", 1, 1.5), letters("ABC", 22, 1), letters("Ana", 62, 1.5)]
+    pieces += [letters("979", 1, 10.5), letters("DEF", 22, 10.5), letters("Bia", 62, 10.5)]
+    pieces += [letters("977", 1, 19.5), letters("GHI", 22, 19), letters("UV", 22, 25.5), letters("Caio", 62, 19.5), letters("Fim", 2, 40)]
+    characters = [character for piece in pieces for character in piece]
+    rows = table_cell_texts(SHORT_ROWS_OF_ISBN_TITLE_AND_AUTHOR, characters, [DrawnText([], piece, []) for piece in pieces])
+    assert [row[1] for row in rows] == ["ABC", "DEF", "GHI\nUV"]
+
+
+def test_line_over_a_cell_that_spans_every_column_goes_to_the_cell_under_it():
+    # The first line of a link stuck out over the header of the list, one cell over every column, and must not go to the cell of
+    # the ISBN, the first column ("a-furia-da-", Intrínseca 2025).
+    rows = [[(0, 0, 90, 9), None, None], [(0, 9, 20, 18), (20, 9, 60, 18), (60, 9, 90, 18)], [(0, 18, 20, 27), (20, 18, 60, 27), (60, 18, 90, 27)]]
+    pieces = [letters("ISBN", 1, 1.5), letters("978", 1, 10.5), letters("Livro", 22, 10.5), letters("ab", 62, 5), letters("cd", 62, 11)]
+    pieces += [letters("979", 1, 19.5), letters("Outro", 22, 19.5), letters("ef", 62, 19.5)]
+    characters = [character for piece in pieces for character in piece]
+    assert table_cell_texts(rows, characters, [DrawnText([], piece, []) for piece in pieces])[1] == ["978", "Livro", "ab\ncd"]
+
+
+def test_first_line_of_a_title_that_sticks_out_above_its_row_goes_whole_to_its_book():
+    # A title of two lines centered in a row too short for them: the cell hides the first line, which sticks out over the row
+    # above, all but the "p" of "para", and that "p" ended the title of the book above ("Dark Deleuze p", GLAC 2026).
+    first_line = letters("Teses para", 22, 5)
+    before = [letters("978", 1, 1.5), letters("Dark", 22, 1.5), letters("Ana", 62, 1.5), letters("979", 1, 10.5)]
+    after = [letters("Valor", 22, 12), letters("Bia", 62, 10.5), letters("977", 1, 19.5), letters("GHI", 22, 19.5), letters("Caio", 62, 19.5)]
+    characters = [character for piece in before + after for character in piece] + first_line[6:7]
+    texts = [DrawnText([], piece, []) for piece in before] + [DrawnText(first_line[:6], first_line[6:7], first_line[7:])]
+    texts += [DrawnText([], piece, []) for piece in after]
+    rows = table_cell_texts(SHORT_ROWS_OF_ISBN_TITLE_AND_AUTHOR, characters, texts)
+    assert [row[1] for row in rows] == ["Dark", "Teses para\nValor", "GHI"]
 
 
 def test_text_hidden_on_the_left_that_shows_in_two_cells_stays_as_the_table_reader_reads_it():
