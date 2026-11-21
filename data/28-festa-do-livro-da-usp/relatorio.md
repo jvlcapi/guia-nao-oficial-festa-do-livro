@@ -1,26 +1,24 @@
 # Relatório do catálogo: 28 Festa do Livro da USP
 
 - Edição: `28-festa-do-livro-da-usp` · 25 e 29 de novembro
-- Editoras no site: 162
-- Livros no catálogo: 28541
+- Editoras no site: 163
+- Livros no catálogo: 29340
 - Livros sem ISBN (preço não conferível automaticamente): 299
 - Preços que não bateram com o PDF: 418
 - Livros sem preço de capa: 6
-- Livros só com preço de capa (feira não informado): 2528
+- Livros só com preço de capa (feira não informado): 2479
 
 ## Listas que ficaram de fora
 
 - Contraponto: sem lista de preços
-- GLAC: sem lista de preços
+- Letra Selvagem: sem lista de preços
 - nVersos: sem lista de preços
-- Valentina: sem lista de preços
+- Seja Breve: sem lista de preços
+- Uneb: sem lista de preços
 
 ## Avisos sobre listas
 
-- Ed. UFV: só tem preço de capa; o preço de feira não foi informado
 - Pontes: só tem preço de capa; o preço de feira não foi informado
-- Seja Breve: só tem preço de capa; o preço de feira não foi informado
-- Uneb: só tem preço de capa; o preço de feira não foi informado
 
 ## Livros por editora
 
@@ -100,6 +98,7 @@
 | Fósforo | 269 | 269 | 0 | posição do texto | 0 |
 | Funilaria | 33 | 33 | 0 | tabela | 0 |
 | Girassol (Grupo) | 488 | 488 | 0 | tabela | 0 |
+| GLAC | 30 | 30 | 0 | tabela | 0 |
 | Global | 641 | 643 | 0 | tabela | 0 |
 | Grua | 102 | 102 | 0 | tabela | 0 |
 | HarperCollins Brasil | 415 | 415 | 0 | tabela | 0 |
@@ -115,7 +114,6 @@
 | Kitembo | 15 | 15 | 0 | tabela | 0 |
 | Kotter | 61 | 61 | 0 | tabela | 0 |
 | LavraPalavra | 70 | 70 | 0 | tabela | 0 |
-| Letra Selvagem | 72 | 72 | 0 | posição do texto | 0 |
 | Livros da Matriz | 33 | 33 | 0 | tabela | 0 |
 | Lote 42 | 45 | 45 | 0 | tabela | 0 |
 | LVM | 209 | 209 | 0 | tabela | 0 |
@@ -155,12 +153,12 @@
 | Pulo do Gato | 86 | 86 | 0 | tabela | 0 |
 | Quatro Cantos | 49 | 49 | 0 | tabela | 0 |
 | Quina | 21 | 21 | 0 | tabela | 0 |
+| Record (Grupo) | 796 | 796 | 0 | tabela | 0 |
 | Reformatório | 209 | 209 | 0 | tabela | 0 |
 | Relicário | 155 | 155 | 3 | tabela | 0 |
 | Revista IEA | 18 | 18 | 0 | tabela | 0 |
 | Rocco | 185 | 185 | 0 | tabela | 0 |
 | Seiva | 8 | 8 | 0 | tabela | 0 |
-| Seja Breve | 16 | 16 | 0 | tabela | 0 |
 | Sesc SP | 299 | 299 | 0 | tabela | 0 |
 | Sisko | 19 | 19 | 0 | tabela | 0 |
 | Sobinfluencia | 33 | 33 | 0 | tabela | 0 |
@@ -176,8 +174,8 @@
 | todavia | 232 | 232 | 0 | tabela | 0 |
 | Ubu | 166 | 166 | 0 | tabela | 0 |
 | UK'A - Arte e Literatura | 19 | 19 | 0 | tabela | 0 |
-| Uneb | 14 | 14 | 0 | tabela | 0 |
 | Universo dos Livros | 358 | 358 | 0 | tabela em faixas | 356 |
+| Valentina | 75 | 75 | 0 | tabela | 0 |
 | Via Lettera | 119 | 119 | 0 | tabela | 0 |
 | Viajante do Tempo | 120 | 120 | 0 | tabela | 0 |
 | Vozes | 1092 | 1092 | 0 | posição do texto | 0 |
