@@ -2,12 +2,15 @@
 
 O que mudou em cada versão do guia. Cada versão tem uma tag no Git e uma release no GitHub com o mesmo texto. As atualizações diárias do catálogo, feitas pelo robô, ficam de fora: elas só trazem listas novas e preços.
 
-## v1.11.0 (19/11/2026)
+## v1.11.0 (21/11/2026)
 
-**Links dos livros que passam da última coluna da tabela**
+**Links dos livros que saíam quebrados e letras fora de ordem**
 
-- Quando o endereço do livro é mais largo que a última coluna da tabela, a letra que a borda de fora corta ao meio não caía em célula nenhuma e sumia, e o link levava a uma página que não existe: "produto/icho-bolota", na Boitatá, no lugar de "produto/bicho-bolota". 682 links de 25 editoras voltam a abrir a página do livro, entre eles 124 da Martins Fontes, 95 da Ed. UnB e 82 da Boitempo.
-- Os 7 assuntos que perdiam uma letra na mesma borda também voltam inteiros, na Jujuba, na LVM e na Relicário ("Romance/História Or l" vira "Romance/História Oral").
+- Quando o endereço do livro é mais largo que a última coluna da tabela, a letra que a borda de fora corta ao meio não caía em célula nenhuma e sumia: "produto/icho-bolota", na Boitatá, no lugar de "produto/bicho-bolota".
+- O leitor da tabela põe o sublinhado uns três pontos abaixo das letras em volta. O "_" sumia ("algebra-em-quadrinhos9788521211488", na Blucher, no lugar de "algebra-em-quadrinhos_9788521211488"), ia para o fim do texto, como na Aleph, ou deixava um espaço no meio do endereço, e o link era descartado, como no Sesc SP.
+- Letras que a fonte desenha numa peça só, como "tt", "fi" e "rt", trocavam de lugar: "kotetr.com.br", na Kotter, no lugar de "kotter.com.br", e "Norberot Bobbio" e "Filosofai", na Contracorrente, no lugar de "Norberto Bobbio" e "Filosofia".
+- No catálogo de 21/11, 1.141 links voltam a abrir a página do livro e 652 livros que estavam sem link ganham o link do PDF, entre eles 509 da Blucher, 291 do Sesc SP, 231 da Aleph, 124 da Martins Fontes e 95 da Ed. UnB. Todos os links da Kotter e da Contracorrente ficam iguais aos do PDF.
+- Também voltam certos 22 títulos e 22 autores da Contracorrente, 3 títulos da Nova Fronteira e 16 assuntos da Kotter, da Jujuba, da LVM e da Relicário ("Romance/História Or l" vira "Romance/História Oral"). E o "_x000D_" que a planilha grava no lugar de uma quebra de linha sai dos 20 autores da Ed. UFMG ("Márcia Arbex x000d _ _" vira "Márcia Arbex").
 
 ## v1.10.0 (19/11/2026)
 

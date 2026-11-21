@@ -47,6 +47,8 @@ MONEY_AMOUNT = re.compile(r"r\$\s*\d[\d.]*,\d{1,2}")
 FEWEST_ROWS_TO_JUDGE_A_COLUMN = 3
 PUBLISHER_NUMBER_IN_ADDRESS = re.compile(r"/publishers/(publisher-\d+)/")
 NAMES_IN_OLD_IDS_FILE = "nomes-usados-nos-codigos-antigos.json"
+# A spreadsheet saved as XML writes a line break inside a cell as "_x000D_" ("Márcia Arbex_x000d_", Ed. UFMG 2026).
+SPREADSHEET_ESCAPE_CODE = re.compile(r"_x[0-9A-Fa-f]{4}_")
 FEWEST_BOOKS_TO_COMPARE_READERS = 10
 SHARE_READ_THE_SAME_WAY = 0.8
 SHORTEST_CUT_TITLE = 10
@@ -63,7 +65,7 @@ class ParsedPriceList:
 
 
 def tidy(text: str) -> str:
-    return re.sub(r"\s+", " ", text or "").strip(" ;,-")
+    return re.sub(r"\s+", " ", SPREADSHEET_ESCAPE_CODE.sub(" ", text or "")).strip(" ;,-")
 
 
 def tidy_subject(text: str) -> str:
@@ -414,7 +416,7 @@ def repair_truncated_names(books: list[dict], publishers: list[Publisher], parse
             continue
         if book["x"] not in line_cache:
             line_cache[book["x"]] = text_after_isbn_by_line(parsed_by_index[book["x"]].plain_text)
-        line = EDITION_BEFORE_TITLE.sub("", line_cache[book["x"]].get(isbn, ""))
+        line = SPREADSHEET_ESCAPE_CODE.sub(" ", EDITION_BEFORE_TITLE.sub("", line_cache[book["x"]].get(isbn, "")))
         if not line or not line.startswith(book["t"]):
             continue
         after_title = line[len(book["t"]):]

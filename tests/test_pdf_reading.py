@@ -1,4 +1,4 @@
-from festa_do_livro.pdf_reading import DrawnText, table_cell_texts
+from festa_do_livro.pdf_reading import DrawnText, table_cell_texts, with_underscores_on_their_line
 
 LETTER_WIDTH = 4.0
 THREE_ROWS_OF_TITLE_AND_AUTHOR = [[(0, top, 20, top + 10), (20, top, 60, top + 10)] for top in (0, 10, 20)]
@@ -99,6 +99,58 @@ def test_text_cut_by_the_right_border_of_the_table_keeps_the_letter_that_crosses
     characters = letters("978", 1, 2) + shown + rows_below((22.5, 22.5))
     rows = table_cell_texts(THREE_ROWS_OF_TITLE_AND_AUTHOR, characters, [DrawnText([], shown, hidden_after)])
     assert rows[0] == ["978", "ABCDEFGHIJKLM"]
+
+
+def test_underscore_the_table_reader_puts_below_its_line_takes_the_line_of_the_letter_before_it():
+    underscore = {**letters("_", 10.5, 2)[0], "top": 5.4, "bottom": 11.4, "doctop": 5.4}
+    characters = with_underscores_on_their_line(letters("ab", 2.5, 2) + [underscore] + letters("cd", 14.5, 2))
+    assert (characters[2]["top"], characters[2]["bottom"], characters[2]["doctop"]) == (2, 8, 2)
+
+
+def test_underscore_that_starts_a_text_takes_the_line_of_the_letter_after_it():
+    underscore = {**letters("_", 2.5, 2)[0], "top": 5.4, "bottom": 11.4, "doctop": 5.4}
+    characters = with_underscores_on_their_line([underscore] + letters("ab", 6.5, 2))
+    assert (characters[0]["top"], characters[0]["bottom"]) == (2, 8)
+
+
+def test_underscore_glued_to_no_letter_stays_where_it_is():
+    underscore = {**letters("_", 30.5, 2)[0], "top": 5.4, "bottom": 11.4, "doctop": 5.4}
+    characters = with_underscores_on_their_line(letters("ab", 2.5, 2) + [underscore])
+    assert (characters[2]["top"], characters[2]["bottom"]) == (5.4, 11.4)
+
+
+def test_underscore_put_back_on_its_line_stays_in_the_cell_of_its_text():
+    # PyMuPDF puts "_" about three points below the letters around it, and the middle of the "_" of "quadrinhos_9788521211488"
+    # fell below the cell (Blucher 2026). Here its middle, 10.4, would fall in the row underneath.
+    underscore = {**letters("_", 30.5, 4)[0], "top": 7.4, "bottom": 13.4, "doctop": 7.4}
+    characters = letters("978", 1, 4) + letters("ab", 22.5, 4) + [underscore] + letters("cd", 34.5, 4) + rows_below((22.5, 22.5))
+    rows = table_cell_texts(THREE_ROWS_OF_TITLE_AND_AUTHOR, with_underscores_on_their_line(characters))
+    assert rows[0] == ["978", "ab_cd"]
+
+
+def test_letter_a_ligature_draws_in_one_glyph_with_the_letter_before_stays_in_its_place():
+    # "tt" of "kotter" drawn as one glyph: PyMuPDF gives the glyph to the first "t" and puts the second one, with no width, exactly
+    # where the glyph ends, and "e" starts a hair before that, so ordered by where they start the "e" came first ("kotetr.com.br",
+    # Kotter 2026).
+    second_t = {**letters("t", 34.5, 2)[0], "x1": 34.5}
+    characters = letters("978", 1, 2) + letters("kot", 22.5, 2) + [second_t] + letters("er", 34.49, 2) + rows_below((22.5, 22.5))
+    assert table_cell_texts(THREE_ROWS_OF_TITLE_AND_AUTHOR, characters)[0] == ["978", "kotter"]
+
+
+def test_letter_of_a_ligature_that_runs_over_the_next_letter_stays_in_its_place():
+    # "fi" of "desafio": PyMuPDF puts the "i" where the "f" ends, with a width of its own, over the "o", which starts a hair
+    # before it, so ordered by where they start the "o" came first ("desafoi", Contracorrente 2026).
+    i = {**letters("i", 26.5, 2)[0], "x1": 27.9}
+    characters = letters("978", 1, 2) + letters("f", 22.5, 2) + letters("o", 26.475, 2) + [i] + letters("-p", 30.475, 2) + rows_below((22.5, 22.5))
+    assert table_cell_texts(THREE_ROWS_OF_TITLE_AND_AUTHOR, characters)[0] == ["978", "fio-p"]
+
+
+def test_letters_that_start_at_the_very_same_spot_keep_the_order_the_page_draws_them_in():
+    # "fi" of "financeirizacao": PyMuPDF puts the "i" exactly where the "f" ends, and the "n" starts at that very spot too, listed
+    # after the "i" (Contracorrente 2026).
+    i = {**letters("i", 26.5, 2)[0], "x1": 27.9}
+    characters = letters("978", 1, 2) + letters("f", 22.5, 2) + [i] + letters("na", 26.5, 2) + rows_below((22.5, 22.5))
+    assert table_cell_texts(THREE_ROWS_OF_TITLE_AND_AUTHOR, characters)[0] == ["978", "fina"]
 
 
 def test_text_hidden_on_the_left_that_shows_in_two_cells_stays_as_the_table_reader_reads_it():

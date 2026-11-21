@@ -20,6 +20,13 @@ SAME_CHARACTER_DISTANCE = 0.05  # the page shows a character where the PDF draws
 
 
 MOST_LETTERS_SPILLED_PAST_A_BORDER = 2
+# The letter after a ligature starts at most this far before the ligature's other letters, which PyMuPDF puts at the same
+# position as the end of its glyph, to rounding.
+LIGATURE_NEXT_LETTER_DISTANCE = 0.5
+SAME_POSITION = 0.001
+LETTERS_OF_THE_LONGEST_LIGATURE = 3  # "ffi"
+UNDERSCORE = "_"
+VERTICAL_POSITION_KEYS = ("top", "bottom", "doctop", "y0", "y1", "height")
 
 
 class DrawnText(NamedTuple):
@@ -35,7 +42,7 @@ def extract_table_rows(pdf_path: Path) -> list[list[str]]:
     with pymupdf.open(pdf_path) as document:
         for page in document:
             tables = page.find_tables().tables
-            characters = list(pymupdf.table.CHARS)  # the characters find_tables read from this page, the ones Table.extract uses
+            characters = with_underscores_on_their_line(list(pymupdf.table.CHARS))  # the characters find_tables read from this page
             texts = drawn_texts(page, characters)
             for table in tables:
                 for row in table_cell_texts([row.cells for row in table.rows], characters, texts):
@@ -268,7 +275,93 @@ def middle_inside(character: dict, bbox: tuple) -> bool:
 
 
 def cell_text(characters: list[dict]) -> str:
-    return pymupdf.table.extract_text(characters) if characters else ""
+    return pymupdf.table.extract_text(with_ligature_letters_in_order(characters)) if characters else ""
+
+
+def with_ligature_letters_in_order(characters: list[dict]) -> list[dict]:
+    """A ligature draws two or three letters in one glyph ("tt" of "kotter", "fi" of "desafio", "rt" of "morte"). PyMuPDF gives the
+    glyph to the first letter and puts the others exactly where the glyph ends, with no width ("kotetr.com.br", Kotter 2026) or with
+    a width of their own ("desafoi", "moret", Contracorrente 2026), while the letter after the ligature starts where the glyph's
+    advance ends, a hair before them. Ordered by where they start, that letter came first. So a letter that starts exactly where a
+    glyph ends, right after a letter that starts a hair before it, belongs to that glyph, and each letter of the glyph gets a share
+    of it, in the order PyMuPDF lists them. Letters that start at the very same spot keep that order, the one the page draws them
+    in ("fi" and then "n" of "financeirizacao", Contracorrente 2026)."""
+    listed_order = {id(character): position for position, character in enumerate(characters)}
+    letters_by_glyph: dict[int, tuple[dict, list[dict]]] = {}
+    for line in lines_of(character for character in characters if character["text"].strip()):
+        line.sort(key=lambda character: character["x0"])
+        for position in range(2, len(line)):
+            glyph = glyph_a_letter_belongs_to(line, position)
+            if glyph is not None:
+                letters_by_glyph.setdefault(id(glyph), (glyph, []))[1].append(line[position])
+    placed = {}
+    for glyph, letters in letters_by_glyph.values():
+        letters.sort(key=lambda letter: listed_order[id(letter)])
+        shares = len(letters) + 1
+        for share, letter in enumerate(letters, start=1):
+            placed[id(letter)] = {**letter, "x0": glyph["x1"] - width_of(glyph) * (shares - share) / shares}
+    return [placed.get(id(character), character) for character in characters]
+
+
+def glyph_a_letter_belongs_to(line: list[dict], position: int) -> dict | None:
+    """The glyph that ends exactly where line[position] starts, when the letter right before it in the line starts a hair before
+    it, past the start of that glyph: the letter after a ligature, which comes before the ligature's other letters."""
+    letter, letter_before = line[position], line[position - 1]
+    if not SAME_POSITION < letter["x0"] - letter_before["x0"] < LIGATURE_NEXT_LETTER_DISTANCE:
+        return None
+    candidates = line[max(0, position - LETTERS_OF_THE_LONGEST_LIGATURE - 1):position - 1]
+    return next(
+        (glyph for glyph in reversed(candidates) if abs(glyph["x1"] - letter["x0"]) < SAME_POSITION and glyph["x0"] < letter_before["x0"]),
+        None,
+    )
+
+
+def lines_of(characters) -> list[list[dict]]:
+    """The characters grouped by the line they are printed on."""
+    lines: list[list[dict]] = []
+    for character in sorted(characters, key=lambda character: character["top"]):
+        if lines and abs(character["top"] - lines[-1][0]["top"]) < SAME_LINE_DISTANCE:
+            lines[-1].append(character)
+        else:
+            lines.append([character])
+    return lines
+
+
+def width_of(character: dict) -> float:
+    return character["x1"] - character["x0"]
+
+
+def with_underscores_on_their_line(characters: list[dict]) -> list[dict]:
+    """PyMuPDF's table reader puts an underscore about three points below the letters around it, while the page draws it on their
+    line. The underscore then fell below its cell ("algebra-em-quadrinhos_9788521211488" read as "algebra-em-quadrinhos9788521211488",
+    Blucher 2026) or into a line of its own at the end of the cell ("1984?_pos=1&_sid" read as "1984? pos=1& sid ... _ _", Aleph
+    2026), and it did not match the text the page draws, so the rest of that text counted as hidden. Each underscore takes the line
+    of the character glued to it, the one before it or else the one after it, and an underscore glued to nothing stays where it is."""
+    placed = list(characters)
+    pending = {position for position, character in enumerate(placed) if character["text"] == UNDERSCORE}
+    while pending:
+        settled_characters = [character for position, character in enumerate(placed) if position not in pending]
+        settled_now = set()
+        for position in pending:
+            neighbour = glued_character_on_the_same_line(placed[position], settled_characters)
+            if neighbour is not None:
+                placed[position] = {**placed[position], **{key: neighbour[key] for key in VERTICAL_POSITION_KEYS if key in neighbour}}
+                settled_now.add(position)
+        if not settled_now:
+            break
+        pending -= settled_now
+    return placed
+
+
+def glued_character_on_the_same_line(underscore: dict, characters: list[dict]) -> dict | None:
+    """The character that ends where the underscore starts, or else the one that starts where it ends, among those whose height
+    spans the top of the underscore."""
+    on_its_line = [other for other in characters if other["top"] <= underscore["top"] <= other["bottom"]]
+    before = [other for other in on_its_line if abs(underscore["x0"] - other["x1"]) <= CUT_LETTER_DISTANCE_FROM_TEXT]
+    if before:
+        return min(before, key=lambda other: abs(underscore["x0"] - other["x1"]))
+    after = [other for other in on_its_line if abs(other["x0"] - underscore["x1"]) <= CUT_LETTER_DISTANCE_FROM_TEXT]
+    return min(after, key=lambda other: abs(other["x0"] - underscore["x1"])) if after else None
 
 
 def extract_plain_text(pdf_path: Path) -> str:

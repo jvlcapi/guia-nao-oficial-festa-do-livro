@@ -887,3 +887,55 @@ def test_link_wider_than_the_last_column_keeps_the_letter_that_crosses_the_borde
 def test_every_link_of_a_list_whose_links_cross_the_border_is_printed_in_the_pdf(boitata):
     printed = re.sub(r"\s+", "", boitata[1].plain_text)
     assert [book["u"] for book in boitata[0]["livros"] if book["u"] not in printed] == []
+
+
+@pytest.fixture(scope="module")
+def kotter():
+    return catalog_for("kotter.pdf", "Kotter")
+
+
+def test_link_with_a_ligature_keeps_its_letters_in_order(kotter):
+    book = book_titled(kotter[0], "A FENOMENOLOGIA NEGRA DE FANON")
+    assert book["u"] == "https://kotter.com.br/loja/lancamentos/a-fenomenologia-negra-de-fanon/"
+
+
+def test_every_link_of_a_list_drawn_with_ligatures_is_printed_in_the_pdf(kotter):
+    printed = re.sub(r"\s+", "", kotter[1].plain_text)
+    assert [book["u"] for book in kotter[0]["livros"] if book["u"] not in printed] == []
+
+
+@pytest.fixture(scope="module")
+def blucher():
+    return catalog_for("blucher.pdf", "Blucher")
+
+
+def test_link_keeps_the_underscore_the_table_reader_puts_below_its_line(blucher):
+    book = book_titled(blucher[0], "Álgebra em Quadrinhos")
+    assert book["u"] == "https://www.blucher.com.br/algebra-em-quadrinhos_9788521211488"
+
+
+def test_every_link_of_a_list_with_underscores_is_printed_in_the_pdf(blucher):
+    printed = re.sub(r"\s+", "", blucher[1].plain_text)
+    assert [book["u"] for book in blucher[0]["livros"] if book["u"] not in printed] == []
+
+
+def test_line_break_a_spreadsheet_writes_as_an_escape_code_leaves_the_author():
+    book = {**parsed_book(isbn_with_check_digit("978852320000"), "Livro"), "author": "Márcia Arbex_x000d_"}
+    assert catalog_from({"Ed. UFMG": [book]})["livros"][0]["a"] == "Márcia Arbex"
+
+
+def test_author_completed_from_the_text_of_the_pdf_leaves_the_spreadsheet_escape_code_out():
+    isbn = isbn_with_check_digit("978852320000")
+    book = {**parsed_book(isbn, "Livro"), "author": "Márcia Arb"}
+    catalog = catalog_from({"Ed. UFMG": [book]}, f"{isbn} Livro Márcia Arbex_x000d_ 72,00 36,00")
+    assert catalog["livros"][0]["a"] == "Márcia Arbex"
+
+
+@pytest.fixture(scope="module")
+def contracorrente():
+    return catalog_for("contracorrente.pdf", "Contracorrente")
+
+
+def test_every_link_of_a_list_whose_font_draws_several_ligatures_is_printed_in_the_pdf(contracorrente):
+    printed = re.sub(r"\s+", "", contracorrente[1].plain_text)
+    assert [book["u"] for book in contracorrente[0]["livros"] if book.get("u", "") not in printed] == []
