@@ -23,12 +23,9 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  publicar:
+  montar:
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    environment:
-      name: github-pages
-      url: ${{ steps.publicacao.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -50,5 +47,16 @@ jobs:
         with:
           path: _site
 
+  publicar:
+    # O GitHub demora a pôr na lista de artefatos da execução o pacote que acabou de receber, e o deploy-pages procura o pacote
+    # nessa lista. No mesmo job, a busca vinha uma fração de segundo depois do envio e às vezes não achava nada (issue 451 do
+    # actions/deploy-pages); em outro job, ela acontece segundos depois.
+    needs: montar
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: github-pages
+      url: ${{ steps.publicacao.outputs.page_url }}
+    steps:
       - id: publicacao
         uses: actions/deploy-pages@v4

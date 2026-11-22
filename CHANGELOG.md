@@ -2,6 +2,13 @@
 
 O que mudou em cada versão do guia. Cada versão tem uma tag no Git e uma release no GitHub com o mesmo texto. As atualizações diárias do catálogo, feitas pelo robô, ficam de fora: elas só trazem listas novas e preços.
 
+## v1.12.0 (22/11/2026)
+
+**Publicação do site que não falha quando o GitHub demora a listar o pacote**
+
+- Em 21 e 22/11, nas duas vezes em que o *Atualizar catálogo* salvou um catálogo novo, a publicação do site falhou, e o site ficou com o catálogo anterior até ser publicado à mão. O pacote do site era enviado e, uma fração de segundo depois, o passo que publica procurava esse pacote na lista do GitHub e não achava nada, porque o GitHub ainda não tinha posto o pacote na lista. Refazer a execução não resolvia: ela mandava um segundo pacote com o mesmo nome, e a busca falhava por achar dois.
+- Montar o site e publicar passam a ser jobs separados, como nos modelos de publicação do próprio GitHub, e a busca acontece segundos depois do envio. Vale para toda publicação: a que o *Atualizar catálogo* chama, a que roda quando o site muda por push e a do botão *Run workflow*.
+
 ## v1.11.0 (22/11/2026)
 
 **Links dos livros que saíam quebrados, letras fora de ordem e títulos de duas linhas**
