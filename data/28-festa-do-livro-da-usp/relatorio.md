@@ -1,15 +1,20 @@
 # Relatório do catálogo: 28 Festa do Livro da USP
 
 - Edição: `28-festa-do-livro-da-usp` · 25 e 29 de novembro
-- Editoras no site: 164
-- Livros no catálogo: 29404
-- Livros sem ISBN (preço não conferível automaticamente): 299
-- Preços que não bateram com o PDF: 418
+- Editoras no site: 170
+- Livros no catálogo: 30072
+- Livros sem ISBN (preço não conferível automaticamente): 635
+- Preços que não bateram com o PDF: 421
 - Livros sem preço de capa: 6
 - Livros só com preço de capa (feira não informado): 2479
 
+## Listas para conferir
+
+- **Matrix**: livros perdidos (337 das 477 linhas lidas viraram livro)
+
 ## Listas que ficaram de fora
 
+- Ciranda Cultural (Grupo): sem lista de preços
 - Contraponto: sem lista de preços
 - Letra Selvagem: sem lista de preços
 - nVersos: sem lista de preços
@@ -24,7 +29,6 @@
 
 | Editora | Livros | Lidos | Sem capa | Leitura | Divergências |
 |---|---:|---:|---:|---|---:|
-| 34 Editora | 700 | 700 | 0 | tabela | 0 |
 | Alameda | 71 | 71 | 0 | tabela | 0 |
 | Aleph | 237 | 238 | 0 | tabela | 0 |
 | Aletria | 85 | 85 | 0 | tabela | 0 |
@@ -34,7 +38,7 @@
 | Arquipélago | 63 | 63 | 0 | tabela | 0 |
 | Ars et Vita | 21 | 21 | 0 | tabela | 1 |
 | Arte & Letra | 103 | 103 | 0 | tabela | 0 |
-| Ateliê | 329 | 329 | 0 | tabela | 0 |
+| Ateliê Editorial | 329 | 329 | 0 | tabela | 0 |
 | Atheneu | 140 | 140 | 0 | tabela | 0 |
 | Autêntica (Grupo) | 510 | 510 | 0 | tabela | 0 |
 | Autonomia Literária | 155 | 155 | 0 | tabela | 0 |
@@ -60,7 +64,6 @@
 | Casa Marx | Iskra | 21 | 21 | 0 | tabela | 0 |
 | Catapulta | 369 | 369 | 0 | posição do texto | 0 |
 | Caxinguelê | 37 | 37 | 0 | tabela | 0 |
-| Ciranda Cultural (Grupo) | 865 | 865 | 0 | tabela | 0 |
 | Com-Arte | 124 | 124 | 0 | tabela | 0 |
 | Contexto | 120 | 120 | 0 | tabela | 0 |
 | Contracorrente | 206 | 208 | 0 | tabela | 0 |
@@ -70,6 +73,7 @@
 | DBA Literatura | 52 | 52 | 0 | tabela | 0 |
 | Diadorim | 23 | 23 | 0 | tabela | 2 |
 | Dublinense | 103 | 103 | 0 | tabela | 0 |
+| Duna Dueto | 73 | 73 | 0 | posição do texto | 0 |
 | Ed. da Unicamp | 453 | 453 | 0 | tabela | 0 |
 | Ed. Mackenzie | 29 | 29 | 0 | tabela | 0 |
 | Ed. UFABC | 18 | 18 | 0 | tabela | 0 |
@@ -81,6 +85,7 @@
 | Ed. Unesp | 693 | 694 | 0 | tabela | 0 |
 | Ed. Unifesp | 199 | 200 | 0 | tabela | 0 |
 | Edições Loyola | 94 | 94 | 0 | tabela | 0 |
+| Editora 34 | 700 | 700 | 0 | tabela | 0 |
 | Eduefs | 10 | 10 | 0 | posição do texto | 0 |
 | Eduel | 15 | 15 | 0 | tabela | 0 |
 | Eduem | 150 | 150 | 0 | tabela | 0 |
@@ -120,6 +125,8 @@
 | Malê | 102 | 102 | 0 | tabela | 0 |
 | Maria Antonia Edições - GMARX | 11 | 11 | 0 | tabela | 0 |
 | Martins Fontes - Selo Martins | 678 | 678 | 0 | tabela | 0 |
+| MASP | 40 | 40 | 0 | tabela | 1 |
+| Matrix | 337 | 477 | 0 | posição do texto | 0 |
 | Melhoramentos | 223 | 223 | 0 | tabela | 0 |
 | Mil Caramiolas | 20 | 20 | 0 | posição do texto | 0 |
 | Miolo Mole | 36 | 36 | 0 | tabela | 0 |
@@ -132,6 +139,7 @@
 | N-1 edições | 158 | 158 | 0 | tabela | 0 |
 | NewPOP | 405 | 405 | 1 | tabela | 0 |
 | Nós | 143 | 143 | 0 | posição do texto | 0 |
+| Nova Alexandria | 144 | 144 | 0 | tabela | 0 |
 | Nova Fronteira | Trama | 166 | 166 | 0 | tabela | 0 |
 | Odysseus | 81 | 82 | 0 | tabela | 0 |
 | Olhares | 79 | 79 | 0 | posição do texto | 0 |
@@ -140,8 +148,9 @@
 | Palas Athena | 94 | 94 | 0 | tabela | 0 |
 | Pallas | 316 | 316 | 0 | tabela | 0 |
 | Panda Books | 139 | 139 | 0 | tabela | 0 |
+| Parábola | 103 | 103 | 0 | tabela | 0 |
 | Patuá | 97 | 97 | 0 | tabela | 0 |
-| Paulinas | 525 | 525 | 0 | tabela | 0 |
+| Paulinas | 517 | 517 | 0 | tabela | 0 |
 | Pedrazul (Grupo) | 68 | 68 | 0 | tabela | 0 |
 | Peirópolis | 271 | 271 | 0 | tabela | 0 |
 | Pensamento (Grupo) | 290 | 290 | 0 | tabela | 0 |
@@ -168,6 +177,7 @@
 | Sundermann | 68 | 68 | 0 | tabela | 0 |
 | Tabla | 41 | 41 | 0 | tabela | 0 |
 | TantaTinta | Carlini e Caniato | 31 | 31 | 0 | tabela | 0 |
+| TASCHEN | 844 | 844 | 0 | tabela | 2 |
 | Telos | 166 | 166 | 0 | tabela | 0 |
 | Temporal | 35 | 35 | 0 | tabela | 0 |
 | Terra Virgem | 36 | 36 | 0 | tabela | 0 |
@@ -189,4 +199,6 @@
 - **Universo dos Livros** (356): A Casa Coruja: Bruxas contra Feiticeiros (capa 39.9 · feira 19.95); Aceita-me (capa 59.9 · feira 29.95); ACEITA-ME - EDIÇÃO DE LUXO LIMITADA (capa 89.9 · feira 44.95); Acelerados - Giovanna Souza (capa 89.9 · feira 44.95); Acorda pra vida! (capa 79.9 · feira 39.95)
 - **Phorte** (59): A Aventura dialógica na infância (capa 95.0 · feira 47.5); A dança na arte, no esporte e na educação (capa 63.0 · feira 31.5); A escola do ser e do querer (ser) (capa 120.0 · feira 60.0); A estética no pensamento e na obra (capa 69.0 · feira 34.5); A ética no pensamento e na obra (capa 75.0 · feira 37.5)
 - **Diadorim** (2): Madeleines (ISBN não aparece no PDF); Alumiara (ISBN não aparece no PDF)
+- **TASCHEN** (2): VINTAGE INDUSTRIAL INTERIORS (capa 210.0 · feira 63.0); WOOD HOUSES (capa 180.0 · feira 54.0)
 - **Ars et Vita** (1): As mãos das mulheres da minha família não eram destinadas à escrita (ISBN não aparece no PDF)
+- **MASP** (1): HISTÓRIAS BRASILEIRAS: ANTOLOGIA (capa 99.0 · feira 49.5)
