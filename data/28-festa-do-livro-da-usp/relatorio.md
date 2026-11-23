@@ -1,8 +1,8 @@
 # Relatório do catálogo: 28 Festa do Livro da USP
 
 - Edição: `28-festa-do-livro-da-usp` · 25 e 29 de novembro
-- Editoras no site: 163
-- Livros no catálogo: 29340
+- Editoras no site: 164
+- Livros no catálogo: 29404
 - Livros sem ISBN (preço não conferível automaticamente): 299
 - Preços que não bateram com o PDF: 418
 - Livros sem preço de capa: 6
@@ -163,6 +163,7 @@
 | Sisko | 19 | 19 | 0 | tabela | 0 |
 | Sobinfluencia | 33 | 33 | 0 | tabela | 0 |
 | Solaris | 19 | 19 | 0 | tabela | 0 |
+| Solisluna | 64 | 64 | 0 | tabela | 0 |
 | Summus (Grupo) | 402 | 402 | 0 | tabela | 0 |
 | Sundermann | 68 | 68 | 0 | tabela | 0 |
 | Tabla | 41 | 41 | 0 | tabela | 0 |
