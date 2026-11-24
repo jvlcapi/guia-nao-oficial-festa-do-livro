@@ -3,14 +3,10 @@
 - Edição: `28-festa-do-livro-da-usp` · 25 e 29 de novembro
 - Editoras no site: 176
 - Livros no catálogo: 31840
-- Livros sem ISBN (preço não conferível automaticamente): 636
+- Livros sem ISBN (preço não conferível automaticamente): 638
 - Preços que não bateram com o PDF: 421
 - Livros sem preço de capa: 7
 - Livros só com preço de capa (feira não informado): 2479
-
-## Listas para conferir
-
-- **Matrix**: livros perdidos (337 das 477 linhas lidas viraram livro)
 
 ## Listas que ficaram de fora
 
