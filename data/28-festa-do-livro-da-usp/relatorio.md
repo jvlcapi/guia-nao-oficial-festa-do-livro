@@ -1,11 +1,11 @@
 # Relatório do catálogo: 28 Festa do Livro da USP
 
 - Edição: `28-festa-do-livro-da-usp` · 25 e 29 de novembro
-- Editoras no site: 170
-- Livros no catálogo: 30072
-- Livros sem ISBN (preço não conferível automaticamente): 635
+- Editoras no site: 175
+- Livros no catálogo: 31138
+- Livros sem ISBN (preço não conferível automaticamente): 636
 - Preços que não bateram com o PDF: 421
-- Livros sem preço de capa: 6
+- Livros sem preço de capa: 7
 - Livros só com preço de capa (feira não informado): 2479
 
 ## Listas para conferir
@@ -64,11 +64,14 @@
 | Casa Marx | Iskra | 21 | 21 | 0 | tabela | 0 |
 | Catapulta | 369 | 369 | 0 | posição do texto | 0 |
 | Caxinguelê | 37 | 37 | 0 | tabela | 0 |
-| Com-Arte | 124 | 124 | 0 | tabela | 0 |
+| Cintra | 92 | 92 | 0 | tabela | 0 |
+| Com-Arte | 128 | 128 | 1 | tabela | 0 |
+| Conrad | 194 | 194 | 0 | tabela | 0 |
 | Contexto | 120 | 120 | 0 | tabela | 0 |
 | Contracorrente | 206 | 208 | 0 | tabela | 0 |
 | Cortez | 150 | 150 | 0 | tabela | 0 |
 | Cosac | 30 | 30 | 0 | tabela | 0 |
+| Da Vinci | 22 | 22 | 0 | tabela | 0 |
 | DarkSide / Magnética | 287 | 287 | 0 | tabela | 0 |
 | DBA Literatura | 52 | 52 | 0 | tabela | 0 |
 | Diadorim | 23 | 23 | 0 | tabela | 2 |
@@ -105,6 +108,7 @@
 | Girassol (Grupo) | 488 | 488 | 0 | tabela | 0 |
 | GLAC | 30 | 30 | 0 | tabela | 0 |
 | Global | 641 | 643 | 0 | tabela | 0 |
+| Globo Livros | 391 | 391 | 0 | tabela | 0 |
 | Grua | 102 | 102 | 0 | tabela | 0 |
 | HarperCollins Brasil | 415 | 415 | 0 | tabela | 0 |
 | Hedra | 497 | 497 | 0 | posição do texto | 0 |
@@ -154,6 +158,7 @@
 | Pedrazul (Grupo) | 68 | 68 | 0 | tabela | 0 |
 | Peirópolis | 271 | 271 | 0 | tabela | 0 |
 | Pensamento (Grupo) | 290 | 290 | 0 | tabela | 0 |
+| Perspectiva | 363 | 363 | 0 | tabela | 0 |
 | Phorte | 60 | 60 | 0 | tabela em faixas | 59 |
 | Pinard | 33 | 33 | 0 | tabela | 0 |
 | Planeta | 301 | 301 | 0 | tabela | 0 |
