@@ -1,8 +1,8 @@
 # Relatório do catálogo: 28 Festa do Livro da USP
 
 - Edição: `28-festa-do-livro-da-usp` · 25 e 29 de novembro
-- Editoras no site: 175
-- Livros no catálogo: 31138
+- Editoras no site: 176
+- Livros no catálogo: 31840
 - Livros sem ISBN (preço não conferível automaticamente): 636
 - Preços que não bateram com o PDF: 421
 - Livros sem preço de capa: 7
@@ -122,6 +122,7 @@
 | Jujuba | 60 | 60 | 0 | tabela | 0 |
 | Kitembo | 15 | 15 | 0 | tabela | 0 |
 | Kotter | 61 | 61 | 0 | tabela | 0 |
+| L&PM | 702 | 702 | 0 | tabela | 0 |
 | LavraPalavra | 70 | 70 | 0 | tabela | 0 |
 | Livros da Matriz | 33 | 33 | 0 | tabela | 0 |
 | Lote 42 | 45 | 45 | 0 | tabela | 0 |
