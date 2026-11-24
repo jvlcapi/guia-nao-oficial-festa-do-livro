@@ -8,7 +8,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from .alert_issue import ISSUE_TITLE, GitHubIssues, sync_issue
-from .catalog_builder import build_catalog, event_summary, load_names_in_old_ids, parse_price_list, same_content
+from .catalog_builder import build_catalog, count_distinct_rows, event_summary, load_names_in_old_ids, parse_price_list, same_content
 from .fair_dates import edition_number
 from .fair_site import FairSite
 from .lists_to_check import LISTS_TO_CHECK_FILE, lists_to_check, load_lists_to_check, save_lists_to_check
@@ -104,8 +104,9 @@ def command_build(arguments) -> int:
     methods = {index: parsed.method for index, parsed in parsed_by_index.items()}
     catalog_path.write_text(json.dumps(catalog, ensure_ascii=False, separators=(",", ":")))
     rows_read = {index: len(parsed.books) for index, parsed in parsed_by_index.items()}
+    distinct_rows_read = {index: count_distinct_rows(parsed.books) for index, parsed in parsed_by_index.items()}
     notices = [(publishers[index].name, parsed.notice) for index, parsed in sorted(parsed_by_index.items()) if parsed.notice]
-    to_check = lists_to_check(catalog, report, download_problems, methods, rows_read)
+    to_check = lists_to_check(catalog, report, download_problems, methods, distinct_rows_read)
     save_lists_to_check(output_directory / LISTS_TO_CHECK_FILE, to_check)
     (output_directory / "relatorio.md").write_text(report_markdown(catalog, report, download_problems, methods, rows_read, notices, to_check))
     (output_directory / "edicao.json").write_text(json.dumps(catalog["evento"], ensure_ascii=False, indent=2) + "\n")

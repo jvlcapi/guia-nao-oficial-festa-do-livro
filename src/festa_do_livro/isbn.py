@@ -3,6 +3,7 @@ import re
 
 ISBN_AT_START_OF_BOOK_ID = re.compile(r"^(\d{13}|\d{9}[\dXx])(?:-|$)")
 ISBN_PRINTED_WITHOUT_ITS_CHECK_DIGIT = re.compile(r"\s*(97[89][\d\-]*-)\s*")
+ISBN13_PREFIXES = ("978", "979")
 
 
 def isbn13_check_digit(first_twelve_digits: str) -> str:
@@ -11,8 +12,13 @@ def isbn13_check_digit(first_twelve_digits: str) -> str:
 
 
 def is_valid_isbn(digits: str) -> bool:
+    """Ten digits that start like an ISBN-13 are an ISBN-13 cut after its tenth digit (Matrix 2026), which passes the ISBN-10 check
+    one time in eleven by chance. An ISBN-10 that really starts that way comes from Nigeria (978) or Indonesia (979), and no list
+    of the 27th or the 28th Festa had one."""
     if len(digits) == 13 and digits.isdigit():
         return isbn13_check_digit(digits[:12]) == digits[12]
+    if len(digits) == 10 and digits.startswith(ISBN13_PREFIXES):
+        return False
     if len(digits) == 10 and digits[:9].isdigit() and (digits[9].isdigit() or digits[9] in "Xx"):
         check_value = 10 if digits[9] in "Xx" else int(digits[9])
         weighted_sum = sum(int(digit) * (10 - position) for position, digit in enumerate(digits[:9]))

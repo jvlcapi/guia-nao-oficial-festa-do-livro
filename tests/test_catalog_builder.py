@@ -9,6 +9,7 @@ from festa_do_livro.catalog_builder import (
     ParsedPriceList,
     books_only_the_other_reader_found,
     build_catalog,
+    count_distinct_rows,
     has_only_cover_prices,
     imprint_repeats_exhibitor,
     load_names_in_old_ids,
@@ -277,6 +278,21 @@ def test_isbn_reused_for_another_title_keeps_both_books():
 def test_row_listed_twice_appears_once():
     catalog = catalog_from({"Editora Vozes": [parsed_book("9788532616463", "Livro repetido"), parsed_book("9788532616463", "Livro repetido")]})
     assert len(catalog["livros"]) == 1
+
+
+def test_row_printed_again_counts_once_among_the_rows_read_as_in_the_catalog():
+    printed_twice = parsed_book("9788577880", "A CAIXA MAGICA DE PERGUNTAS PARA CRIANCAS", 51.0, 25.5)
+    rows = [printed_twice, dict(printed_twice), parsed_book("9786556165", "40 DIAS NA FLORESTA", 72.0, 36.0)]
+    assert count_distinct_rows(rows) == len(catalog_from({"Matrix": rows})["livros"]) == 2
+
+
+def test_same_title_under_another_isbn_counts_as_another_row():
+    assert count_distinct_rows([parsed_book("9788535914849", "Livro"), parsed_book("9786587955230", "Livro")]) == 2
+
+
+def test_isbn13_cut_after_ten_digits_is_not_shown_as_an_isbn10():
+    catalog = catalog_from({"Matrix": [parsed_book("9788582303", "DIGA TUDO COM NOMES DE FILMES", 54.0, 27.0)]})
+    assert isbn_of_book_id(catalog["livros"][0]["i"]) == ""
 
 
 @pytest.mark.parametrize("url, published", [

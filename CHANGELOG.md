@@ -2,6 +2,13 @@
 
 O que mudou em cada versão do guia. Cada versão tem uma tag no Git e uma release no GitHub com o mesmo texto. As atualizações diárias do catálogo, feitas pelo robô, ficam de fora: elas só trazem listas novas e preços.
 
+## v1.13.0 (24/11/2026)
+
+**Linha repetida na lista deixa de ser avisada como livro perdido, e ISBN cortado deixa de aparecer como ISBN**
+
+- A lista da Matrix imprime 137 dos seus 337 títulos duas ou três vezes, com o mesmo preço. O guia já mostrava cada título uma vez só, mas o aviso de livros perdidos contava as 140 linhas a mais como livros que não chegaram ao catálogo, e a issue das listas para conferir foi reaberta por isso. Agora uma linha repetida, com o mesmo ISBN (ou sem ISBN) e o mesmo título, conta uma vez só.
+- A mesma lista corta todos os ISBNs no décimo dígito. Dois desses números passam por acaso na conta do ISBN-10, e o guia mostrava um ISBN errado em dois livros da Matrix. Dez dígitos que começam com 978 ou 979 passam a contar como um ISBN-13 cortado, e esses dois livros ficam sem ISBN, como os outros da Matrix. Quem já tinha guardado um deles na lista continua com ele, porque o guia acha o livro pelo título, pela editora e pelo preço de feira.
+
 ## v1.12.0 (22/11/2026)
 
 **Publicação do site que não falha quando o GitHub demora a listar o pacote**

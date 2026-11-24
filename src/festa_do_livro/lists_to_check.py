@@ -1,7 +1,8 @@
 """Price lists the reader may have misread, so the daily refresh can ask a person to open their PDF.
 Each rule matches a failure that already reached the site: a list with no book at all, a price column read as text,
 rows dropped on the way to the catalog, prices that cannot be found next to their ISBN in the PDF, and another number read as
-the fair price (Unesp 2026: the quantity sold, "ABOLICAO" for R$ 3,00 with a cover of R$ 156,00)."""
+the fair price (Unesp 2026: the quantity sold, "ABOLICAO" for R$ 3,00 with a cover of R$ 156,00). A row the list prints again
+is shown once and counts once, so its copies are not dropped rows (Matrix 2026)."""
 import collections
 import json
 from dataclasses import dataclass
@@ -36,7 +37,7 @@ class ListToCheck:
 
 
 def lists_to_check(
-    catalog: dict, report: VerificationReport, download_problems: list[tuple[str, str]], methods: dict[int, str], rows_read: dict[int, int],
+    catalog: dict, report: VerificationReport, download_problems: list[tuple[str, str]], methods: dict[int, str], distinct_rows_read: dict[int, int],
 ) -> list[ListToCheck]:
     exhibitors = catalog["expositores"]
     books = collections.Counter(book["x"] for book in catalog["livros"])
@@ -46,7 +47,7 @@ def lists_to_check(
     )
     found = [ListToCheck(name, "lista não baixada", problem) for name, problem in download_problems if problem != NO_PRICE_LIST_YET]
     for index in sorted(methods):
-        name, book_count, row_count = exhibitors[index]["nome"], books.get(index, 0), rows_read.get(index, 0)
+        name, book_count, row_count = exhibitors[index]["nome"], books.get(index, 0), distinct_rows_read.get(index, 0)
         if book_count == 0:
             detail = f"o leitor achou {row_count} linhas e nenhuma virou livro" if row_count else "a lista foi baixada, mas o leitor não achou nenhum livro"
             found.append(ListToCheck(name, "nenhum livro lido", detail))

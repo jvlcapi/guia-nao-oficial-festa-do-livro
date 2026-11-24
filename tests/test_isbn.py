@@ -11,6 +11,7 @@ def test_valid_isbns(digits):
 @pytest.mark.parametrize("digits, reason", [
     ("9788580000000", "planilha que gravou o ISBN em notação científica"),
     ("9786587955", "ISBN cortado no fim da linha"),
+    ("9788582303", "ISBN-13 cortado no décimo dígito que passa por acaso na conta do ISBN-10 (Matrix 2026)"),
     ("9788535914840", "dígito verificador errado"),
     ("26004235", "código interno da editora"),
     ("", "sem ISBN"),

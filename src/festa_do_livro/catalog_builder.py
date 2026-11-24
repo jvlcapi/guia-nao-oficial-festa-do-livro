@@ -348,6 +348,15 @@ def imprint_repeats_exhibitor(imprint: str, exhibitor_name: str) -> bool:
     return False
 
 
+def count_distinct_rows(parsed_books: list[dict]) -> int:
+    """The rows read, with a row printed again counted once: the same ISBN, or none, and the same title. catalog_books shows that
+    row once, so its copies are no books lost on the way to the catalog (Matrix 2026 prints 137 of its 337 titles two or three times)."""
+    return len({
+        (book["isbn"] if is_valid_isbn(book["isbn"]) else "", without_accents_lowercase(tidy_title(book["title"])))
+        for book in parsed_books
+    })
+
+
 def catalog_books(publishers: list[Publisher], parsed_by_index: dict[int, ParsedPriceList], names_in_old_ids: dict[str, list[str]]) -> list[dict]:
     books = []
     title_by_book_id = {}
