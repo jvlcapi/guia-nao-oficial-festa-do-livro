@@ -1,16 +1,17 @@
 # Relatório do catálogo: 28 Festa do Livro da USP
 
 - Edição: `28-festa-do-livro-da-usp` · 25 e 29 de novembro
-- Editoras no site: 176
-- Livros no catálogo: 31840
+- Editoras no site: 180
+- Livros no catálogo: 32838
 - Livros sem ISBN (preço não conferível automaticamente): 638
-- Preços que não bateram com o PDF: 421
+- Preços que não bateram com o PDF: 422
 - Livros sem preço de capa: 7
 - Livros só com preço de capa (feira não informado): 2479
 
 ## Listas que ficaram de fora
 
 - Ciranda Cultural (Grupo): sem lista de preços
+- Companhia das Letras: sem lista de preços
 - Contraponto: sem lista de preços
 - Letra Selvagem: sem lista de preços
 - nVersos: sem lista de preços
@@ -149,6 +150,7 @@
 | Palas Athena | 94 | 94 | 0 | tabela | 0 |
 | Pallas | 316 | 316 | 0 | tabela | 0 |
 | Panda Books | 139 | 139 | 0 | tabela | 0 |
+| Papirus | 59 | 59 | 0 | tabela | 0 |
 | Parábola | 103 | 103 | 0 | tabela | 0 |
 | Patuá | 97 | 97 | 0 | tabela | 0 |
 | Paulinas | 517 | 517 | 0 | tabela | 0 |
@@ -170,6 +172,7 @@
 | Revista IEA | 18 | 18 | 0 | tabela | 0 |
 | Rocco | 185 | 185 | 0 | tabela | 0 |
 | Seiva | 8 | 8 | 0 | tabela | 0 |
+| Senac São Paulo | 717 | 717 | 0 | tabela | 1 |
 | Sesc SP | 299 | 299 | 0 | tabela | 0 |
 | Sisko | 19 | 19 | 0 | tabela | 0 |
 | Sobinfluencia | 33 | 33 | 0 | tabela | 0 |
@@ -195,6 +198,7 @@
 | Zagodoni | 161 | 161 | 0 | tabela | 0 |
 | Zain | 16 | 16 | 0 | posição do texto | 0 |
 | Zapata | 31 | 31 | 0 | tabela | 0 |
+| Zouk | 222 | 222 | 0 | posição do texto | 0 |
 
 ## Divergências (amostra de até 5 por editora)
 
@@ -204,3 +208,4 @@
 - **TASCHEN** (2): VINTAGE INDUSTRIAL INTERIORS (capa 210.0 · feira 63.0); WOOD HOUSES (capa 180.0 · feira 54.0)
 - **Ars et Vita** (1): As mãos das mulheres da minha família não eram destinadas à escrita (ISBN não aparece no PDF)
 - **MASP** (1): HISTÓRIAS BRASILEIRAS: ANTOLOGIA (capa 99.0 · feira 49.5)
+- **Senac São Paulo** (1): METODOLOGIA DE DESENVOLVIMENTO DE COMPETENCIAS (capa 116.0 · feira 34.8)
