@@ -1,8 +1,8 @@
 # Relatório do catálogo: 28 Festa do Livro da USP
 
 - Edição: `28-festa-do-livro-da-usp` · 25 e 29 de novembro
-- Editoras no site: 180
-- Livros no catálogo: 32838
+- Editoras no site: 181
+- Livros no catálogo: 34319
 - Livros sem ISBN (preço não conferível automaticamente): 638
 - Preços que não bateram com o PDF: 422
 - Livros sem preço de capa: 7
@@ -11,9 +11,9 @@
 ## Listas que ficaram de fora
 
 - Ciranda Cultural (Grupo): sem lista de preços
-- Companhia das Letras: sem lista de preços
 - Contraponto: sem lista de preços
 - Letra Selvagem: sem lista de preços
+- Mundaréu | Manjuba: sem lista de preços
 - nVersos: sem lista de preços
 - Seja Breve: sem lista de preços
 - Uneb: sem lista de preços
@@ -63,6 +63,7 @@
 | Caxinguelê | 37 | 37 | 0 | tabela | 0 |
 | Cintra | 92 | 92 | 0 | tabela | 0 |
 | Com-Arte | 128 | 128 | 1 | tabela | 0 |
+| Companhia das Letras | 1412 | 1413 | 0 | tabela | 0 |
 | Conrad | 194 | 194 | 0 | tabela | 0 |
 | Contexto | 120 | 120 | 0 | tabela | 0 |
 | Contracorrente | 206 | 208 | 0 | tabela | 0 |
@@ -115,6 +116,7 @@
 | Iná | 414 | 414 | 0 | tabela | 0 |
 | Instante | 60 | 60 | 0 | tabela | 0 |
 | Instituto Tomie Ohtake | 18 | 18 | 0 | tabela | 0 |
+| Intrínseca | 118 | 118 | 0 | tabela | 0 |
 | Joaquina | 12 | 12 | 0 | tabela | 0 |
 | Jujuba | 60 | 60 | 0 | tabela | 0 |
 | Kitembo | 15 | 15 | 0 | tabela | 0 |
@@ -137,7 +139,6 @@
 | Monolito | 52 | 52 | 0 | tabela | 0 |
 | Mostarda | 102 | 102 | 0 | tabela | 0 |
 | Movimento Neomarginal | 22 | 22 | 0 | posição do texto | 0 |
-| Mundaréu | Manjuba | 49 | 49 | 0 | tabela | 0 |
 | N-1 edições | 158 | 158 | 0 | tabela | 0 |
 | NewPOP | 405 | 405 | 1 | tabela | 0 |
 | Nós | 143 | 143 | 0 | posição do texto | 0 |
