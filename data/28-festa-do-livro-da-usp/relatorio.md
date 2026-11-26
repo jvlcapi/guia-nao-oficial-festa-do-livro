@@ -2,11 +2,15 @@
 
 - Edição: `28-festa-do-livro-da-usp` · 25 e 29 de novembro
 - Editoras no site: 181
-- Livros no catálogo: 34319
+- Livros no catálogo: 34811
 - Livros sem ISBN (preço não conferível automaticamente): 638
 - Preços que não bateram com o PDF: 422
-- Livros sem preço de capa: 7
+- Livros sem preço de capa: 1911
 - Livros só com preço de capa (feira não informado): 2479
+
+## Listas para conferir
+
+- **Companhia das Letras**: sem preço de capa (1904 de 1904 livros)
 
 ## Listas que ficaram de fora
 
@@ -63,7 +67,7 @@
 | Caxinguelê | 37 | 37 | 0 | tabela | 0 |
 | Cintra | 92 | 92 | 0 | tabela | 0 |
 | Com-Arte | 128 | 128 | 1 | tabela | 0 |
-| Companhia das Letras | 1412 | 1413 | 0 | tabela | 0 |
+| Companhia das Letras | 1904 | 1905 | 1904 | tabela | 0 |
 | Conrad | 194 | 194 | 0 | tabela | 0 |
 | Contexto | 120 | 120 | 0 | tabela | 0 |
 | Contracorrente | 206 | 208 | 0 | tabela | 0 |
