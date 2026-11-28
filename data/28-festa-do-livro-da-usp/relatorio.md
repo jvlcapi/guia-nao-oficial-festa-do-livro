@@ -2,7 +2,7 @@
 
 - Edição: `28-festa-do-livro-da-usp` · 25 e 29 de novembro
 - Editoras no site: 181
-- Livros no catálogo: 34811
+- Livros no catálogo: 34396
 - Livros sem ISBN (preço não conferível automaticamente): 638
 - Preços que não bateram com o PDF: 422
 - Livros sem preço de capa: 1911
@@ -16,6 +16,7 @@
 
 - Ciranda Cultural (Grupo): sem lista de preços
 - Contraponto: sem lista de preços
+- HarperCollins Brasil: sem lista de preços
 - Letra Selvagem: sem lista de preços
 - Mundaréu | Manjuba: sem lista de preços
 - nVersos: sem lista de preços
@@ -112,7 +113,6 @@
 | Global | 641 | 643 | 0 | tabela | 0 |
 | Globo Livros | 391 | 391 | 0 | tabela | 0 |
 | Grua | 102 | 102 | 0 | tabela | 0 |
-| HarperCollins Brasil | 415 | 415 | 0 | tabela | 0 |
 | Hedra | 497 | 497 | 0 | posição do texto | 0 |
 | Hucitec | 366 | 367 | 0 | tabela | 0 |
 | Hyperion Comics | 21 | 21 | 1 | posição do texto | 0 |
